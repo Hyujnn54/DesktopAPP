@@ -393,3 +393,73 @@ QSqlQueryModel* Client::getUpcomingConsultations(const QDateTime &start, const Q
     model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
     return model;
 }
+int Client::getTotalConsultations(const QDateTime &start, const QDateTime &end)
+{
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(*) FROM Clients "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS')");
+    query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
+    query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
+
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    }
+    qDebug() << "Error fetching total consultations:" << query.lastError().text();
+    return 0;
+}
+
+int Client::getUpcomingConsultationsCount(const QDateTime &start, const QDateTime &end)
+{
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(*) FROM Clients "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS')");
+    query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
+    query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
+
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    }
+    qDebug() << "Error fetching upcoming consultations count:" << query.lastError().text();
+    return 0;
+}
+
+QMap<QDate, int> Client::getConsultationsPerDay(const QDateTime &start, const QDateTime &end)
+{
+    QMap<QDate, int> result;
+    QSqlQuery query;
+    query.prepare("SELECT TRUNC(CONSULTATION_DATE), COUNT(*) FROM Clients "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS') "
+                  "GROUP BY TRUNC(CONSULTATION_DATE)");
+    query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
+    query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
+
+    if (query.exec()) {
+        while (query.next()) {
+            QDate date = query.value(0).toDate();
+            int count = query.value(1).toInt();
+            result[date] = count;
+        }
+    } else {
+        qDebug() << "Error fetching consultations per day:" << query.lastError().text();
+    }
+    return result;
+}
+
+int Client::getUniqueClients(const QDateTime &start, const QDateTime &end)
+{
+    QSqlQuery query;
+    query.prepare("SELECT COUNT(DISTINCT NAME) FROM Clients "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS')");
+    query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
+    query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
+
+    if (query.exec() && query.next()) {
+        return query.value(0).toInt();
+    }
+    qDebug() << "Error fetching unique clients:" << query.lastError().text();
+    return 0;
+}

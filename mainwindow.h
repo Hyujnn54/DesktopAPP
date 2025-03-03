@@ -40,6 +40,7 @@ private slots:
     bool isValidDateTime(const QDateTime &dateTime);
     void on_exportPdfButton_clicked();
     void sendConsultationReminders();
+    void showStatistics();
 
 private:
     Ui::MainWindow *ui;
@@ -62,6 +63,10 @@ private:
     void performSearch(); // New helper method for dynamic search
     EmailSender *emailSender; // New member
     void checkAndSendReminders();
+
+    int emailAttempts = 0; // Track email attempts
+    int emailSuccesses = 0; // Track successful sends
+    void updateStatisticsDisplay();
 };
 
 class CalendarHoverItem : public QObject

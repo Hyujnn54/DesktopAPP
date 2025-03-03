@@ -48,6 +48,11 @@ public:
     QSqlQueryModel* getConsultationsForDateTime(const QDateTime& dateTime);
     QSqlQueryModel* getConsultationsForDate(const QDate& date);
 
+    int getTotalConsultations(const QDateTime &start, const QDateTime &end); // New
+    int getUpcomingConsultationsCount(const QDateTime &start, const QDateTime &end); // New
+    QMap<QDate, int> getConsultationsPerDay(const QDateTime &start, const QDateTime &end); // New
+    int getUniqueClients(const QDateTime &start, const QDateTime &end);
+
 private:
     int clientId;
     QString name;

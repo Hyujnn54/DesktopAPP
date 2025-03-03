@@ -33,6 +33,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , isDarkTheme(true)
     , emailSender(new EmailSender(this))
+    , emailAttempts(0)
+    , emailSuccesses(0)
 {
     ui->setupUi(this);
 
@@ -82,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::tableViewHeaderClicked);
 
     connect(ui->pushButton_5, &QPushButton::clicked, this, &MainWindow::sendConsultationReminders);
+    connect(ui->pushButton_3, &QPushButton::clicked, this, &MainWindow::showStatistics);
 
     // Connect dynamic search signals
     connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_searchInput_textChanged);
@@ -724,6 +727,82 @@ void MainWindow::checkAndSendReminders()
                                .arg(consultationDate.toString("yyyy-MM-dd HH:mm"));
 
             if (emailSender->sendEmail(email, subject, body)) {
+                qDebug() << "Reminder sent to:" << email;
+                ui->statusBar->showMessage("Reminder sent to " + email);
+            } else {
+                qDebug() << "Failed to send reminder to:" << email;
+                ui->statusBar->showMessage("Failed to send reminder to " + email);
+            }
+        }
+    }
+
+    if (rowCount == 0) {
+        ui->statusBar->showMessage("No upcoming consultations found.");
+    }
+}
+
+void MainWindow::showStatistics()
+{
+    updateStatisticsDisplay();
+}
+
+void MainWindow::updateStatisticsDisplay()
+{
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime dayEnd = now.addDays(1).toDate().startOfDay(); // End of today
+    QDateTime weekEnd = now.addDays(7).toDate().startOfDay(); // End of week
+    QDateTime monthEnd = now.addDays(30).toDate().startOfDay(); // Approx month
+
+    int totalToday = Etmp.getTotalConsultations(now.toDate().startOfDay(), dayEnd);
+    int totalWeek = Etmp.getTotalConsultations(now.addDays(-7).toDate().startOfDay(), weekEnd);
+    int totalMonth = Etmp.getTotalConsultations(now.addDays(-30).toDate().startOfDay(), monthEnd);
+    int upcoming = Etmp.getUpcomingConsultationsCount(now, now.addSecs(24 * 60 * 60));
+    int uniqueClients = Etmp.getUniqueClients(now.addDays(-30).toDate().startOfDay(), monthEnd);
+    double successRate = emailAttempts > 0 ? (double)emailSuccesses / emailAttempts * 100 : 0;
+
+    QString statsText = QString(
+                            "Statistics (as of %1):\n"
+                            "Total Consultations Today: %2\n"
+                            "Total Consultations This Week: %3\n"
+                            "Total Consultations This Month: %4\n"
+                            "Upcoming Consultations (Next 24h): %5\n"
+                            "Unique Clients (Last 30 Days): %6\n"
+                            "Email Reminder Success Rate: %7%"
+                            ).arg(now.toString("yyyy-MM-dd HH:mm:ss"))
+                            .arg(totalToday)
+                            .arg(totalWeek)
+                            .arg(totalMonth)
+                            .arg(upcoming)
+                            .arg(uniqueClients)
+                            .arg(successRate, 0, 'f', 2);
+
+    // Switch to Reports tab and display stats
+    ui->tabWidget->setCurrentIndex(1); // Assuming "Manage Clients" tab (index 1) for now
+    QMessageBox::information(this, "Statistics", statsText); // Temporary display; replace with UI later
+}
+
+void MainWindow::checkAndSendReminders()
+{
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime reminderEnd = now.addSecs(24 * 60 * 60);
+
+    QSqlQueryModel *model = Etmp.getUpcomingConsultations(now, reminderEnd);
+    int rowCount = model->rowCount();
+
+    for (int row = 0; row < rowCount; ++row) {
+        QString name = model->data(model->index(row, 0)).toString();
+        QString email = model->data(model->index(row, 3)).toString();
+        QDateTime consultationDate = model->data(model->index(row, 4)).toDateTime();
+
+        if (!email.isEmpty()) {
+            QString subject = "Consultation Reminder";
+            QString body = QString("Dear %1,\n\nThis is a reminder for your consultation scheduled on %2.\n\nBest regards,\nClient Management System")
+                               .arg(name)
+                               .arg(consultationDate.toString("yyyy-MM-dd HH:mm"));
+
+            emailAttempts++;
+            if (emailSender->sendEmail(email, subject, body)) {
+                emailSuccesses++;
                 qDebug() << "Reminder sent to:" << email;
                 ui->statusBar->showMessage("Reminder sent to " + email);
             } else {
