@@ -42,7 +42,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     QGridLayout *gridLayout = qobject_cast<QGridLayout*>(ui->ClientForm->layout());
     if (gridLayout) {
-        // Find the consultation_date widget position
         int row = 0, column = 0;
         for (int i = 0; i < gridLayout->count(); ++i) {
             int r, c, rs, cs;
@@ -54,8 +53,6 @@ MainWindow::MainWindow(QWidget *parent)
                 break;
             }
         }
-
-        // Replace the widget
         gridLayout->removeWidget(ui->searchDateButton_2);
         ui->searchDateButton_2->deleteLater();
         gridLayout->addWidget(dateTimeEdit, row, column);
@@ -68,33 +65,6 @@ MainWindow::MainWindow(QWidget *parent)
     searchDateTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm");
     searchDateTimeEdit->setDateTime(QDateTime::currentDateTime());
 
-    // Replace the searchDateEdit with searchDateTimeEdit
-    if (ui->searchDateEdit) {
-        QGridLayout *searchLayout = qobject_cast<QGridLayout*>(ui->searchDateEdit->parentWidget()->layout());
-        if (searchLayout) {
-            int row = 0, column = 0;
-            for (int i = 0; i < searchLayout->count(); ++i) {
-                int r, c, rs, cs;
-                searchLayout->getItemPosition(i, &r, &c, &rs, &cs);
-                if (searchLayout->itemAtPosition(r, c) &&
-                    searchLayout->itemAtPosition(r, c)->widget() == ui->searchDateEdit) {
-                    row = r;
-                    column = c;
-                    break;
-                }
-            }
-
-            searchLayout->removeWidget(ui->searchDateEdit);
-            ui->searchDateEdit->deleteLater();
-            searchLayout->addWidget(searchDateTimeEdit, row, column);
-        }
-    }
-
-    // Rename the search date button to reflect datetime search
-    if (ui->searchDateButton) {
-        ui->searchDateButton->setText("Search by Date & Time");
-    }
-
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
@@ -104,19 +74,23 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->Delet, &QPushButton::clicked, this, &MainWindow::on_removeButtonClicked);
     connect(ui->update, &QPushButton::clicked, this, &MainWindow::on_updateButtonClicked);
     connect(ui->themeButton, &QPushButton::clicked, this, &MainWindow::toggleTheme);
-
-    // Connect search buttons
-    connect(ui->searchNameButton, &QPushButton::clicked, this, &MainWindow::on_searchNameButton_clicked);
-    connect(ui->searchSectorButton, &QPushButton::clicked, this, &MainWindow::on_searchSectorButton_clicked);
-    connect(ui->searchDateButton, &QPushButton::clicked, this, &MainWindow::on_searchDateTimeButton_clicked);
     connect(ui->resetSearchButton, &QPushButton::clicked, this, &MainWindow::on_resetSearchButton_clicked);
+    connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::tableViewHeaderClicked);
 
-    // Connect table header click for sorting
-    connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionClicked,
-            this, &MainWindow::tableViewHeaderClicked);
+    // Connect dynamic search signals
+    connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_searchInput_textChanged);
+    connect(ui->searchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MainWindow::on_searchCriteriaComboBox_currentIndexChanged);
 
     // Setup calendar functionality
     setupCalendarView();
+    QSqlQueryModel *model = Etmp.afficher();
+    ui->tableView->setModel(model);
+    ui->tableView->resizeColumnsToContents();
+    // Ensure all columns are visible
+    for (int i = 0; i < model->columnCount(); ++i) {
+        ui->tableView->showColumn(i);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -125,7 +99,6 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::on_addButtonclicked() {
-    // Validate inputs first
     if (!validateInputs()) {
         return;
     }
@@ -133,39 +106,23 @@ void MainWindow::on_addButtonclicked() {
     QString Name = ui->Name->text().trimmed();
     QString Sector = ui->Sector->text().trimmed();
     QString Contact = ui->Contact_info->text().trimmed();
-
-    // Get the QDateTimeEdit widget we created programmatically
+    QString Email = ui->Email->text().trimmed(); // New field
     QDateTimeEdit *dateTimeEdit = findChild<QDateTimeEdit*>("consultation_datetime");
-    QDateTime Cdate;
-
-    if (dateTimeEdit) {
-        Cdate = dateTimeEdit->dateTime();
-    } else {
-        // Fallback to just the date from the original widget if our replacement wasn't found
-        QMessageBox::critical(this, "Error", "DateTime widget not found.");
-        return;
-    }
-
+    QDateTime Cdate = dateTimeEdit ? dateTimeEdit->dateTime() : QDateTime::currentDateTime();
     int Consultant = ui->Consultant->text().toInt();
 
-    // Create Client object
-    Client c(Name, Sector, Contact, Cdate, Consultant);
+    Client c(Name, Sector, Contact, Email, Cdate, Consultant); // Updated constructor call
 
     if (c.ajouter()) {
         QMessageBox::information(this, "Success", "Client added successfully!");
-        QSqlQueryModel *model = Etmp.afficher(); // Fetch updated data
-        ui->tableView->setModel(model); // Update the table view with new model
-
-        // Clear inputs after successful addition
+        QSqlQueryModel *model = Etmp.afficher();
+        ui->tableView->setModel(model);
         ui->Name->clear();
         ui->Sector->clear();
         ui->Contact_info->clear();
-        if (dateTimeEdit) {
-            dateTimeEdit->setDateTime(QDateTime::currentDateTime());
-        }
+        ui->Email->clear(); // Clear new field
+        if (dateTimeEdit) dateTimeEdit->setDateTime(QDateTime::currentDateTime());
         ui->Consultant->clear();
-
-        // Update calendar view with new consultation
         updateCalendarConsultations();
     } else {
         QMessageBox::critical(this, "Error", "Failed to add client.");
@@ -228,30 +185,26 @@ void MainWindow::on_updateButtonClicked() {
     QString name = model->data(model->index(row, 0)).toString();
     QString sector = model->data(model->index(row, 1)).toString();
     QString contact = model->data(model->index(row, 2)).toString();
-    QDateTime dateTime = model->data(model->index(row, 3)).toDateTime();
-    int consultant = model->data(model->index(row, 4)).toInt();
+    QString email = model->data(model->index(row, 3)).toString(); // New field
+    QDateTime dateTime = model->data(model->index(row, 4)).toDateTime();
+    int consultant = model->data(model->index(row, 5)).toInt();
 
-    // Create and show the update dialog
     UpdateClientDialog updateDialog(this);
-    updateDialog.setClientData(name, sector, contact, dateTime, consultant);
+    updateDialog.setClientData(name, sector, contact, email, dateTime, consultant); // Updated
 
     if (updateDialog.exec() == QDialog::Accepted) {
-        // User confirmed the update
         QString newName = updateDialog.getName();
         QString newSector = updateDialog.getSector();
         QString newContact = updateDialog.getContactInfo();
+        QString newEmail = updateDialog.getEmail(); // New field
         QDateTime newDateTime = updateDialog.getConsultationDateTime();
         int newConsultant = updateDialog.getConsultant();
 
         Client c;
-        if (c.updateClient(name, newName, newSector, newContact, newDateTime, newConsultant)) {
+        if (c.updateClient(name, newName, newSector, newContact, newEmail, newDateTime, newConsultant)) { // Updated
             QMessageBox::information(this, "Success", "Client updated successfully!");
-
-            // Refresh the table view
             QSqlQueryModel *updatedModel = Etmp.afficher();
             ui->tableView->setModel(updatedModel);
-
-            // Update calendar after client update
             updateCalendarConsultations();
         } else {
             QMessageBox::critical(this, "Error", "Failed to update the client.");
@@ -294,66 +247,16 @@ void MainWindow::applyLightTheme() {
     qApp->setStyleSheet("");
 }
 
-void MainWindow::on_searchNameButton_clicked() {
-    QString searchText = ui->searchNameEdit->text().trimmed();
-    if (searchText.isEmpty()) {
-        QMessageBox::warning(this, "Search", "Please enter a name to search.");
-        return;
-    }
-
-    QSqlQueryModel* searchModel = Etmp.searchByName(searchText);
-    ui->tableView->setModel(searchModel);
-
-    // Update status
-    ui->statusBar->showMessage(QString("Found %1 client(s) matching name: %2")
-                                   .arg(searchModel->rowCount())
-                                   .arg(searchText));
-}
-
-void MainWindow::on_searchSectorButton_clicked() {
-    QString searchText = ui->searchSectorEdit->text().trimmed();
-    if (searchText.isEmpty()) {
-        QMessageBox::warning(this, "Search", "Please enter a sector to search.");
-        return;
-    }
-
-    QSqlQueryModel* searchModel = Etmp.searchBySector(searchText);
-    ui->tableView->setModel(searchModel);
-
-    // Update status
-    ui->statusBar->showMessage(QString("Found %1 client(s) in sector: %2")
-                                   .arg(searchModel->rowCount())
-                                   .arg(searchText));
-}
-
-void MainWindow::on_searchDateTimeButton_clicked() {
-    QDateTimeEdit *searchDateTimeEdit = findChild<QDateTimeEdit*>("searchDateTimeEdit");
-    if (!searchDateTimeEdit) {
-        QMessageBox::critical(this, "Error", "DateTime widget not found.");
-        return;
-    }
-    
-    QDateTime searchDateTime = searchDateTimeEdit->dateTime();
-    QSqlQueryModel* searchModel = Etmp.searchByDateTime(searchDateTime);
-    
-    ui->tableView->setModel(searchModel);
-
-    // Update status - use searchDateTime instead of searchDate
-    ui->statusBar->showMessage(QString("Found %1 client(s) with date & time: %2")
-                                   .arg(searchModel->rowCount())
-                                   .arg(searchDateTime.toString("yyyy-MM-dd HH:mm")));
-}
-
-void MainWindow::on_resetSearchButton_clicked() {
-    // Clear search fields
-    ui->searchNameEdit->clear();
-    ui->searchSectorEdit->clear();
-
-    // Reset to show all clients
-    QSqlQueryModel* model = Etmp.afficher();
+void MainWindow::on_resetSearchButton_clicked()
+{
+    ui->searchInput->clear();
+    QSqlQueryModel *model = Etmp.afficher();
     ui->tableView->setModel(model);
-
-    // Update status
+    ui->tableView->resizeColumnsToContents();
+    // Ensure all columns are visible
+    for (int i = 0; i < model->columnCount(); ++i) {
+        ui->tableView->showColumn(i);
+    }
     ui->statusBar->showMessage("Showing all clients");
 }
 
@@ -372,8 +275,9 @@ void MainWindow::tableViewHeaderClicked(int logicalIndex) {
     case 0: column = "Name"; break;
     case 1: column = "Sector"; break;
     case 2: column = "Contact"; break;
-    case 3: column = "Date"; break;
-    case 4: column = "Consultant"; break;
+    case 3: column = "Email"; break;  // Add this line
+    case 4: column = "Date"; break;
+    case 5: column = "Consultant"; break;
     default: column = "Unknown"; break;
     }
 
@@ -424,6 +328,12 @@ bool MainWindow::validateInputs() {
     if (!isValidConsultant(consultant)) {
         QMessageBox::warning(this, "Input Error", "Consultant ID must be a valid number.");
         ui->Consultant->setFocus();
+        return false;
+    }
+    QString email = ui->Email->text().trimmed();
+    if (email.isEmpty() || !email.contains('@') || !email.contains('.')) {
+        QMessageBox::warning(this, "Input Error", "Please enter a valid email address.");
+        ui->Email->setFocus();
         return false;
     }
 
@@ -605,4 +515,177 @@ bool CalendarHoverItem::eventFilter(QObject *watched, QEvent *event)
     }
 
     return QObject::eventFilter(watched, event);
+}
+
+void MainWindow::on_exportPdfButton_clicked()
+{
+    static QElapsedTimer lastClickTime;
+    if (lastClickTime.isValid() && lastClickTime.elapsed() < 1000) {
+        qDebug() << "Ignoring rapid click";
+        return;
+    }
+    lastClickTime.restart();
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save PDF"), "", tr("PDF Files (*.pdf)"));
+    if (fileName.isEmpty()) {
+        ui->exportPdfButton->setEnabled(true);
+        return;
+    }
+
+    if (!fileName.endsWith(".pdf", Qt::CaseInsensitive))
+        fileName += ".pdf";
+
+    qDebug() << "Exporting to:" << fileName;
+
+    QPdfWriter pdfWriter(fileName);
+    pdfWriter.setPageSize(QPageSize::A4);
+    pdfWriter.setPageMargins(QMarginsF(20, 20, 20, 20));
+
+    QPainter painter(&pdfWriter);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QAbstractItemModel* model = ui->tableView->model();
+    if (!model) {
+        QMessageBox::warning(this, "Export Error", "No data available to export.");
+        return;
+    }
+
+    const int rows = model->rowCount();
+    const int columns = model->columnCount();
+    const int margin = 100;
+    const int cellPadding = 50;
+    const int headerHeight = 300;
+    const int rowHeight = 200;
+
+    // Removed unused totalHeight
+    int pageWidth = pdfWriter.width() - 2 * margin;
+    int columnWidth = pageWidth / columns;
+
+    QFont headerFont("Arial", 12, QFont::Bold);
+    QFont dataFont("Arial", 10);
+
+    painter.setFont(QFont("Arial", 14, QFont::Bold));
+    painter.drawText(QRectF(margin, margin, pageWidth, 100),
+                     Qt::AlignCenter, "Client Management Report");
+
+    int yPos = margin + 200;
+
+    painter.setFont(headerFont);
+    for (int col = 0; col < columns; ++col) {
+        QString header = model->headerData(col, Qt::Horizontal).toString();
+        QRectF cellRect(margin + col * columnWidth, yPos, columnWidth, headerHeight);
+        painter.drawText(cellRect.adjusted(cellPadding, cellPadding, -cellPadding, -cellPadding),
+                         Qt::AlignCenter, header);
+        painter.drawRect(cellRect);
+    }
+    yPos += headerHeight;
+
+    painter.setFont(dataFont);
+    for (int row = 0; row < rows; ++row) {
+        if (yPos + rowHeight > pdfWriter.height() - margin) {
+            pdfWriter.newPage();
+            yPos = margin;
+            painter.setFont(headerFont);
+            for (int col = 0; col < columns; ++col) {
+                QString header = model->headerData(col, Qt::Horizontal).toString();
+                QRectF cellRect(margin + col * columnWidth, yPos, columnWidth, headerHeight);
+                painter.drawText(cellRect.adjusted(cellPadding, cellPadding, -cellPadding, -cellPadding),
+                                 Qt::AlignCenter, header);
+                painter.drawRect(cellRect);
+            }
+            yPos += headerHeight;
+        }
+
+        for (int col = 0; col < columns; ++col) {
+            QString text = model->data(model->index(row, col)).toString();
+            if (col == 4) { // Date & Time column
+                QDateTime dt = model->data(model->index(row, col)).toDateTime();
+                text = dt.toString("yyyy-MM-dd HH:mm");
+            }
+            QRectF cellRect(margin + col * columnWidth, yPos, columnWidth, rowHeight);
+            painter.drawText(cellRect.adjusted(cellPadding, cellPadding, -cellPadding, -cellPadding),
+                             Qt::AlignCenter, text);
+            painter.drawRect(cellRect);
+        }
+        yPos += rowHeight;
+    }
+
+    painter.setFont(QFont("Arial", 8));
+    QString footer = QString("Generated on: %1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm"));
+    painter.drawText(QRectF(margin, pdfWriter.height() - margin, pageWidth, 100),
+                     Qt::AlignRight, footer);
+
+    painter.end();
+
+    QMessageBox::information(this, "Success", "PDF exported successfully!");
+    ui->statusBar->showMessage("PDF exported to: " + fileName);
+    ui->exportPdfButton->setEnabled(false);
+}
+
+void MainWindow::on_searchInput_textChanged()
+{
+    performSearch();
+}
+
+void MainWindow::on_searchCriteriaComboBox_currentIndexChanged()
+{
+    performSearch();
+}
+
+void MainWindow::performSearch()
+{
+    QString searchText = ui->searchInput->text().trimmed();
+    int criteriaIndex = ui->searchCriteriaComboBox->currentIndex();
+    QSqlQueryModel *model = nullptr;
+
+    if (searchText.isEmpty()) {
+        model = Etmp.afficher();
+    } else {
+        switch (criteriaIndex) {
+        case 0: // Name
+            model = Etmp.searchByName(searchText);
+            break;
+        case 1: // Sector
+            model = Etmp.searchBySector(searchText);
+            break;
+        case 2: // Email
+            model = Etmp.searchByEmail(searchText);
+            break;
+        case 3: // Contact
+            model = Etmp.searchByContact(searchText);
+            break;
+        case 4: // Date & Time
+            {
+                QDateTime dateTime = QDateTime::fromString(searchText, "yyyy-MM-dd HH:mm");
+                if (dateTime.isValid()) {
+                    model = Etmp.searchByDateTime(dateTime);
+                } else {
+                    model = new QSqlQueryModel();
+                }
+            }
+            break;
+        case 5: // Consultant
+            {
+                bool ok;
+                int consultantId = searchText.toInt(&ok);
+                if (ok) {
+                    model = Etmp.searchByConsultant(consultantId);
+                } else {
+                    model = new QSqlQueryModel();
+                }
+            }
+            break;
+        default:
+            model = Etmp.afficher();
+            break;
+        }
+    }
+
+    ui->tableView->setModel(model);
+    ui->tableView->resizeColumnsToContents();
+    // Ensure all columns are visible
+    for (int i = 0; i < model->columnCount(); ++i) {
+        ui->tableView->showColumn(i);
+    }
+    ui->statusBar->showMessage(QString("Found %1 client(s)").arg(model->rowCount()));
 }

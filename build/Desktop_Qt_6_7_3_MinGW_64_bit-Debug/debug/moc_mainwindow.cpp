@@ -42,9 +42,8 @@ constexpr auto qt_meta_stringdata_CLASSMainWindowENDCLASS = QtMocHelpers::string
     "on_updateButtonClicked",
     "toggleSidebar",
     "toggleTheme",
-    "on_searchNameButton_clicked",
-    "on_searchSectorButton_clicked",
-    "on_searchDateTimeButton_clicked",
+    "on_searchInput_textChanged",
+    "on_searchCriteriaComboBox_currentIndexChanged",
     "on_resetSearchButton_clicked",
     "tableViewHeaderClicked",
     "logicalIndex",
@@ -53,7 +52,8 @@ constexpr auto qt_meta_stringdata_CLASSMainWindowENDCLASS = QtMocHelpers::string
     "date",
     "updateCalendarConsultations",
     "isValidDateTime",
-    "dateTime"
+    "dateTime",
+    "on_exportPdfButton_clicked"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -82,12 +82,12 @@ Q_CONSTINIT static const uint qt_meta_data_CLASSMainWindowENDCLASS[] = {
        7,    0,  103,    2, 0x08,    6 /* Private */,
        8,    0,  104,    2, 0x08,    7 /* Private */,
        9,    0,  105,    2, 0x08,    8 /* Private */,
-      10,    0,  106,    2, 0x08,    9 /* Private */,
-      11,    1,  107,    2, 0x08,   10 /* Private */,
-      13,    0,  110,    2, 0x08,   12 /* Private */,
-      14,    1,  111,    2, 0x08,   13 /* Private */,
-      16,    0,  114,    2, 0x08,   15 /* Private */,
-      17,    1,  115,    2, 0x08,   16 /* Private */,
+      10,    1,  106,    2, 0x08,    9 /* Private */,
+      12,    0,  109,    2, 0x08,   11 /* Private */,
+      13,    1,  110,    2, 0x08,   12 /* Private */,
+      15,    0,  113,    2, 0x08,   14 /* Private */,
+      16,    1,  114,    2, 0x08,   15 /* Private */,
+      18,    0,  117,    2, 0x08,   17 /* Private */,
 
  // slots: parameters
     QMetaType::Void,
@@ -98,12 +98,12 @@ Q_CONSTINIT static const uint qt_meta_data_CLASSMainWindowENDCLASS[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,   11,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,   12,
+    QMetaType::Void, QMetaType::QDate,   14,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QDate,   15,
+    QMetaType::Bool, QMetaType::QDateTime,   17,
     QMetaType::Void,
-    QMetaType::Bool, QMetaType::QDateTime,   18,
 
        0        // eod
 };
@@ -127,11 +127,9 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'toggleTheme'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'on_searchNameButton_clicked'
+        // method 'on_searchInput_textChanged'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'on_searchSectorButton_clicked'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'on_searchDateTimeButton_clicked'
+        // method 'on_searchCriteriaComboBox_currentIndexChanged'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'on_resetSearchButton_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
@@ -147,7 +145,9 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'isValidDateTime'
         QtPrivate::TypeAndForceComplete<bool, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const QDateTime &, std::false_type>
+        QtPrivate::TypeAndForceComplete<const QDateTime &, std::false_type>,
+        // method 'on_exportPdfButton_clicked'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>
     >,
     nullptr
 } };
@@ -163,16 +163,16 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 2: _t->on_updateButtonClicked(); break;
         case 3: _t->toggleSidebar(); break;
         case 4: _t->toggleTheme(); break;
-        case 5: _t->on_searchNameButton_clicked(); break;
-        case 6: _t->on_searchSectorButton_clicked(); break;
-        case 7: _t->on_searchDateTimeButton_clicked(); break;
-        case 8: _t->on_resetSearchButton_clicked(); break;
-        case 9: _t->tableViewHeaderClicked((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 10: _t->on_consultationCalendar_selectionChanged(); break;
-        case 11: _t->on_consultationCalendar_activated((*reinterpret_cast< std::add_pointer_t<QDate>>(_a[1]))); break;
-        case 12: _t->updateCalendarConsultations(); break;
-        case 13: { bool _r = _t->isValidDateTime((*reinterpret_cast< std::add_pointer_t<QDateTime>>(_a[1])));
+        case 5: _t->on_searchInput_textChanged(); break;
+        case 6: _t->on_searchCriteriaComboBox_currentIndexChanged(); break;
+        case 7: _t->on_resetSearchButton_clicked(); break;
+        case 8: _t->tableViewHeaderClicked((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 9: _t->on_consultationCalendar_selectionChanged(); break;
+        case 10: _t->on_consultationCalendar_activated((*reinterpret_cast< std::add_pointer_t<QDate>>(_a[1]))); break;
+        case 11: _t->updateCalendarConsultations(); break;
+        case 12: { bool _r = _t->isValidDateTime((*reinterpret_cast< std::add_pointer_t<QDateTime>>(_a[1])));
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
+        case 13: _t->on_exportPdfButton_clicked(); break;
         default: ;
         }
     }

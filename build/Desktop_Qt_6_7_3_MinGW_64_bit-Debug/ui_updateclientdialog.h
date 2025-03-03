@@ -38,6 +38,8 @@ public:
     QLabel *label_5;
     QLineEdit *consultantLineEdit;
     QDateTimeEdit *consultationDateTime;
+    QLineEdit *emailLineEdit;
+    QLabel *label_email;
     QHBoxLayout *horizontalLayout;
     QSpacerItem *horizontalSpacer;
     QPushButton *confirmButton;
@@ -85,22 +87,32 @@ public:
         label_4 = new QLabel(UpdateClientDialog);
         label_4->setObjectName("label_4");
 
-        formLayout->setWidget(3, QFormLayout::LabelRole, label_4);
+        formLayout->setWidget(4, QFormLayout::LabelRole, label_4);
 
         label_5 = new QLabel(UpdateClientDialog);
         label_5->setObjectName("label_5");
 
-        formLayout->setWidget(4, QFormLayout::LabelRole, label_5);
+        formLayout->setWidget(5, QFormLayout::LabelRole, label_5);
 
         consultantLineEdit = new QLineEdit(UpdateClientDialog);
         consultantLineEdit->setObjectName("consultantLineEdit");
 
-        formLayout->setWidget(4, QFormLayout::FieldRole, consultantLineEdit);
+        formLayout->setWidget(5, QFormLayout::FieldRole, consultantLineEdit);
 
         consultationDateTime = new QDateTimeEdit(UpdateClientDialog);
         consultationDateTime->setObjectName("consultationDateTime");
 
-        formLayout->setWidget(3, QFormLayout::FieldRole, consultationDateTime);
+        formLayout->setWidget(4, QFormLayout::FieldRole, consultationDateTime);
+
+        emailLineEdit = new QLineEdit(UpdateClientDialog);
+        emailLineEdit->setObjectName("emailLineEdit");
+
+        formLayout->setWidget(3, QFormLayout::FieldRole, emailLineEdit);
+
+        label_email = new QLabel(UpdateClientDialog);
+        label_email->setObjectName("label_email");
+
+        formLayout->setWidget(3, QFormLayout::LabelRole, label_email);
 
 
         verticalLayout->addLayout(formLayout);
@@ -138,6 +150,7 @@ public:
         label_3->setText(QCoreApplication::translate("UpdateClientDialog", "Contact:", nullptr));
         label_4->setText(QCoreApplication::translate("UpdateClientDialog", "Date:", nullptr));
         label_5->setText(QCoreApplication::translate("UpdateClientDialog", "Consultant:", nullptr));
+        label_email->setText(QCoreApplication::translate("UpdateClientDialog", "Email:", nullptr));
         confirmButton->setText(QCoreApplication::translate("UpdateClientDialog", "Confirm", nullptr));
         cancelButton->setText(QCoreApplication::translate("UpdateClientDialog", "Cancel", nullptr));
     } // retranslateUi

@@ -7,8 +7,6 @@ UpdateClientDialog::UpdateClientDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     setWindowTitle("Update Client");
-
-    // Connect buttons
     connect(ui->confirmButton, &QPushButton::clicked, this, &UpdateClientDialog::on_confirmButton_clicked);
     connect(ui->cancelButton, &QPushButton::clicked, this, &UpdateClientDialog::on_cancelButton_clicked);
 }
@@ -18,10 +16,12 @@ UpdateClientDialog::~UpdateClientDialog()
     delete ui;
 }
 
-void UpdateClientDialog::setClientData(const QString &name, const QString &sector, const QString &contactInfo, const QDateTime &consultationDateTime, int consultant) {
+// Corrected definition with 6 parameters, fixing typo '§or' to 'sector'
+void UpdateClientDialog::setClientData(const QString &name, const QString &sector, const QString &contactInfo, const QString &email, const QDateTime &consultationDateTime, int consultant) {
     ui->nameLineEdit->setText(name);
     ui->sectorLineEdit->setText(sector);
     ui->contactLineEdit->setText(contactInfo);
+    ui->emailLineEdit->setText(email);
     ui->consultationDateTime->setDateTime(consultationDateTime);
     ui->consultantLineEdit->setText(QString::number(consultant));
 }
@@ -38,6 +38,10 @@ QString UpdateClientDialog::getContactInfo() const {
     return ui->contactLineEdit->text();
 }
 
+QString UpdateClientDialog::getEmail() const {
+    return ui->emailLineEdit->text();
+}
+
 QDateTime UpdateClientDialog::getConsultationDateTime() const {
     return ui->consultationDateTime->dateTime();
 }
@@ -48,10 +52,10 @@ int UpdateClientDialog::getConsultant() const {
 
 void UpdateClientDialog::on_confirmButton_clicked()
 {
-    accept(); // Close dialog with accept status
+    accept();
 }
 
 void UpdateClientDialog::on_cancelButton_clicked()
 {
-    reject(); // Close dialog with reject status
+    reject();
 }

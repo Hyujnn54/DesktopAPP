@@ -12,7 +12,7 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QCalendarWidget>
-#include <QtWidgets/QDateEdit>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QDateTimeEdit>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
@@ -62,37 +62,33 @@ public:
     QTabWidget *tabWidget;
     QWidget *ClientForm;
     QGridLayout *gridLayout_2;
+    QLineEdit *Consultant;
+    QDateTimeEdit *searchDateButton_2;
+    QLabel *label_contact;
+    QLabel *label_sector;
+    QLineEdit *Contact_info;
+    QLabel *label_consultant;
+    QPushButton *add;
+    QLineEdit *Sector;
+    QSpacerItem *horizontalSpacer;
     QLabel *label_name;
     QLineEdit *Name;
-    QLabel *label_sector;
-    QLineEdit *Sector;
-    QLabel *label_contact;
-    QLineEdit *Contact_info;
     QLabel *label_date;
-    QLabel *label_consultant;
-    QLineEdit *Consultant;
-    QPushButton *add;
-    QSpacerItem *horizontalSpacer;
-    QDateTimeEdit *searchDateButton_2;
+    QLineEdit *Email;
+    QLabel *label_email;
     QWidget *listClient;
     QVBoxLayout *verticalLayout_6;
     QGroupBox *searchGroupBox;
-    QGridLayout *gridLayout;
-    QLabel *label_6;
-    QLineEdit *searchNameEdit;
-    QPushButton *searchNameButton;
-    QLabel *label_7;
-    QLineEdit *searchSectorEdit;
-    QPushButton *searchSectorButton;
-    QLabel *label_8;
-    QDateEdit *searchDateEdit;
-    QPushButton *searchDateButton;
+    QHBoxLayout *searchLayout;
+    QComboBox *searchCriteriaComboBox;
+    QLineEdit *searchInput;
     QPushButton *resetSearchButton;
     QTableView *tableView;
     QHBoxLayout *horizontalLayout_4;
     QSpacerItem *horizontalSpacer_2;
     QPushButton *Delet;
     QPushButton *update;
+    QPushButton *exportPdfButton;
     QWidget *calendarTab;
     QVBoxLayout *verticalLayout_7;
     QCalendarWidget *consultationCalendar;
@@ -260,6 +256,50 @@ public:
         ClientForm->setContextMenuPolicy(Qt::ContextMenuPolicy::PreventContextMenu);
         gridLayout_2 = new QGridLayout(ClientForm);
         gridLayout_2->setObjectName("gridLayout_2");
+        Consultant = new QLineEdit(ClientForm);
+        Consultant->setObjectName("Consultant");
+
+        gridLayout_2->addWidget(Consultant, 5, 1, 1, 1);
+
+        searchDateButton_2 = new QDateTimeEdit(ClientForm);
+        searchDateButton_2->setObjectName("searchDateButton_2");
+
+        gridLayout_2->addWidget(searchDateButton_2, 4, 1, 1, 1);
+
+        label_contact = new QLabel(ClientForm);
+        label_contact->setObjectName("label_contact");
+
+        gridLayout_2->addWidget(label_contact, 2, 0, 1, 1);
+
+        label_sector = new QLabel(ClientForm);
+        label_sector->setObjectName("label_sector");
+
+        gridLayout_2->addWidget(label_sector, 1, 0, 1, 1);
+
+        Contact_info = new QLineEdit(ClientForm);
+        Contact_info->setObjectName("Contact_info");
+
+        gridLayout_2->addWidget(Contact_info, 2, 1, 1, 1);
+
+        label_consultant = new QLabel(ClientForm);
+        label_consultant->setObjectName("label_consultant");
+
+        gridLayout_2->addWidget(label_consultant, 5, 0, 1, 1);
+
+        add = new QPushButton(ClientForm);
+        add->setObjectName("add");
+
+        gridLayout_2->addWidget(add, 6, 1, 1, 1);
+
+        Sector = new QLineEdit(ClientForm);
+        Sector->setObjectName("Sector");
+
+        gridLayout_2->addWidget(Sector, 1, 1, 1, 1);
+
+        horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        gridLayout_2->addItem(horizontalSpacer, 0, 2, 7, 1);
+
         label_name = new QLabel(ClientForm);
         label_name->setObjectName("label_name");
 
@@ -270,54 +310,20 @@ public:
 
         gridLayout_2->addWidget(Name, 0, 1, 1, 1);
 
-        label_sector = new QLabel(ClientForm);
-        label_sector->setObjectName("label_sector");
-
-        gridLayout_2->addWidget(label_sector, 1, 0, 1, 1);
-
-        Sector = new QLineEdit(ClientForm);
-        Sector->setObjectName("Sector");
-
-        gridLayout_2->addWidget(Sector, 1, 1, 1, 1);
-
-        label_contact = new QLabel(ClientForm);
-        label_contact->setObjectName("label_contact");
-
-        gridLayout_2->addWidget(label_contact, 2, 0, 1, 1);
-
-        Contact_info = new QLineEdit(ClientForm);
-        Contact_info->setObjectName("Contact_info");
-
-        gridLayout_2->addWidget(Contact_info, 2, 1, 1, 1);
-
         label_date = new QLabel(ClientForm);
         label_date->setObjectName("label_date");
 
-        gridLayout_2->addWidget(label_date, 3, 0, 1, 1);
+        gridLayout_2->addWidget(label_date, 4, 0, 1, 1);
 
-        label_consultant = new QLabel(ClientForm);
-        label_consultant->setObjectName("label_consultant");
+        Email = new QLineEdit(ClientForm);
+        Email->setObjectName("Email");
 
-        gridLayout_2->addWidget(label_consultant, 4, 0, 1, 1);
+        gridLayout_2->addWidget(Email, 3, 1, 1, 1);
 
-        Consultant = new QLineEdit(ClientForm);
-        Consultant->setObjectName("Consultant");
+        label_email = new QLabel(ClientForm);
+        label_email->setObjectName("label_email");
 
-        gridLayout_2->addWidget(Consultant, 4, 1, 1, 1);
-
-        add = new QPushButton(ClientForm);
-        add->setObjectName("add");
-
-        gridLayout_2->addWidget(add, 5, 1, 1, 1);
-
-        horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
-
-        gridLayout_2->addItem(horizontalSpacer, 0, 2, 6, 1);
-
-        searchDateButton_2 = new QDateTimeEdit(ClientForm);
-        searchDateButton_2->setObjectName("searchDateButton_2");
-
-        gridLayout_2->addWidget(searchDateButton_2, 3, 1, 1, 1);
+        gridLayout_2->addWidget(label_email, 3, 0, 1, 1);
 
         tabWidget->addTab(ClientForm, QString());
         listClient = new QWidget();
@@ -326,57 +332,28 @@ public:
         verticalLayout_6->setObjectName("verticalLayout_6");
         searchGroupBox = new QGroupBox(listClient);
         searchGroupBox->setObjectName("searchGroupBox");
-        gridLayout = new QGridLayout(searchGroupBox);
-        gridLayout->setObjectName("gridLayout");
-        label_6 = new QLabel(searchGroupBox);
-        label_6->setObjectName("label_6");
+        searchLayout = new QHBoxLayout(searchGroupBox);
+        searchLayout->setObjectName("searchLayout");
+        searchCriteriaComboBox = new QComboBox(searchGroupBox);
+        searchCriteriaComboBox->addItem(QString());
+        searchCriteriaComboBox->addItem(QString());
+        searchCriteriaComboBox->addItem(QString());
+        searchCriteriaComboBox->addItem(QString());
+        searchCriteriaComboBox->addItem(QString());
+        searchCriteriaComboBox->addItem(QString());
+        searchCriteriaComboBox->setObjectName("searchCriteriaComboBox");
 
-        gridLayout->addWidget(label_6, 0, 0, 1, 1);
+        searchLayout->addWidget(searchCriteriaComboBox);
 
-        searchNameEdit = new QLineEdit(searchGroupBox);
-        searchNameEdit->setObjectName("searchNameEdit");
+        searchInput = new QLineEdit(searchGroupBox);
+        searchInput->setObjectName("searchInput");
 
-        gridLayout->addWidget(searchNameEdit, 0, 1, 1, 1);
-
-        searchNameButton = new QPushButton(searchGroupBox);
-        searchNameButton->setObjectName("searchNameButton");
-
-        gridLayout->addWidget(searchNameButton, 0, 2, 1, 1);
-
-        label_7 = new QLabel(searchGroupBox);
-        label_7->setObjectName("label_7");
-
-        gridLayout->addWidget(label_7, 1, 0, 1, 1);
-
-        searchSectorEdit = new QLineEdit(searchGroupBox);
-        searchSectorEdit->setObjectName("searchSectorEdit");
-
-        gridLayout->addWidget(searchSectorEdit, 1, 1, 1, 1);
-
-        searchSectorButton = new QPushButton(searchGroupBox);
-        searchSectorButton->setObjectName("searchSectorButton");
-
-        gridLayout->addWidget(searchSectorButton, 1, 2, 1, 1);
-
-        label_8 = new QLabel(searchGroupBox);
-        label_8->setObjectName("label_8");
-
-        gridLayout->addWidget(label_8, 2, 0, 1, 1);
-
-        searchDateEdit = new QDateEdit(searchGroupBox);
-        searchDateEdit->setObjectName("searchDateEdit");
-
-        gridLayout->addWidget(searchDateEdit, 2, 1, 1, 1);
-
-        searchDateButton = new QPushButton(searchGroupBox);
-        searchDateButton->setObjectName("searchDateButton");
-
-        gridLayout->addWidget(searchDateButton, 2, 2, 1, 1);
+        searchLayout->addWidget(searchInput);
 
         resetSearchButton = new QPushButton(searchGroupBox);
         resetSearchButton->setObjectName("resetSearchButton");
 
-        gridLayout->addWidget(resetSearchButton, 3, 2, 1, 1);
+        searchLayout->addWidget(resetSearchButton);
 
 
         verticalLayout_6->addWidget(searchGroupBox);
@@ -403,6 +380,11 @@ public:
         update->setObjectName("update");
 
         horizontalLayout_4->addWidget(update);
+
+        exportPdfButton = new QPushButton(listClient);
+        exportPdfButton->setObjectName("exportPdfButton");
+
+        horizontalLayout_4->addWidget(exportPdfButton);
 
 
         verticalLayout_6->addLayout(horizontalLayout_4);
@@ -462,7 +444,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(2);
+        tabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -479,23 +461,27 @@ public:
         pushButton_4->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
         pushButton_5->setText(QCoreApplication::translate("MainWindow", "Calendar", nullptr));
         themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
-        label_name->setText(QCoreApplication::translate("MainWindow", "Name:", nullptr));
-        label_sector->setText(QCoreApplication::translate("MainWindow", "Sector:", nullptr));
         label_contact->setText(QCoreApplication::translate("MainWindow", "Contact Info:", nullptr));
-        label_date->setText(QCoreApplication::translate("MainWindow", "Consultation Date:", nullptr));
+        label_sector->setText(QCoreApplication::translate("MainWindow", "Sector:", nullptr));
         label_consultant->setText(QCoreApplication::translate("MainWindow", "Consultant ID:", nullptr));
         add->setText(QCoreApplication::translate("MainWindow", "Add Client", nullptr));
+        label_name->setText(QCoreApplication::translate("MainWindow", "Name:", nullptr));
+        label_date->setText(QCoreApplication::translate("MainWindow", "Consultation Date:", nullptr));
+        label_email->setText(QCoreApplication::translate("MainWindow", "Email:", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(ClientForm), QCoreApplication::translate("MainWindow", "Add Client", nullptr));
         searchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
-        label_6->setText(QCoreApplication::translate("MainWindow", "Name:", nullptr));
-        searchNameButton->setText(QCoreApplication::translate("MainWindow", "Search by Name", nullptr));
-        label_7->setText(QCoreApplication::translate("MainWindow", "Sector:", nullptr));
-        searchSectorButton->setText(QCoreApplication::translate("MainWindow", "Search by Sector", nullptr));
-        label_8->setText(QCoreApplication::translate("MainWindow", "Date:", nullptr));
-        searchDateButton->setText(QCoreApplication::translate("MainWindow", "Search by Date", nullptr));
+        searchCriteriaComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Name", nullptr));
+        searchCriteriaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Sector", nullptr));
+        searchCriteriaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Email", nullptr));
+        searchCriteriaComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Contact", nullptr));
+        searchCriteriaComboBox->setItemText(4, QCoreApplication::translate("MainWindow", "Date  Time", nullptr));
+        searchCriteriaComboBox->setItemText(5, QCoreApplication::translate("MainWindow", "Consultant", nullptr));
+
+        searchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
         resetSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
         Delet->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
         update->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
+        exportPdfButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(listClient), QCoreApplication::translate("MainWindow", "Manage Clients", nullptr));
         calendarDetailsBox->setTitle(QCoreApplication::translate("MainWindow", "Consultation Details", nullptr));
         selectedDateLabel->setText(QCoreApplication::translate("MainWindow", "Selected date: ", nullptr));

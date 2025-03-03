@@ -1,5 +1,6 @@
 QT += core gui sql
 QT += charts
+QT += core gui sql printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++17
@@ -11,6 +12,7 @@ CONFIG += c++17
 SOURCES += \
     client.cpp \
     connection.cpp \
+    emailsender.cpp \
     main.cpp \
     mainwindow.cpp \
     updateclientdialog.cpp
@@ -18,6 +20,7 @@ SOURCES += \
 HEADERS += \
     client.h \
     connection.h \
+    emailsender.h \
     mainwindow.h \
     updateclientdialog.h
 

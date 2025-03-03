@@ -4,7 +4,10 @@
 #include "qcalendarwidget.h"
 #include "qdatetimeedit.h"
 #include "updateclientdialog.h"
-
+#include <QPrinter>
+#include <QPdfWriter>
+#include <QPainter>
+#include <QFileDialog>
 #include <QMainWindow>
 #include <QPalette>
 
@@ -26,22 +29,21 @@ private slots:
     void on_updateButtonClicked();
     void toggleSidebar();
     void toggleTheme();
-    void on_searchNameButton_clicked();
-    void on_searchSectorButton_clicked();
-    void on_searchDateTimeButton_clicked();
+    void on_searchInput_textChanged(); // Updated
+    void on_searchCriteriaComboBox_currentIndexChanged(); // Updated
     void on_resetSearchButton_clicked();
     void tableViewHeaderClicked(int logicalIndex);
     void on_consultationCalendar_selectionChanged();
     void on_consultationCalendar_activated(const QDate &date);
     void updateCalendarConsultations();
     bool isValidDateTime(const QDateTime &dateTime);
+    void on_exportPdfButton_clicked();
 
 private:
     Ui::MainWindow *ui;
     Client Etmp;
     QWidget *sidebarWidget;
     bool isDarkTheme;
-    // Store both date and datetime maps for the calendar view
     QMap<QDate, int> consultationCountMap;
     QMap<QDateTime, int> consultationDateTimeMap;
     QDate lastHoveredDate;
@@ -55,6 +57,7 @@ private:
     void setupCalendarView();
     void highlightDatesWithConsultations();
     void updateSelectedDateInfo(const QDate &date);
+    void performSearch(); // New helper method for dynamic search
 };
 
 class CalendarHoverItem : public QObject

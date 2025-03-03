@@ -326,7 +326,7 @@
           <item>
            <widget class="QTabWidget" name="tabWidget">
             <property name="currentIndex">
-             <number>2</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="ClientForm">
              <property name="contextMenuPolicy">
@@ -336,25 +336,11 @@
               <string>Add Client</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_2">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_name">
-                <property name="text">
-                 <string>Name:</string>
-                </property>
-               </widget>
+              <item row="5" column="1">
+               <widget class="QLineEdit" name="Consultant"/>
               </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="Name"/>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_sector">
-                <property name="text">
-                 <string>Sector:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLineEdit" name="Sector"/>
+              <item row="4" column="1">
+               <widget class="QDateTimeEdit" name="searchDateButton_2"/>
               </item>
               <item row="2" column="0">
                <widget class="QLabel" name="label_contact">
@@ -363,34 +349,34 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
-               <widget class="QLineEdit" name="Contact_info"/>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_date">
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_sector">
                 <property name="text">
-                 <string>Consultation Date:</string>
+                 <string>Sector:</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
+              <item row="2" column="1">
+               <widget class="QLineEdit" name="Contact_info"/>
+              </item>
+              <item row="5" column="0">
                <widget class="QLabel" name="label_consultant">
                 <property name="text">
                  <string>Consultant ID:</string>
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
-               <widget class="QLineEdit" name="Consultant"/>
-              </item>
-              <item row="5" column="1">
+              <item row="6" column="1">
                <widget class="QPushButton" name="add">
                 <property name="text">
                  <string>Add Client</string>
                 </property>
                </widget>
               </item>
-              <item row="0" column="2" rowspan="6">
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="Sector"/>
+              </item>
+              <item row="0" column="2" rowspan="7">
                <spacer name="horizontalSpacer">
                 <property name="orientation">
                  <enum>Qt::Orientation::Horizontal</enum>
@@ -403,8 +389,32 @@
                 </property>
                </spacer>
               </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_name">
+                <property name="text">
+                 <string>Name:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="Name"/>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_date">
+                <property name="text">
+                 <string>Consultation Date:</string>
+                </property>
+               </widget>
+              </item>
               <item row="3" column="1">
-               <widget class="QDateTimeEdit" name="searchDateButton_2"/>
+               <widget class="QLineEdit" name="Email"/>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_email">
+                <property name="text">
+                 <string>Email:</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -418,59 +428,49 @@
                 <property name="title">
                  <string>Search</string>
                 </property>
-                <layout class="QGridLayout" name="gridLayout">
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="label_6">
-                   <property name="text">
-                    <string>Name:</string>
+                <layout class="QHBoxLayout" name="searchLayout">
+                 <item>
+                  <widget class="QComboBox" name="searchCriteriaComboBox">
+                   <item>
+                    <property name="text">
+                     <string>Name</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sector</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Email</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Contact</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Date  Time</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Consultant</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="searchInput">
+                   <property name="placeholderText">
+                    <string>Type to search...</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1">
-                  <widget class="QLineEdit" name="searchNameEdit"/>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QPushButton" name="searchNameButton">
-                   <property name="text">
-                    <string>Search by Name</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="label_7">
-                   <property name="text">
-                    <string>Sector:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QLineEdit" name="searchSectorEdit"/>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QPushButton" name="searchSectorButton">
-                   <property name="text">
-                    <string>Search by Sector</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="label_8">
-                   <property name="text">
-                    <string>Date:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QDateEdit" name="searchDateEdit"/>
-                 </item>
-                 <item row="2" column="2">
-                  <widget class="QPushButton" name="searchDateButton">
-                   <property name="text">
-                    <string>Search by Date</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="2">
+                 <item>
                   <widget class="QPushButton" name="resetSearchButton">
                    <property name="text">
                     <string>Reset Search</string>
@@ -516,6 +516,13 @@
                  <widget class="QPushButton" name="update">
                   <property name="text">
                    <string>Update</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="exportPdfButton">
+                  <property name="text">
+                   <string>PDF</string>
                   </property>
                  </widget>
                 </item>
