@@ -113,6 +113,9 @@ bool Client::removeByName(const QString& clientName) {
     return true;
 }
 
+
+
+
 bool Client::updateClient(const QString& originalName, const QString& newName, const QString& sector,
     const QString& contactInfo, const QDateTime& consultationDateTime, int consultant) {
 QSqlQuery query;
