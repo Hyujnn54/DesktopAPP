@@ -27,6 +27,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "emailsender.h"
+#include <QTime>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -90,6 +91,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_searchInput_textChanged);
     connect(ui->searchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::on_searchCriteriaComboBox_currentIndexChanged);
+
+
+    connect(ui->refreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_refreshStatsButton_clicked);
 
     // Setup calendar functionality
     setupCalendarView();
@@ -706,42 +710,15 @@ void MainWindow::sendConsultationReminders()
     checkAndSendReminders();
 }
 
-void MainWindow::checkAndSendReminders()
-{
-    // Define the reminder window (e.g., next 24 hours)
-    QDateTime now = QDateTime::currentDateTime();
-    QDateTime reminderEnd = now.addSecs(24 * 60 * 60); // 24 hours from now
 
-    QSqlQueryModel *model = Etmp.getUpcomingConsultations(now, reminderEnd);
-    int rowCount = model->rowCount();
-
-    for (int row = 0; row < rowCount; ++row) {
-        QString name = model->data(model->index(row, 0)).toString();
-        QString email = model->data(model->index(row, 3)).toString();
-        QDateTime consultationDate = model->data(model->index(row, 4)).toDateTime();
-
-        if (!email.isEmpty()) {
-            QString subject = "Consultation Reminder";
-            QString body = QString("Dear %1,\n\nThis is a reminder for your consultation scheduled on %2.\n\nBest regards,\nClient Management System")
-                               .arg(name)
-                               .arg(consultationDate.toString("yyyy-MM-dd HH:mm"));
-
-            if (emailSender->sendEmail(email, subject, body)) {
-                qDebug() << "Reminder sent to:" << email;
-                ui->statusBar->showMessage("Reminder sent to " + email);
-            } else {
-                qDebug() << "Failed to send reminder to:" << email;
-                ui->statusBar->showMessage("Failed to send reminder to " + email);
-            }
-        }
-    }
-
-    if (rowCount == 0) {
-        ui->statusBar->showMessage("No upcoming consultations found.");
-    }
-}
 
 void MainWindow::showStatistics()
+{
+    ui->tabWidget->setCurrentIndex(3); // Switch to Statistics tab (index 3)
+    updateStatisticsDisplay();
+}
+
+void MainWindow::on_refreshStatsButton_clicked()
 {
     updateStatisticsDisplay();
 }
@@ -749,36 +726,44 @@ void MainWindow::showStatistics()
 void MainWindow::updateStatisticsDisplay()
 {
     QDateTime now = QDateTime::currentDateTime();
-    QDateTime dayEnd = now.addDays(1).toDate().startOfDay(); // End of today
-    QDateTime weekEnd = now.addDays(7).toDate().startOfDay(); // End of week
-    QDateTime monthEnd = now.addDays(30).toDate().startOfDay(); // Approx month
+    QDateTime dayEnd = QDateTime(now.date().addDays(1), QTime(0, 0, 0)); // End of today
+    QDateTime weekEnd = QDateTime(now.date().addDays(7), QTime(0, 0, 0)); // End of week
+    QDateTime monthEnd = QDateTime(now.date().addMonths(1), QTime(0, 0, 0)); // End of month
+    QDateTime monthStart = QDateTime(QDate(now.date().year(), now.date().month(), 1), QTime(0, 0, 0)); // Start of current month
 
-    int totalToday = Etmp.getTotalConsultations(now.toDate().startOfDay(), dayEnd);
-    int totalWeek = Etmp.getTotalConsultations(now.addDays(-7).toDate().startOfDay(), weekEnd);
-    int totalMonth = Etmp.getTotalConsultations(now.addDays(-30).toDate().startOfDay(), monthEnd);
+    int totalToday = Etmp.getTotalConsultations(now, dayEnd);
+    int totalWeek = Etmp.getTotalConsultations(now.addDays(-7), weekEnd);
+    int totalMonth = Etmp.getTotalConsultations(monthStart, monthEnd);
     int upcoming = Etmp.getUpcomingConsultationsCount(now, now.addSecs(24 * 60 * 60));
-    int uniqueClients = Etmp.getUniqueClients(now.addDays(-30).toDate().startOfDay(), monthEnd);
+    int uniqueClients = Etmp.getUniqueClients(monthStart, monthEnd);
     double successRate = emailAttempts > 0 ? (double)emailSuccesses / emailAttempts * 100 : 0;
 
+    QMap<QDate, int> consultationsPerDay = Etmp.getConsultationsPerDay(now.addDays(-30), now);
+    QString dayStats;
+    for (auto it = consultationsPerDay.begin(); it != consultationsPerDay.end(); ++it) {
+        dayStats += QString("%1: %2 consultations\n").arg(it.key().toString("yyyy-MM-dd"), QString::number(it.value()));
+    }
+
     QString statsText = QString(
-                            "Statistics (as of %1):\n"
-                            "Total Consultations Today: %2\n"
-                            "Total Consultations This Week: %3\n"
-                            "Total Consultations This Month: %4\n"
+                            "Statistics (as of %1):\n\n"
+                            "Total Consultations:\n"
+                            "  Today: %2\n"
+                            "  This Week: %3\n"
+                            "  This Month: %4\n"
                             "Upcoming Consultations (Next 24h): %5\n"
-                            "Unique Clients (Last 30 Days): %6\n"
-                            "Email Reminder Success Rate: %7%"
+                            "Unique Clients (This Month): %6\n"
+                            "Email Reminder Success Rate: %7%\n\n"
+                            "Consultations Per Day (Last 30 Days):\n%8"
                             ).arg(now.toString("yyyy-MM-dd HH:mm:ss"))
                             .arg(totalToday)
                             .arg(totalWeek)
                             .arg(totalMonth)
                             .arg(upcoming)
                             .arg(uniqueClients)
-                            .arg(successRate, 0, 'f', 2);
+                            .arg(successRate, 0, 'f', 2)
+                            .arg(dayStats);
 
-    // Switch to Reports tab and display stats
-    ui->tabWidget->setCurrentIndex(1); // Assuming "Manage Clients" tab (index 1) for now
-    QMessageBox::information(this, "Statistics", statsText); // Temporary display; replace with UI later
+    ui->statsDisplay->setText(statsText);
 }
 
 void MainWindow::checkAndSendReminders()

@@ -27,6 +27,7 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
+#include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -97,6 +98,12 @@ public:
     QLabel *selectedDateLabel;
     QLabel *consultationCountLabel;
     QTableView *dateConsultationsView;
+    QWidget *tab;
+    QGridLayout *gridLayout_3;
+    QGridLayout *gridLayout;
+    QPushButton *refreshStatsButton;
+    QTextEdit *statsDisplay;
+    QSpacerItem *verticalSpacer;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -428,6 +435,31 @@ public:
         verticalLayout_7->addWidget(calendarDetailsBox);
 
         tabWidget->addTab(calendarTab, QString());
+        tab = new QWidget();
+        tab->setObjectName("tab");
+        gridLayout_3 = new QGridLayout(tab);
+        gridLayout_3->setObjectName("gridLayout_3");
+        gridLayout = new QGridLayout();
+        gridLayout->setObjectName("gridLayout");
+        refreshStatsButton = new QPushButton(tab);
+        refreshStatsButton->setObjectName("refreshStatsButton");
+
+        gridLayout->addWidget(refreshStatsButton, 2, 0, 1, 1);
+
+        statsDisplay = new QTextEdit(tab);
+        statsDisplay->setObjectName("statsDisplay");
+        statsDisplay->setReadOnly(true);
+
+        gridLayout->addWidget(statsDisplay, 0, 0, 1, 1);
+
+
+        gridLayout_3->addLayout(gridLayout, 0, 0, 1, 1);
+
+        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
+
+        gridLayout_3->addItem(verticalSpacer, 1, 0, 1, 1);
+
+        tabWidget->addTab(tab, QString());
 
         verticalLayout_5->addWidget(tabWidget);
 
@@ -444,7 +476,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(3);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -487,6 +519,8 @@ public:
         selectedDateLabel->setText(QCoreApplication::translate("MainWindow", "Selected date: ", nullptr));
         consultationCountLabel->setText(QCoreApplication::translate("MainWindow", "Consultations: 0", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(calendarTab), QCoreApplication::translate("MainWindow", "Consultation Calendar", nullptr));
+        refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi
 
 };

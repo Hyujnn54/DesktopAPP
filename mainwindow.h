@@ -41,6 +41,7 @@ private slots:
     void on_exportPdfButton_clicked();
     void sendConsultationReminders();
     void showStatistics();
+    void on_refreshStatsButton_clicked();
 
 private:
     Ui::MainWindow *ui;
