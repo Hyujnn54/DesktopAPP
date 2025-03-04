@@ -27,6 +27,7 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
+#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -99,10 +100,14 @@ public:
     QLabel *consultationCountLabel;
     QTableView *dateConsultationsView;
     QWidget *tab;
-    QGridLayout *gridLayout_3;
-    QGridLayout *gridLayout;
-    QPushButton *refreshStatsButton;
+    QVBoxLayout *verticalLayoutStats;
+    QTableWidget *statsTable;
+    QGroupBox *statsTextGroup;
+    QVBoxLayout *verticalLayoutText;
     QTextEdit *statsDisplay;
+    QHBoxLayout *buttonLayout;
+    QSpacerItem *horizontalSpacer2;
+    QPushButton *refreshStatsButton;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -445,23 +450,45 @@ public:
         tabWidget->addTab(calendarTab, QString());
         tab = new QWidget();
         tab->setObjectName("tab");
-        gridLayout_3 = new QGridLayout(tab);
-        gridLayout_3->setObjectName("gridLayout_3");
-        gridLayout = new QGridLayout();
-        gridLayout->setObjectName("gridLayout");
-        refreshStatsButton = new QPushButton(tab);
-        refreshStatsButton->setObjectName("refreshStatsButton");
+        verticalLayoutStats = new QVBoxLayout(tab);
+        verticalLayoutStats->setObjectName("verticalLayoutStats");
+        statsTable = new QTableWidget(tab);
+        statsTable->setObjectName("statsTable");
+        statsTable->setMinimumSize(QSize(0, 300));
+        QSizePolicy sizePolicy3(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+        sizePolicy3.setHorizontalStretch(0);
+        sizePolicy3.setVerticalStretch(0);
+        sizePolicy3.setHeightForWidth(statsTable->sizePolicy().hasHeightForWidth());
+        statsTable->setSizePolicy(sizePolicy3);
 
-        gridLayout->addWidget(refreshStatsButton, 2, 0, 1, 1);
+        verticalLayoutStats->addWidget(statsTable);
 
-        statsDisplay = new QTextEdit(tab);
+        statsTextGroup = new QGroupBox(tab);
+        statsTextGroup->setObjectName("statsTextGroup");
+        verticalLayoutText = new QVBoxLayout(statsTextGroup);
+        verticalLayoutText->setObjectName("verticalLayoutText");
+        statsDisplay = new QTextEdit(statsTextGroup);
         statsDisplay->setObjectName("statsDisplay");
         statsDisplay->setReadOnly(true);
 
-        gridLayout->addWidget(statsDisplay, 0, 0, 1, 1);
+        verticalLayoutText->addWidget(statsDisplay);
 
 
-        gridLayout_3->addLayout(gridLayout, 0, 0, 1, 1);
+        verticalLayoutStats->addWidget(statsTextGroup);
+
+        buttonLayout = new QHBoxLayout();
+        buttonLayout->setObjectName("buttonLayout");
+        horizontalSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        buttonLayout->addItem(horizontalSpacer2);
+
+        refreshStatsButton = new QPushButton(tab);
+        refreshStatsButton->setObjectName("refreshStatsButton");
+
+        buttonLayout->addWidget(refreshStatsButton);
+
+
+        verticalLayoutStats->addLayout(buttonLayout);
 
         tabWidget->addTab(tab, QString());
 
@@ -480,7 +507,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(3);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -523,6 +550,7 @@ public:
         selectedDateLabel->setText(QCoreApplication::translate("MainWindow", "Selected date: ", nullptr));
         consultationCountLabel->setText(QCoreApplication::translate("MainWindow", "Consultations: 0", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(calendarTab), QCoreApplication::translate("MainWindow", "Consultation Calendar", nullptr));
+        statsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
         refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi

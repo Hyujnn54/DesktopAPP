@@ -4,7 +4,6 @@
 #include <QDate>
 #include <QDateTime>
 #include <QDateTimeEdit>
-#include "client.h"
 #include <QComboBox>
 #include <QRadioButton>
 #include <QLineEdit>
@@ -24,21 +23,26 @@
 #include <QTextCharFormat>
 #include <QHoverEvent>
 #include <QToolTip>
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include "emailsender.h"
 #include <QTime>
+#include <QGraphicsSceneMouseEvent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , isDarkTheme(false)
+    , statsTable(new QTableWidget(this)) // Initialize QTableWidget
     , emailSender(new EmailSender(this))
     , emailAttempts(0)
     , emailSuccesses(0)
 {
     ui->setupUi(this);
-    applyLightTheme();
+    applyLightTheme(); // Set default theme
+
+    // Add QTableWidget to the Statistics tab layout
+    ui->verticalLayoutStats->addWidget(statsTable);
+    ui->verticalLayoutStats->setStretch(0, 1); // Ensure the table takes space
+
     // Set up the datetime edit widget for consultations
     QDateTimeEdit *dateTimeEdit = new QDateTimeEdit(this);
     dateTimeEdit->setObjectName("consultation_datetime");
@@ -92,7 +96,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->searchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::on_searchCriteriaComboBox_currentIndexChanged);
 
-
     connect(ui->refreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_refreshStatsButton_clicked);
 
     // Setup calendar functionality
@@ -100,20 +103,26 @@ MainWindow::MainWindow(QWidget *parent)
     QSqlQueryModel *model = Etmp.afficher();
     ui->tableView->setModel(model);
     ui->tableView->resizeColumnsToContents();
-    // Ensure all columns are visible
     for (int i = 0; i < model->columnCount(); ++i) {
         ui->tableView->showColumn(i);
     }
 
     checkAndSendReminders();
+
+    if (!ui->statsDisplay) {
+        qDebug() << "statsDisplay is nullptr in constructor";
+        QMessageBox::critical(this, "Error", "Statistics display text edit not found in UI.");
+    }
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete statsTable; // Clean up QTableWidget
 }
 
-void MainWindow::on_addButtonclicked() {
+void MainWindow::on_addButtonclicked()
+{
     if (!validateInputs()) {
         return;
     }
@@ -121,12 +130,12 @@ void MainWindow::on_addButtonclicked() {
     QString Name = ui->Name->text().trimmed();
     QString Sector = ui->Sector->text().trimmed();
     QString Contact = ui->Contact_info->text().trimmed();
-    QString Email = ui->Email->text().trimmed(); // New field
+    QString Email = ui->Email->text().trimmed();
     QDateTimeEdit *dateTimeEdit = findChild<QDateTimeEdit*>("consultation_datetime");
     QDateTime Cdate = dateTimeEdit ? dateTimeEdit->dateTime() : QDateTime::currentDateTime();
     int Consultant = ui->Consultant->text().toInt();
 
-    Client c(Name, Sector, Contact, Email, Cdate, Consultant); // Updated constructor call
+    Client c(Name, Sector, Contact, Email, Cdate, Consultant);
 
     if (c.ajouter()) {
         QMessageBox::information(this, "Success", "Client added successfully!");
@@ -135,7 +144,7 @@ void MainWindow::on_addButtonclicked() {
         ui->Name->clear();
         ui->Sector->clear();
         ui->Contact_info->clear();
-        ui->Email->clear(); // Clear new field
+        ui->Email->clear();
         if (dateTimeEdit) dateTimeEdit->setDateTime(QDateTime::currentDateTime());
         ui->Consultant->clear();
         updateCalendarConsultations();
@@ -245,7 +254,7 @@ void MainWindow::applyLightTheme() {
             color: #333333;
             font-family: 'Segoe UI', Arial, sans-serif;
         }
-        /* Buttons with rounded corners and subtle shadow */
+        /* Buttons with rounded corners and subtle shadow (remove box-shadow if not supported) */
         QPushButton {
             background-color: #3A5DAE;
             color: white;
@@ -253,11 +262,11 @@ void MainWindow::applyLightTheme() {
             border-radius: 5px;
             padding: 6px;
             font-weight: bold;
-            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            /* box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1); */
         }
         QPushButton:hover {
             background-color: #4A70C2;
-            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+            /* box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2); */
         }
         QPushButton:pressed {
             background-color: #2A4682;
@@ -341,25 +350,25 @@ void MainWindow::applyLightTheme() {
             font-size: 18pt;
             font-weight: bold;
             color: #3A5DAE;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            /* text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); */
             qproperty-alignment: AlignCenter;
         }
         /* Frames for distinguishing areas */
         QFrame#header {
             border: 2px solid #3A5DAE;
             border-radius: 5px;
-            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+            /* box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1); */
         }
         QFrame#sideMenu {
             border: 2px solid #3A5DAE;
             border-radius: 5px;
-            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+            /* box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1); */
             background-color: #E6ECF5; /* Slightly darker blueish background for contrast */
         }
         QFrame#frame_2, QFrame#frame_4 {
             border: 1px solid #D3DCE6;
             border-radius: 5px;
-            box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+            /* box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1); */
         }
     )";
     qApp->setStyleSheet(styleSheet);
@@ -616,8 +625,7 @@ bool MainWindow::isValidConsultant(const QString &consultant) {
     return ok;
 }
 
-void MainWindow::setupCalendarView()
-{
+void MainWindow::setupCalendarView() {
     // Connect calendar signals
     connect(ui->consultationCalendar, &QCalendarWidget::selectionChanged,
             this, &MainWindow::on_consultationCalendar_selectionChanged);
@@ -625,7 +633,7 @@ void MainWindow::setupCalendarView()
             this, &MainWindow::on_consultationCalendar_activated);
 
     // Create and install event filter for hover tooltips
-    CalendarHoverItem *hoverItem = new CalendarHoverItem(ui->consultationCalendar, &consultationCountMap);
+    CalendarHoverItem* hoverItem = new CalendarHoverItem(ui->consultationCalendar, &consultationCountMap, this);
     ui->consultationCalendar->installEventFilter(hoverItem);
 
     // Set first day of week to Monday
@@ -952,50 +960,114 @@ void MainWindow::showStatistics()
 
 void MainWindow::on_refreshStatsButton_clicked()
 {
-    updateStatisticsDisplay();
+    static QElapsedTimer lastRefresh;
+    if (!lastRefresh.isValid() || lastRefresh.elapsed() > 1000) { // Throttle to 1 second
+        lastRefresh.start();
+        updateStatisticsDisplay();
+    } else {
+        qDebug() << "Throttling refresh, too frequent";
+    }
 }
 
-void MainWindow::updateStatisticsDisplay()
-{
-    QDateTime now = QDateTime::currentDateTime();
-    QDateTime dayEnd = QDateTime(now.date().addDays(1), QTime(0, 0, 0)); // End of today
-    QDateTime weekEnd = QDateTime(now.date().addDays(7), QTime(0, 0, 0)); // End of week
-    QDateTime monthEnd = QDateTime(now.date().addMonths(1), QTime(0, 0, 0)); // End of month
-    QDateTime monthStart = QDateTime(QDate(now.date().year(), now.date().month(), 1), QTime(0, 0, 0)); // Start of current month
+void MainWindow::updateStatisticsDisplay() {
+    QDate startDate = QDate::currentDate().addDays(-30);
+    QDate endDate = QDate::currentDate();
+    QDateTime start = QDateTime(startDate, QTime(0, 0, 0));
+    QDateTime end = QDateTime(endDate, QTime(23, 59, 59));
 
-    int totalToday = Etmp.getTotalConsultations(now, dayEnd);
-    int totalWeek = Etmp.getTotalConsultations(now.addDays(-7), weekEnd);
-    int totalMonth = Etmp.getTotalConsultations(monthStart, monthEnd);
-    int upcoming = Etmp.getUpcomingConsultationsCount(now, now.addSecs(24 * 60 * 60));
-    int uniqueClients = Etmp.getUniqueClients(monthStart, monthEnd);
-    double successRate = emailAttempts > 0 ? (double)emailSuccesses / emailAttempts * 100 : 0;
+    qDebug() << "Updating statistics for range:" << start.toString() << "to" << end.toString();
 
-    QMap<QDate, int> consultationsPerDay = Etmp.getConsultationsPerDay(now.addDays(-30), now);
+    // Declare and initialize variables
+    int total = Etmp.getTotalConsultations(start, end);
+    int upcoming = Etmp.getUpcomingConsultationsCount(start, end.addDays(1));
+    int uniqueClients = Etmp.getUniqueClients(start, end);
+    double successRate = (emailAttempts > 0) ? (double)emailSuccesses / emailAttempts * 100 : 0;
+
+    QMap<QDate, int> consultationsPerDay = Etmp.getConsultationsPerDay(start, end);
+    qDebug() << "Consultations per day size:" << consultationsPerDay.size();
+
+    // Clear and set up the table
+    statsTable->clear();
+    statsTable->setRowCount(4 + consultationsPerDay.size()); // Header + summary rows + data rows
+    statsTable->setColumnCount(2); // Date and Count columns
+    QStringList headers;
+    headers << "Date" << "Consultations";
+    statsTable->setHorizontalHeaderLabels(headers);
+    statsTable->setEditTriggers(QAbstractItemView::NoEditTriggers); // Make read-only
+    statsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    // Set summary statistics
+    statsTable->setItem(0, 0, new QTableWidgetItem("Total Consultations"));
+    statsTable->setItem(0, 1, new QTableWidgetItem(QString::number(total)));
+    statsTable->setItem(1, 0, new QTableWidgetItem("Upcoming (Next 24h)"));
+    statsTable->setItem(1, 1, new QTableWidgetItem(QString::number(upcoming)));
+    statsTable->setItem(2, 0, new QTableWidgetItem("Unique Clients"));
+    statsTable->setItem(2, 1, new QTableWidgetItem(QString::number(uniqueClients)));
+    statsTable->setItem(3, 0, new QTableWidgetItem("Email Success Rate"));
+    statsTable->setItem(3, 1, new QTableWidgetItem(QString("%1%").arg(successRate, 0, 'f', 2)));
+
+    // Set consultations per day
+    int row = 4; // Start after summary
+    for (QMap<QDate, int>::const_iterator it = consultationsPerDay.constBegin(); it != consultationsPerDay.constEnd(); ++it) {
+        statsTable->setItem(row, 0, new QTableWidgetItem(it.key().toString("yyyy-MM-dd")));
+        statsTable->setItem(row, 1, new QTableWidgetItem(QString::number(it.value())));
+        row++;
+    }
+
+    // Format statistics text with HTML
     QString dayStats;
-    for (auto it = consultationsPerDay.begin(); it != consultationsPerDay.end(); ++it) {
-        dayStats += QString("%1: %2 consultations\n").arg(it.key().toString("yyyy-MM-dd"), QString::number(it.value()));
+    for (QMap<QDate, int>::const_iterator it = consultationsPerDay.constBegin(); it != consultationsPerDay.constEnd(); ++it) {
+        dayStats += QString("%1: %2 consultations<br>").arg(it.key().toString("yyyy-MM-dd"), QString::number(it.value()));
     }
 
     QString statsText = QString(
-                            "Statistics (as of %1):\n\n"
-                            "Total Consultations:\n"
-                            "  Today: %2\n"
-                            "  This Week: %3\n"
-                            "  This Month: %4\n"
-                            "Upcoming Consultations (Next 24h): %5\n"
-                            "Unique Clients (This Month): %6\n"
-                            "Email Reminder Success Rate: %7%\n\n"
-                            "Consultations Per Day (Last 30 Days):\n%8"
-                            ).arg(now.toString("yyyy-MM-dd HH:mm:ss"))
-                            .arg(totalToday)
-                            .arg(totalWeek)
-                            .arg(totalMonth)
+                            "<h3>Statistics (as of %1):</h3>"
+                            "<p><b>Total Consultations:</b> %2</p>"
+                            "<p><b>Upcoming Consultations (Next 24h):</b> %3</p>"
+                            "<p><b>Unique Clients:</b> %4</p>"
+                            "<p><b>Email Reminder Success Rate:</b> %5%</p>"
+                            "<p><b>Consultations Per Day:</b><br>%6</p>"
+                            ).arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss"))
+                            .arg(total)
                             .arg(upcoming)
                             .arg(uniqueClients)
                             .arg(successRate, 0, 'f', 2)
                             .arg(dayStats);
 
-    ui->statsDisplay->setText(statsText);
+    if (ui->statsDisplay) {
+        ui->statsDisplay->setHtml(statsText);
+    } else {
+        qDebug() << "statsDisplay is nullptr";
+        QMessageBox::warning(this, "Error", "Statistics display text edit is not initialized.");
+    }
+}
+
+    // Format statistics text with HTML
+    QString dayStats;
+    for (auto it = consultationsPerDay.begin(); it != consultationsPerDay.end(); ++it) {
+        dayStats += QString("%1: %2 consultations<br>").arg(it.key().toString("yyyy-MM-dd"), QString::number(it.value()));
+    }
+
+    QString statsText = QString(
+                            "<h3>Statistics (as of %1):</h3>"
+                            "<p><b>Total Consultations:</b> %2</p>"
+                            "<p><b>Upcoming Consultations (Next 24h):</b> %3</p>"
+                            "<p><b>Unique Clients:</b> %4</p>"
+                            "<p><b>Email Reminder Success Rate:</b> %5%</p>"
+                            "<p><b>Consultations Per Day:</b><br>%6</p>"
+                            ).arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss"))
+                            .arg(total)
+                            .arg(upcoming)
+                            .arg(uniqueClients)
+                            .arg(successRate, 0, 'f', 2)
+                            .arg(dayStats);
+
+    if (ui->statsDisplay) {
+        ui->statsDisplay->setHtml(statsText);
+    } else {
+        qDebug() << "statsDisplay is nullptr";
+        QMessageBox::warning(this, "Error", "Statistics display text edit is not initialized.");
+    }
 }
 
 void MainWindow::checkAndSendReminders()
@@ -1033,3 +1105,6 @@ void MainWindow::checkAndSendReminders()
         ui->statusBar->showMessage("No upcoming consultations found.");
     }
 }
+
+
+

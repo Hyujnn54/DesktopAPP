@@ -5,12 +5,15 @@
 #include "qdatetimeedit.h"
 #include "updateclientdialog.h"
 #include "emailsender.h"
+#include "calendarhoveritem.h"
 #include <QPrinter>
 #include <QPdfWriter>
 #include <QPainter>
 #include <QFileDialog>
 #include <QMainWindow>
 #include <QPalette>
+#include <QGraphicsItem> // Still needed for BarChartItem if you keep it
+#include <QTableWidget>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,8 +33,8 @@ private slots:
     void on_updateButtonClicked();
     void toggleSidebar();
     void toggleTheme();
-    void on_searchInput_textChanged(); // Updated
-    void on_searchCriteriaComboBox_currentIndexChanged(); // Updated
+    void on_searchInput_textChanged();
+    void on_searchCriteriaComboBox_currentIndexChanged();
     void on_resetSearchButton_clicked();
     void tableViewHeaderClicked(int logicalIndex);
     void on_consultationCalendar_selectionChanged();
@@ -51,6 +54,7 @@ private:
     QMap<QDate, int> consultationCountMap;
     QMap<QDateTime, int> consultationDateTimeMap;
     QDate lastHoveredDate;
+    QTableWidget *statsTable; // Replace QCustomPlot with QTableWidget
 
     void applyDarkTheme();
     void applyLightTheme();
@@ -61,28 +65,13 @@ private:
     void setupCalendarView();
     void highlightDatesWithConsultations();
     void updateSelectedDateInfo(const QDate &date);
-    void performSearch(); // New helper method for dynamic search
-    EmailSender *emailSender; // New member
+    void performSearch();
+    EmailSender *emailSender;
     void checkAndSendReminders();
 
-    int emailAttempts = 0; // Track email attempts
-    int emailSuccesses = 0; // Track successful sends
+    int emailAttempts = 0;
+    int emailSuccesses = 0;
     void updateStatisticsDisplay();
-};
-
-class CalendarHoverItem : public QObject
-{
-    Q_OBJECT
-public:
-    CalendarHoverItem(QCalendarWidget *calendar, QMap<QDate, int> *consultationCounts)
-        : QObject(static_cast<QObject*>(calendar)), calendar(calendar), consultationCounts(consultationCounts) {}
-
-protected:
-    bool eventFilter(QObject *watched, QEvent *event) override;
-
-private:
-    QCalendarWidget *calendar;
-    QMap<QDate, int> *consultationCounts;
 };
 
 #endif // MAINWINDOW_H

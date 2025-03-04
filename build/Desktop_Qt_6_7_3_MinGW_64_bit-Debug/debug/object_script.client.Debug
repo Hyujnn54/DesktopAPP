@@ -1,0 +1,10 @@
+debug/calendarhoveritem.o
+debug/client.o
+debug/connection.o
+debug/emailsender.o
+debug/main.o
+debug/mainwindow.o
+debug/updateclientdialog.o
+debug/moc_emailsender.o
+debug/moc_mainwindow.o
+debug/moc_updateclientdialog.o

@@ -1,16 +1,15 @@
-QT += core gui sql
-QT += charts
-QT += core gui sql printsupport
-QT += core gui sql network
+QT += core gui sql printsupport network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
 CONFIG += c++17
 
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
+# Debug output to verify flags
+message("C++ flags: $$QMAKE_CXXFLAGS")
 
 SOURCES += \
+    calendarhoveritem.cpp \
     client.cpp \
     connection.cpp \
     emailsender.cpp \
@@ -19,6 +18,7 @@ SOURCES += \
     updateclientdialog.cpp
 
 HEADERS += \
+    calendarhoveritem.h \
     client.h \
     connection.h \
     emailsender.h \

@@ -1,0 +1,10 @@
+release/calendarhoveritem.o
+release/client.o
+release/connection.o
+release/emailsender.o
+release/main.o
+release/mainwindow.o
+release/updateclientdialog.o
+release/moc_emailsender.o
+release/moc_mainwindow.o
+release/moc_updateclientdialog.o
