@@ -17,31 +17,22 @@
 #include <QSqlRecord>
 #include <QSqlQueryModel>
 #include <QSqlTableModel>
-#include <QTableWidget>
 #include <QInputDialog>
 #include <QCalendarWidget>
 #include <QTextCharFormat>
-#include <QHoverEvent>
-#include <QToolTip>
-#include "emailsender.h"
 #include <QTime>
-#include <QGraphicsSceneMouseEvent>
+#include "emailsender.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , isDarkTheme(false)
-    , statsTable(new QTableWidget(this)) // Initialize QTableWidget
     , emailSender(new EmailSender(this))
     , emailAttempts(0)
     , emailSuccesses(0)
 {
     ui->setupUi(this);
     applyLightTheme(); // Set default theme
-
-    // Add QTableWidget to the Statistics tab layout
-    ui->verticalLayoutStats->addWidget(statsTable);
-    ui->verticalLayoutStats->setStretch(0, 1); // Ensure the table takes space
 
     // Set up the datetime edit widget for consultations
     QDateTimeEdit *dateTimeEdit = new QDateTimeEdit(this);
@@ -113,12 +104,14 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "statsDisplay is nullptr in constructor";
         QMessageBox::critical(this, "Error", "Statistics display text edit not found in UI.");
     }
+
+    // Install event filter for calendar hover
+    ui->consultationCalendar->installEventFilter(this);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete statsTable; // Clean up QTableWidget
 }
 
 void MainWindow::on_addButtonclicked()
@@ -571,7 +564,7 @@ bool MainWindow::validateInputs() {
         QMessageBox::critical(this, "Error", "DateTime widget not found.");
         return false;
     }
-    
+
     QDateTime dateTime = dateTimeEdit->dateTime();
     if (!isValidDateTime(dateTime)) {
         QMessageBox::warning(this, "Input Error", "Date and time must be current or in the future.");
@@ -632,9 +625,8 @@ void MainWindow::setupCalendarView() {
     connect(ui->consultationCalendar, &QCalendarWidget::activated,
             this, &MainWindow::on_consultationCalendar_activated);
 
-    // Create and install event filter for hover tooltips
-    CalendarHoverItem* hoverItem = new CalendarHoverItem(ui->consultationCalendar, &consultationCountMap, this);
-    ui->consultationCalendar->installEventFilter(hoverItem);
+    // Install event filter for hover tooltips directly on MainWindow
+    ui->consultationCalendar->installEventFilter(this);
 
     // Set first day of week to Monday
     ui->consultationCalendar->setFirstDayOfWeek(Qt::Monday);
@@ -650,13 +642,13 @@ void MainWindow::updateCalendarConsultations()
 {
     QMap<QDateTime, int> dtMap = Etmp.getConsultationCountsByDateTime();
     consultationCountMap.clear();
-    
+
     // Group by date (ignore time)
     for (auto it = dtMap.begin(); it != dtMap.end(); ++it) {
         QDate date = it.key().date();
         consultationCountMap[date] += it.value();
     }
-    
+
     // Highlight dates with consultations on the calendar
     highlightDatesWithConsultations();
 }
@@ -716,60 +708,56 @@ void MainWindow::updateSelectedDateInfo(const QDate &date) {
     ui->dateConsultationsView->resizeColumnsToContents();
 }
 
-// Event filter implementation for calendar hover tooltips
-bool CalendarHoverItem::eventFilter(QObject *watched, QEvent *event)
-{
-    if (watched == calendar) {
-        if (event->type() == QEvent::HoverMove) {
-            QHoverEvent *hoverEvent = static_cast<QHoverEvent*>(event);
-            QPoint pos = hoverEvent->position().toPoint();
+// Implement hover event filter directly in MainWindow
+bool MainWindow::calendarHoverEventFilter(QObject* watched, QEvent* event) {
+    if (watched == ui->consultationCalendar && event->type() == QEvent::HoverMove) {
+        QHoverEvent* hoverEvent = static_cast<QHoverEvent*>(event);
+        QPoint pos = hoverEvent->position().toPoint();
 
-            // Access the underlying table view of the calendar widget
-            QTableView* tableView = calendar->findChild<QTableView*>();
-            QDate hoverDate;
+        QTableView* tableView = ui->consultationCalendar->findChild<QTableView*>();
+        QDate hoverDate;
 
-            if (tableView) {
-                QModelIndex index = tableView->indexAt(pos);
-                if (index.isValid()) {
-                    // Convert the model index to a date
-                    int row = index.row();
-                    int col = index.column();
+        if (tableView) {
+            QModelIndex index = tableView->indexAt(pos);
+            if (index.isValid()) {
+                int row = index.row();
+                int col = index.column();
 
-                    // Calculate the date based on row and column
-                    QDate firstDayOfMonth = calendar->selectedDate().addDays(-calendar->selectedDate().day() + 1);
-                    int offset = firstDayOfMonth.dayOfWeek() - 1; // Adjust for first day of week
+                QDate firstDayOfMonth = ui->consultationCalendar->selectedDate().addDays(-ui->consultationCalendar->selectedDate().day() + 1);
+                int offset = firstDayOfMonth.dayOfWeek() - 1; // Adjust for first day of week
 
-                    int day = (row * 7) + col - offset + 1;
-                    if (day > 0 && day <= firstDayOfMonth.daysInMonth()) {
-                        hoverDate = QDate(firstDayOfMonth.year(), firstDayOfMonth.month(), day);
-                    } else {
-                        // Fallback to selected date if calculation fails
-                        hoverDate = calendar->selectedDate();
-                    }
-                }
-            } else {
-                // Fallback to last activated date if table view isn't accessible
-                hoverDate = calendar->selectedDate();
-            }
-
-            if (hoverDate.isValid()) {
-                // Show consultation count in tooltip
-                int count = consultationCounts->value(hoverDate, 0);
-
-                if (count > 0) {
-                    QString tooltipText = QString("%1: %2 consultation(s)")
-                    .arg(hoverDate.toString("yyyy-MM-dd"))
-                        .arg(count);
-                    QToolTip::showText(calendar->mapToGlobal(hoverEvent->position().toPoint()),
-                                       tooltipText, calendar);
+                int day = (row * 7) + col - offset + 1;
+                if (day > 0 && day <= firstDayOfMonth.daysInMonth()) {
+                    hoverDate = QDate(firstDayOfMonth.year(), firstDayOfMonth.month(), day);
                 } else {
-                    QToolTip::hideText();
+                    hoverDate = ui->consultationCalendar->selectedDate();
                 }
+            }
+        } else {
+            hoverDate = ui->consultationCalendar->selectedDate();
+        }
+
+        if (hoverDate.isValid()) {
+            int count = consultationCountMap.value(hoverDate, 0);
+            if (count > 0) {
+                QString tooltipText = QString("%1: %2 consultation(s)")
+                .arg(hoverDate.toString("yyyy-MM-dd"))
+                    .arg(count);
+                QToolTip::showText(ui->consultationCalendar->mapToGlobal(hoverEvent->position().toPoint()), tooltipText, ui->consultationCalendar);
+            } else {
+                QToolTip::hideText();
             }
         }
     }
+    return false; // Return false to allow further event processing
+}
 
-    return QObject::eventFilter(watched, event);
+// Override eventFilter to call our custom hover function
+bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    if (calendarHoverEventFilter(watched, event)) {
+        return true; // Event handled, stop propagation
+    }
+    return QMainWindow::eventFilter(watched, event); // Pass to base class for unhandled events
 }
 
 void MainWindow::on_exportPdfButton_clicked()
@@ -783,8 +771,7 @@ void MainWindow::on_exportPdfButton_clicked()
 
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save PDF"), "", tr("PDF Files (*.pdf)"));
     if (fileName.isEmpty()) {
-        ui->exportPdfButton->setEnabled(true);
-        return;
+        return; // No need to re-enable a button since we removed statsTable
     }
 
     if (!fileName.endsWith(".pdf", Qt::CaseInsensitive))
@@ -812,7 +799,6 @@ void MainWindow::on_exportPdfButton_clicked()
     const int headerHeight = 300;
     const int rowHeight = 200;
 
-    // Removed unused totalHeight
     int pageWidth = pdfWriter.width() - 2 * margin;
     int columnWidth = pageWidth / columns;
 
@@ -874,7 +860,6 @@ void MainWindow::on_exportPdfButton_clicked()
 
     QMessageBox::information(this, "Success", "PDF exported successfully!");
     ui->statusBar->showMessage("PDF exported to: " + fileName);
-    ui->exportPdfButton->setEnabled(false);
 }
 
 void MainWindow::on_searchInput_textChanged()
@@ -910,26 +895,26 @@ void MainWindow::performSearch()
             model = Etmp.searchByContact(searchText);
             break;
         case 4: // Date & Time
-            {
-                QDateTime dateTime = QDateTime::fromString(searchText, "yyyy-MM-dd HH:mm");
-                if (dateTime.isValid()) {
-                    model = Etmp.searchByDateTime(dateTime);
-                } else {
-                    model = new QSqlQueryModel();
-                }
+        {
+            QDateTime dateTime = QDateTime::fromString(searchText, "yyyy-MM-dd HH:mm");
+            if (dateTime.isValid()) {
+                model = Etmp.searchByDateTime(dateTime);
+            } else {
+                model = new QSqlQueryModel();
             }
-            break;
+        }
+        break;
         case 5: // Consultant
-            {
-                bool ok;
-                int consultantId = searchText.toInt(&ok);
-                if (ok) {
-                    model = Etmp.searchByConsultant(consultantId);
-                } else {
-                    model = new QSqlQueryModel();
-                }
+        {
+            bool ok;
+            int consultantId = searchText.toInt(&ok);
+            if (ok) {
+                model = Etmp.searchByConsultant(consultantId);
+            } else {
+                model = new QSqlQueryModel();
             }
-            break;
+        }
+        break;
         default:
             model = Etmp.afficher();
             break;
@@ -949,8 +934,6 @@ void MainWindow::sendConsultationReminders()
 {
     checkAndSendReminders();
 }
-
-
 
 void MainWindow::showStatistics()
 {
@@ -986,65 +969,9 @@ void MainWindow::updateStatisticsDisplay() {
     QMap<QDate, int> consultationsPerDay = Etmp.getConsultationsPerDay(start, end);
     qDebug() << "Consultations per day size:" << consultationsPerDay.size();
 
-    // Clear and set up the table
-    statsTable->clear();
-    statsTable->setRowCount(4 + consultationsPerDay.size()); // Header + summary rows + data rows
-    statsTable->setColumnCount(2); // Date and Count columns
-    QStringList headers;
-    headers << "Date" << "Consultations";
-    statsTable->setHorizontalHeaderLabels(headers);
-    statsTable->setEditTriggers(QAbstractItemView::NoEditTriggers); // Make read-only
-    statsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-
-    // Set summary statistics
-    statsTable->setItem(0, 0, new QTableWidgetItem("Total Consultations"));
-    statsTable->setItem(0, 1, new QTableWidgetItem(QString::number(total)));
-    statsTable->setItem(1, 0, new QTableWidgetItem("Upcoming (Next 24h)"));
-    statsTable->setItem(1, 1, new QTableWidgetItem(QString::number(upcoming)));
-    statsTable->setItem(2, 0, new QTableWidgetItem("Unique Clients"));
-    statsTable->setItem(2, 1, new QTableWidgetItem(QString::number(uniqueClients)));
-    statsTable->setItem(3, 0, new QTableWidgetItem("Email Success Rate"));
-    statsTable->setItem(3, 1, new QTableWidgetItem(QString("%1%").arg(successRate, 0, 'f', 2)));
-
-    // Set consultations per day
-    int row = 4; // Start after summary
-    for (QMap<QDate, int>::const_iterator it = consultationsPerDay.constBegin(); it != consultationsPerDay.constEnd(); ++it) {
-        statsTable->setItem(row, 0, new QTableWidgetItem(it.key().toString("yyyy-MM-dd")));
-        statsTable->setItem(row, 1, new QTableWidgetItem(QString::number(it.value())));
-        row++;
-    }
-
-    // Format statistics text with HTML
+    // Format statistics text with HTML for the text edit
     QString dayStats;
     for (QMap<QDate, int>::const_iterator it = consultationsPerDay.constBegin(); it != consultationsPerDay.constEnd(); ++it) {
-        dayStats += QString("%1: %2 consultations<br>").arg(it.key().toString("yyyy-MM-dd"), QString::number(it.value()));
-    }
-
-    QString statsText = QString(
-                            "<h3>Statistics (as of %1):</h3>"
-                            "<p><b>Total Consultations:</b> %2</p>"
-                            "<p><b>Upcoming Consultations (Next 24h):</b> %3</p>"
-                            "<p><b>Unique Clients:</b> %4</p>"
-                            "<p><b>Email Reminder Success Rate:</b> %5%</p>"
-                            "<p><b>Consultations Per Day:</b><br>%6</p>"
-                            ).arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss"))
-                            .arg(total)
-                            .arg(upcoming)
-                            .arg(uniqueClients)
-                            .arg(successRate, 0, 'f', 2)
-                            .arg(dayStats);
-
-    if (ui->statsDisplay) {
-        ui->statsDisplay->setHtml(statsText);
-    } else {
-        qDebug() << "statsDisplay is nullptr";
-        QMessageBox::warning(this, "Error", "Statistics display text edit is not initialized.");
-    }
-}
-
-    // Format statistics text with HTML
-    QString dayStats;
-    for (auto it = consultationsPerDay.begin(); it != consultationsPerDay.end(); ++it) {
         dayStats += QString("%1: %2 consultations<br>").arg(it.key().toString("yyyy-MM-dd"), QString::number(it.value()));
     }
 
@@ -1105,6 +1032,3 @@ void MainWindow::checkAndSendReminders()
         ui->statusBar->showMessage("No upcoming consultations found.");
     }
 }
-
-
-

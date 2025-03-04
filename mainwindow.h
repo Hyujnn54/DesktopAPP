@@ -5,15 +5,14 @@
 #include "qdatetimeedit.h"
 #include "updateclientdialog.h"
 #include "emailsender.h"
-#include "calendarhoveritem.h"
 #include <QPrinter>
 #include <QPdfWriter>
 #include <QPainter>
 #include <QFileDialog>
 #include <QMainWindow>
 #include <QPalette>
-#include <QGraphicsItem> // Still needed for BarChartItem if you keep it
-#include <QTableWidget>
+#include <QHoverEvent>
+#include <QToolTip>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -54,7 +53,6 @@ private:
     QMap<QDate, int> consultationCountMap;
     QMap<QDateTime, int> consultationDateTimeMap;
     QDate lastHoveredDate;
-    QTableWidget *statsTable; // Replace QCustomPlot with QTableWidget
 
     void applyDarkTheme();
     void applyLightTheme();
@@ -68,6 +66,8 @@ private:
     void performSearch();
     EmailSender *emailSender;
     void checkAndSendReminders();
+    bool calendarHoverEventFilter(QObject* watched, QEvent* event); // New hover event filter
+    bool eventFilter(QObject* watched, QEvent* event) override; // Override eventFilter from QObject
 
     int emailAttempts = 0;
     int emailSuccesses = 0;

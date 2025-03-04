@@ -27,7 +27,6 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
-#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -101,7 +100,6 @@ public:
     QTableView *dateConsultationsView;
     QWidget *tab;
     QVBoxLayout *verticalLayoutStats;
-    QTableWidget *statsTable;
     QGroupBox *statsTextGroup;
     QVBoxLayout *verticalLayoutText;
     QTextEdit *statsDisplay;
@@ -452,17 +450,6 @@ public:
         tab->setObjectName("tab");
         verticalLayoutStats = new QVBoxLayout(tab);
         verticalLayoutStats->setObjectName("verticalLayoutStats");
-        statsTable = new QTableWidget(tab);
-        statsTable->setObjectName("statsTable");
-        statsTable->setMinimumSize(QSize(0, 300));
-        QSizePolicy sizePolicy3(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
-        sizePolicy3.setHorizontalStretch(0);
-        sizePolicy3.setVerticalStretch(0);
-        sizePolicy3.setHeightForWidth(statsTable->sizePolicy().hasHeightForWidth());
-        statsTable->setSizePolicy(sizePolicy3);
-
-        verticalLayoutStats->addWidget(statsTable);
-
         statsTextGroup = new QGroupBox(tab);
         statsTextGroup->setObjectName("statsTextGroup");
         verticalLayoutText = new QVBoxLayout(statsTextGroup);
