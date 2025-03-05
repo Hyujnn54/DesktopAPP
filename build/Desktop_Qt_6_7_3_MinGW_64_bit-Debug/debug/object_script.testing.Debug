@@ -1,0 +1,10 @@
+debug/connection.o
+debug/employee.o
+debug/login.o
+debug/login.o
+debug/main.o
+debug/mainwindow.o
+debug/qrc_resources.o
+debug/qrc_qmake_qmake_qm_files.o
+debug/moc_login.o
+debug/moc_mainwindow.o
