@@ -11,17 +11,25 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QCalendarWidget>
 #include <QtWidgets/QComboBox>
-#include <QtWidgets/QDateTimeEdit>
+#include <QtWidgets/QDateEdit>
 #include <QtWidgets/QFrame>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStatusBar>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QTableView>
 #include <QtWidgets/QTableWidget>
+#include <QtWidgets/QTextEdit>
+#include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -30,282 +38,345 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralwidget;
-    QLabel *label_6;
-    QWidget *widget;
+    QVBoxLayout *verticalLayout;
+    QFrame *header;
+    QHBoxLayout *horizontalLayout_2;
+    QFrame *frame_3;
+    QHBoxLayout *horizontalLayout_3;
+    QPushButton *menuButton;
+    QFrame *frame_5;
+    QVBoxLayout *verticalLayout_4;
+    QLabel *label;
+    QFrame *frame_2;
+    QHBoxLayout *horizontalLayout;
+    QFrame *sideMenu;
+    QVBoxLayout *verticalLayout_2;
+    QFrame *frame_6;
+    QVBoxLayout *verticalLayout_3;
+    QPushButton *pushButton;
     QPushButton *pushButton_2;
-    QPushButton *AddButton;
-    QLineEdit *title;
-    QLineEdit *organiser;
-    QLineEdit *participant;
-    QLabel *label_4;
-    QLabel *label_7;
-    QLabel *label_8;
-    QDateTimeEdit *date_time;
-    QComboBox *agenda;
-    QLabel *label_9;
-    QLabel *label_10;
-    QLabel *label_11;
-    QLineEdit *duration;
-    QTableWidget *tableWidget;
-    QFrame *frame;
     QPushButton *pushButton_3;
     QPushButton *pushButton_4;
     QPushButton *pushButton_5;
-    QPushButton *on_addButton_clicked;
-    QPushButton *pushButton_7;
+    QPushButton *themeButton;
+    QFrame *frame_4;
+    QVBoxLayout *verticalLayout_5;
+    QTabWidget *tabWidget;
+    QWidget *ClientForm;
+    QGridLayout *gridLayout_2;
+    QLineEdit *organiser;
+    QLabel *label_sector;
+    QLabel *label_contact;
+    QPushButton *AddButton;
+    QSpacerItem *horizontalSpacer;
+    QLabel *label_date;
+    QLineEdit *participant;
+    QLineEdit *duration;
+    QLineEdit *title;
+    QLabel *label_consultant;
+    QLabel *label_name;
+    QComboBox *agenda;
+    QDateEdit *dateEdit;
+    QLabel *label_2;
+    QWidget *listClient;
+    QVBoxLayout *verticalLayout_6;
+    QGroupBox *searchGroupBox;
+    QHBoxLayout *searchLayout;
+    QComboBox *sortComboBox;
+    QLineEdit *searchInput;
+    QPushButton *searchButton;
+    QHBoxLayout *horizontalLayout_4;
+    QTableWidget *tableWidget;
     QPushButton *deleteButton;
     QPushButton *updateButton;
-    QMenuBar *menubar;
-    QStatusBar *statusbar;
+    QPushButton *statisticsButton;
+    QWidget *calendarTab;
+    QVBoxLayout *verticalLayout_7;
+    QCalendarWidget *consultationCalendar;
+    QGroupBox *calendarDetailsBox;
+    QVBoxLayout *verticalLayout_8;
+    QLabel *selectedDateLabel;
+    QLabel *consultationCountLabel;
+    QTableView *dateConsultationsView;
+    QWidget *tab;
+    QVBoxLayout *verticalLayoutStats;
+    QGroupBox *statsTextGroup;
+    QVBoxLayout *verticalLayoutText;
+    QTextEdit *statsDisplay;
+    QHBoxLayout *buttonLayout;
+    QSpacerItem *horizontalSpacer2;
+    QPushButton *refreshStatsButton;
+    QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName("MainWindow");
-        MainWindow->resize(1299, 706);
-        MainWindow->setStyleSheet(QString::fromUtf8("background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, \n"
-"        stop:0 rgba(173, 216, 230, 255),\n"
-"        stop:1 rgba(255, 255, 255, 255)); "));
+        MainWindow->resize(1387, 758);
+        QSizePolicy sizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Preferred);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(MainWindow->sizePolicy().hasHeightForWidth());
+        MainWindow->setSizePolicy(sizePolicy);
+        MainWindow->setMinimumSize(QSize(0, 600));
+        MainWindow->setStyleSheet(QString::fromUtf8(""));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName("centralwidget");
-        label_6 = new QLabel(centralwidget);
-        label_6->setObjectName("label_6");
-        label_6->setGeometry(QRect(460, -40, 511, 131));
-        label_6->setBaseSize(QSize(30, 0));
+        verticalLayout = new QVBoxLayout(centralwidget);
+        verticalLayout->setObjectName("verticalLayout");
+        header = new QFrame(centralwidget);
+        header->setObjectName("header");
+        sizePolicy.setHeightForWidth(header->sizePolicy().hasHeightForWidth());
+        header->setSizePolicy(sizePolicy);
+        header->setMinimumSize(QSize(0, 75));
+        header->setMaximumSize(QSize(16777215, 75));
+        header->setFrameShape(QFrame::Shape::StyledPanel);
+        header->setFrameShadow(QFrame::Shadow::Raised);
+        horizontalLayout_2 = new QHBoxLayout(header);
+        horizontalLayout_2->setSpacing(0);
+        horizontalLayout_2->setObjectName("horizontalLayout_2");
+        horizontalLayout_2->setContentsMargins(0, 0, 0, 0);
+        frame_3 = new QFrame(header);
+        frame_3->setObjectName("frame_3");
+        frame_3->setMinimumSize(QSize(50, 0));
+        frame_3->setMaximumSize(QSize(151, 16777215));
+        frame_3->setFrameShape(QFrame::Shape::StyledPanel);
+        frame_3->setFrameShadow(QFrame::Shadow::Raised);
+        horizontalLayout_3 = new QHBoxLayout(frame_3);
+        horizontalLayout_3->setSpacing(0);
+        horizontalLayout_3->setObjectName("horizontalLayout_3");
+        horizontalLayout_3->setContentsMargins(0, 0, 0, 0);
+        menuButton = new QPushButton(frame_3);
+        menuButton->setObjectName("menuButton");
+        QSizePolicy sizePolicy1(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Fixed);
+        sizePolicy1.setHorizontalStretch(0);
+        sizePolicy1.setVerticalStretch(0);
+        sizePolicy1.setHeightForWidth(menuButton->sizePolicy().hasHeightForWidth());
+        menuButton->setSizePolicy(sizePolicy1);
+        menuButton->setMinimumSize(QSize(0, 30));
+        menuButton->setMaximumSize(QSize(16777215, 30));
+        menuButton->setIconSize(QSize(24, 24));
+
+        horizontalLayout_3->addWidget(menuButton);
+
+
+        horizontalLayout_2->addWidget(frame_3);
+
+        frame_5 = new QFrame(header);
+        frame_5->setObjectName("frame_5");
+        frame_5->setFrameShape(QFrame::Shape::StyledPanel);
+        frame_5->setFrameShadow(QFrame::Shadow::Raised);
+        verticalLayout_4 = new QVBoxLayout(frame_5);
+        verticalLayout_4->setObjectName("verticalLayout_4");
+        label = new QLabel(frame_5);
+        label->setObjectName("label");
         QFont font;
-        font.setFamilies({QString::fromUtf8("Segoe UI")});
-        font.setPointSize(25);
+        font.setPointSize(15);
         font.setBold(true);
-        font.setItalic(true);
-        font.setUnderline(false);
-        font.setStrikeOut(false);
-        font.setStyleStrategy(QFont::PreferDefault);
-        font.setHintingPreference(QFont::PreferDefaultHinting);
-        label_6->setFont(font);
-        label_6->setCursor(QCursor(Qt::CursorShape::ArrowCursor));
-        label_6->setMouseTracking(true);
-        label_6->setTabletTracking(false);
-        label_6->setStyleSheet(QString::fromUtf8("background-color: transparent"));
-        label_6->setWordWrap(false);
-        label_6->setTextInteractionFlags(Qt::TextInteractionFlag::NoTextInteraction);
-        widget = new QWidget(centralwidget);
-        widget->setObjectName("widget");
-        widget->setGeometry(QRect(190, 130, 411, 491));
-        widget->setStyleSheet(QString::fromUtf8("background-color: rgba(255, 255, 255, 200); \n"
-"    border: 1px solid #A0A0A0;\n"
-"    border-radius: 10px;\n"
-"    padding: 10px;"));
-        pushButton_2 = new QPushButton(widget);
+        label->setFont(font);
+        label->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        verticalLayout_4->addWidget(label);
+
+
+        horizontalLayout_2->addWidget(frame_5);
+
+
+        verticalLayout->addWidget(header);
+
+        frame_2 = new QFrame(centralwidget);
+        frame_2->setObjectName("frame_2");
+        frame_2->setFrameShape(QFrame::Shape::StyledPanel);
+        frame_2->setFrameShadow(QFrame::Shadow::Raised);
+        horizontalLayout = new QHBoxLayout(frame_2);
+        horizontalLayout->setSpacing(0);
+        horizontalLayout->setObjectName("horizontalLayout");
+        horizontalLayout->setContentsMargins(0, 0, 0, 0);
+        sideMenu = new QFrame(frame_2);
+        sideMenu->setObjectName("sideMenu");
+        sideMenu->setMinimumSize(QSize(150, 0));
+        sideMenu->setMaximumSize(QSize(150, 16777215));
+        sideMenu->setFrameShape(QFrame::Shape::StyledPanel);
+        sideMenu->setFrameShadow(QFrame::Shadow::Raised);
+        verticalLayout_2 = new QVBoxLayout(sideMenu);
+        verticalLayout_2->setSpacing(0);
+        verticalLayout_2->setObjectName("verticalLayout_2");
+        verticalLayout_2->setContentsMargins(0, 0, 0, 0);
+        frame_6 = new QFrame(sideMenu);
+        frame_6->setObjectName("frame_6");
+        frame_6->setMinimumSize(QSize(125, 600));
+        frame_6->setMaximumSize(QSize(150, 16777215));
+        frame_6->setFrameShape(QFrame::Shape::StyledPanel);
+        frame_6->setFrameShadow(QFrame::Shadow::Raised);
+        verticalLayout_3 = new QVBoxLayout(frame_6);
+        verticalLayout_3->setSpacing(0);
+        verticalLayout_3->setObjectName("verticalLayout_3");
+        verticalLayout_3->setContentsMargins(0, 0, 0, 0);
+        pushButton = new QPushButton(frame_6);
+        pushButton->setObjectName("pushButton");
+        pushButton->setStyleSheet(QString::fromUtf8("#label {\n"
+"    color: white;\n"
+"    padding: 5px;\n"
+"    font-size: 15pt;\n"
+"    font-weight: bold;\n"
+"    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);\n"
+"}"));
+
+        verticalLayout_3->addWidget(pushButton);
+
+        pushButton_2 = new QPushButton(frame_6);
         pushButton_2->setObjectName("pushButton_2");
-        pushButton_2->setGeometry(QRect(250, 400, 91, 31));
-        QFont font1;
-        font1.setPointSize(12);
-        pushButton_2->setFont(font1);
-        pushButton_2->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background-color: #0078D7; \n"
-"    color: white;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #0056A3;\n"
-"}"));
-        AddButton = new QPushButton(widget);
-        AddButton->setObjectName("AddButton");
-        AddButton->setGeometry(QRect(80, 400, 91, 31));
-        AddButton->setFont(font1);
-        AddButton->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background-color: #0078D7; \n"
-"    color: white;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #0056A3;\n"
-"}"));
-        AddButton->setFlat(false);
-        title = new QLineEdit(widget);
-        title->setObjectName("title");
-        title->setGeometry(QRect(120, 50, 161, 22));
-        title->setStyleSheet(QString::fromUtf8("QLineEdit {\n"
-"    color: black;\n"
-"    background-color: white;\n"
-"    border: 1px solid #0078D7; \n"
-"    border-radius: 4px;\n"
-"    padding: 4px;\n"
-"    font-size: 14px;\n"
-"}\n"
-"\n"
-"QLineEdit::placeholder {\n"
-"    color: gray;\n"
-"}"));
-        organiser = new QLineEdit(widget);
+
+        verticalLayout_3->addWidget(pushButton_2);
+
+        pushButton_3 = new QPushButton(frame_6);
+        pushButton_3->setObjectName("pushButton_3");
+
+        verticalLayout_3->addWidget(pushButton_3);
+
+        pushButton_4 = new QPushButton(frame_6);
+        pushButton_4->setObjectName("pushButton_4");
+
+        verticalLayout_3->addWidget(pushButton_4);
+
+        pushButton_5 = new QPushButton(frame_6);
+        pushButton_5->setObjectName("pushButton_5");
+
+        verticalLayout_3->addWidget(pushButton_5);
+
+        themeButton = new QPushButton(frame_6);
+        themeButton->setObjectName("themeButton");
+
+        verticalLayout_3->addWidget(themeButton);
+
+
+        verticalLayout_2->addWidget(frame_6, 0, Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter);
+
+
+        horizontalLayout->addWidget(sideMenu);
+
+        frame_4 = new QFrame(frame_2);
+        frame_4->setObjectName("frame_4");
+        QSizePolicy sizePolicy2(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
+        sizePolicy2.setHorizontalStretch(0);
+        sizePolicy2.setVerticalStretch(0);
+        sizePolicy2.setHeightForWidth(frame_4->sizePolicy().hasHeightForWidth());
+        frame_4->setSizePolicy(sizePolicy2);
+        frame_4->setFrameShape(QFrame::Shape::StyledPanel);
+        frame_4->setFrameShadow(QFrame::Shadow::Raised);
+        verticalLayout_5 = new QVBoxLayout(frame_4);
+        verticalLayout_5->setObjectName("verticalLayout_5");
+        tabWidget = new QTabWidget(frame_4);
+        tabWidget->setObjectName("tabWidget");
+        ClientForm = new QWidget();
+        ClientForm->setObjectName("ClientForm");
+        ClientForm->setContextMenuPolicy(Qt::ContextMenuPolicy::PreventContextMenu);
+        gridLayout_2 = new QGridLayout(ClientForm);
+        gridLayout_2->setObjectName("gridLayout_2");
+        organiser = new QLineEdit(ClientForm);
         organiser->setObjectName("organiser");
-        organiser->setGeometry(QRect(120, 170, 161, 22));
-        organiser->setStyleSheet(QString::fromUtf8("QLineEdit {\n"
-"    color: black;\n"
-"    background-color: white;\n"
-"    border: 1px solid #0078D7; \n"
-"    border-radius: 4px;\n"
-"    padding: 4px;\n"
-"    font-size: 14px;\n"
-"}\n"
-"\n"
-"QLineEdit::placeholder {\n"
-"    color: gray;\n"
-"}"));
-        participant = new QLineEdit(widget);
+
+        gridLayout_2->addWidget(organiser, 1, 2, 1, 1);
+
+        label_sector = new QLabel(ClientForm);
+        label_sector->setObjectName("label_sector");
+
+        gridLayout_2->addWidget(label_sector, 1, 0, 1, 1);
+
+        label_contact = new QLabel(ClientForm);
+        label_contact->setObjectName("label_contact");
+
+        gridLayout_2->addWidget(label_contact, 2, 0, 1, 1);
+
+        AddButton = new QPushButton(ClientForm);
+        AddButton->setObjectName("AddButton");
+
+        gridLayout_2->addWidget(AddButton, 6, 2, 1, 1);
+
+        horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        gridLayout_2->addItem(horizontalSpacer, 0, 3, 7, 1);
+
+        label_date = new QLabel(ClientForm);
+        label_date->setObjectName("label_date");
+
+        gridLayout_2->addWidget(label_date, 4, 0, 1, 1);
+
+        participant = new QLineEdit(ClientForm);
         participant->setObjectName("participant");
-        participant->setGeometry(QRect(120, 240, 161, 22));
-        participant->setStyleSheet(QString::fromUtf8("QLineEdit {\n"
-"    color: black;\n"
-"    background-color: white;\n"
-"    border: 1px solid #0078D7; \n"
-"    border-radius: 4px;\n"
-"    padding: 4px;\n"
-"    font-size: 14px;\n"
-"}\n"
-"\n"
-"QLineEdit::placeholder {\n"
-"    color: gray;\n"
-"}"));
-        label_4 = new QLabel(widget);
-        label_4->setObjectName("label_4");
-        label_4->setGeometry(QRect(80, 260, 151, 71));
-        label_4->setStyleSheet(QString::fromUtf8("QLabel {\n"
-"    font-size: 18px;\n"
-"    font-weight: bold;\n"
-"    color: #0078D7; \n"
-"    border: none;\n"
-"    background: transparent;\n"
-"text-align: center;\n"
-"padding: 5px;\n"
-"}\n"
-"\n"
-"\n"
-"QLabel {\n"
-"    font-size: 14px;\n"
-"    color: black;\n"
-"}"));
-        label_7 = new QLabel(widget);
-        label_7->setObjectName("label_7");
-        label_7->setGeometry(QRect(110, 70, 171, 41));
-        label_7->setStyleSheet(QString::fromUtf8("QLabel {\n"
-"    font-size: 18px;\n"
-"    font-weight: bold;\n"
-"    color: #0078D7; \n"
-"    border: none;\n"
-"    background: transparent;\n"
-"text-align: center;\n"
-"padding: 5px;\n"
-"}\n"
-"\n"
-"\n"
-"QLabel {\n"
-"    font-size: 14px;\n"
-"    color: black;\n"
-"}"));
-        label_8 = new QLabel(widget);
-        label_8->setObjectName("label_8");
-        label_8->setGeometry(QRect(170, 320, 71, 41));
-        label_8->setStyleSheet(QString::fromUtf8("QLabel {\n"
-"    font-size: 18px;\n"
-"    font-weight: bold;\n"
-"    color: #0078D7; \n"
-"    border: none;\n"
-"    background: transparent;\n"
-"text-align: center;\n"
-"padding: 5px;\n"
-"}\n"
-"\n"
-"\n"
-"QLabel {\n"
-"    font-size: 14px;\n"
-"    color: black;\n"
-"}"));
-        date_time = new QDateTimeEdit(widget);
-        date_time->setObjectName("date_time");
-        date_time->setGeometry(QRect(110, 110, 194, 22));
-        agenda = new QComboBox(widget);
+
+        gridLayout_2->addWidget(participant, 2, 2, 1, 1);
+
+        duration = new QLineEdit(ClientForm);
+        duration->setObjectName("duration");
+
+        gridLayout_2->addWidget(duration, 5, 2, 1, 1);
+
+        title = new QLineEdit(ClientForm);
+        title->setObjectName("title");
+
+        gridLayout_2->addWidget(title, 0, 2, 1, 1);
+
+        label_consultant = new QLabel(ClientForm);
+        label_consultant->setObjectName("label_consultant");
+
+        gridLayout_2->addWidget(label_consultant, 5, 0, 1, 1);
+
+        label_name = new QLabel(ClientForm);
+        label_name->setObjectName("label_name");
+
+        gridLayout_2->addWidget(label_name, 0, 0, 1, 1);
+
+        agenda = new QComboBox(ClientForm);
         agenda->addItem(QString());
         agenda->addItem(QString());
         agenda->addItem(QString());
         agenda->setObjectName("agenda");
-        agenda->setGeometry(QRect(210, 280, 171, 22));
-        label_9 = new QLabel(widget);
-        label_9->setObjectName("label_9");
-        label_9->setGeometry(QRect(140, 200, 141, 41));
-        label_9->setStyleSheet(QString::fromUtf8("QLabel {\n"
-"    font-size: 18px;\n"
-"    font-weight: bold;\n"
-"    color: #0078D7; \n"
-"    border: none;\n"
-"    background: transparent;\n"
-"text-align: center;\n"
-"padding: 5px;\n"
-"}\n"
-"\n"
-"\n"
-"QLabel {\n"
-"    font-size: 14px;\n"
-"    color: black;\n"
-"}"));
-        label_10 = new QLabel(widget);
-        label_10->setObjectName("label_10");
-        label_10->setGeometry(QRect(130, 140, 151, 31));
-        label_10->setStyleSheet(QString::fromUtf8("QLabel {\n"
-"    font-size: 18px;\n"
-"    font-weight: bold;\n"
-"    color: #0078D7; \n"
-"    border: none;\n"
-"    background: transparent;\n"
-"text-align: center;\n"
-"padding: 5px;\n"
-"}\n"
-"\n"
-"\n"
-"QLabel {\n"
-"    font-size: 14px;\n"
-"    color: black;\n"
-"}"));
-        label_11 = new QLabel(widget);
-        label_11->setObjectName("label_11");
-        label_11->setGeometry(QRect(150, 0, 81, 51));
-        label_11->setStyleSheet(QString::fromUtf8("QLabel {\n"
-"    font-size: 18px;\n"
-"    font-weight: bold;\n"
-"    color: #0078D7; \n"
-"    border: none;\n"
-"    background: transparent;\n"
-"text-align: center;\n"
-"padding: 5px;\n"
-"}\n"
-"\n"
-"\n"
-"QLabel {\n"
-"    font-size: 14px;\n"
-"    color: black;\n"
-"}"));
-        duration = new QLineEdit(widget);
-        duration->setObjectName("duration");
-        duration->setGeometry(QRect(130, 360, 161, 22));
-        duration->setStyleSheet(QString::fromUtf8("QLineEdit {\n"
-"    color: black;\n"
-"    background-color: white;\n"
-"    border: 1px solid #0078D7; \n"
-"    border-radius: 4px;\n"
-"    padding: 4px;\n"
-"    font-size: 14px;\n"
-"}\n"
-"\n"
-"QLineEdit::placeholder {\n"
-"    color: gray;\n"
-"}"));
-        tableWidget = new QTableWidget(centralwidget);
-        if (tableWidget->columnCount() < 7)
-            tableWidget->setColumnCount(7);
+
+        gridLayout_2->addWidget(agenda, 3, 2, 1, 1);
+
+        dateEdit = new QDateEdit(ClientForm);
+        dateEdit->setObjectName("dateEdit");
+
+        gridLayout_2->addWidget(dateEdit, 4, 2, 1, 1);
+
+        label_2 = new QLabel(ClientForm);
+        label_2->setObjectName("label_2");
+
+        gridLayout_2->addWidget(label_2, 3, 0, 1, 1);
+
+        tabWidget->addTab(ClientForm, QString());
+        listClient = new QWidget();
+        listClient->setObjectName("listClient");
+        verticalLayout_6 = new QVBoxLayout(listClient);
+        verticalLayout_6->setObjectName("verticalLayout_6");
+        searchGroupBox = new QGroupBox(listClient);
+        searchGroupBox->setObjectName("searchGroupBox");
+        searchLayout = new QHBoxLayout(searchGroupBox);
+        searchLayout->setObjectName("searchLayout");
+        sortComboBox = new QComboBox(searchGroupBox);
+        sortComboBox->setObjectName("sortComboBox");
+
+        searchLayout->addWidget(sortComboBox);
+
+        searchInput = new QLineEdit(searchGroupBox);
+        searchInput->setObjectName("searchInput");
+
+        searchLayout->addWidget(searchInput);
+
+        searchButton = new QPushButton(searchGroupBox);
+        searchButton->setObjectName("searchButton");
+
+        searchLayout->addWidget(searchButton);
+
+
+        verticalLayout_6->addWidget(searchGroupBox);
+
+        horizontalLayout_4 = new QHBoxLayout();
+        horizontalLayout_4->setObjectName("horizontalLayout_4");
+        tableWidget = new QTableWidget(listClient);
+        if (tableWidget->columnCount() < 6)
+            tableWidget->setColumnCount(6);
         QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
         tableWidget->setHorizontalHeaderItem(0, __qtablewidgetitem);
         QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
@@ -318,171 +389,170 @@ public:
         tableWidget->setHorizontalHeaderItem(4, __qtablewidgetitem4);
         QTableWidgetItem *__qtablewidgetitem5 = new QTableWidgetItem();
         tableWidget->setHorizontalHeaderItem(5, __qtablewidgetitem5);
-        QTableWidgetItem *__qtablewidgetitem6 = new QTableWidgetItem();
-        tableWidget->setHorizontalHeaderItem(6, __qtablewidgetitem6);
         tableWidget->setObjectName("tableWidget");
-        tableWidget->setGeometry(QRect(630, 130, 601, 281));
-        tableWidget->setStyleSheet(QString::fromUtf8("QTableWidget {\n"
-"    background-color: white;\n"
-"    border: 1px solid #A0A0A0;\n"
-"    border-radius: 3px;\n"
-"    gridline-color: #A0A0A0;\n"
-"}\n"
-"\n"
-"QHeaderView::section {\n"
-"    background-color: #0078D7;\n"
-"    color: white;\n"
-"    padding: 2px;\n"
-"    border: 1px solid #A0A0A0;\n"
-"}"));
-        frame = new QFrame(centralwidget);
-        frame->setObjectName("frame");
-        frame->setGeometry(QRect(0, 0, 181, 661));
-        frame->setStyleSheet(QString::fromUtf8("background-color: rgb(255, 255, 255);"));
-        frame->setFrameShape(QFrame::Shape::StyledPanel);
-        frame->setFrameShadow(QFrame::Shadow::Raised);
-        pushButton_3 = new QPushButton(frame);
-        pushButton_3->setObjectName("pushButton_3");
-        pushButton_3->setGeometry(QRect(30, 90, 101, 41));
-        pushButton_3->setFont(font1);
-        pushButton_3->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background-color: #0078D7; \n"
-"    color: white;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #0056A3;\n"
-"}"));
-        pushButton_3->setFlat(false);
-        pushButton_4 = new QPushButton(frame);
-        pushButton_4->setObjectName("pushButton_4");
-        pushButton_4->setGeometry(QRect(30, 190, 101, 41));
-        pushButton_4->setFont(font1);
-        pushButton_4->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background-color: #0078D7; \n"
-"    color: white;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #0056A3;\n"
-"}"));
-        pushButton_4->setFlat(false);
-        pushButton_5 = new QPushButton(frame);
-        pushButton_5->setObjectName("pushButton_5");
-        pushButton_5->setGeometry(QRect(30, 280, 101, 41));
-        pushButton_5->setFont(font1);
-        pushButton_5->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background-color: #0078D7; \n"
-"    color: white;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #0056A3;\n"
-"}"));
-        pushButton_5->setFlat(false);
-        on_addButton_clicked = new QPushButton(frame);
-        on_addButton_clicked->setObjectName("on_addButton_clicked");
-        on_addButton_clicked->setGeometry(QRect(30, 380, 101, 41));
-        on_addButton_clicked->setFont(font1);
-        on_addButton_clicked->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background-color: #0078D7; \n"
-"    color: white;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #0056A3;\n"
-"}"));
-        on_addButton_clicked->setFlat(false);
-        pushButton_7 = new QPushButton(frame);
-        pushButton_7->setObjectName("pushButton_7");
-        pushButton_7->setGeometry(QRect(30, 470, 101, 41));
-        pushButton_7->setFont(font1);
-        pushButton_7->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background-color: #0078D7; \n"
-"    color: white;\n"
-"    border-radius: 5px;\n"
-"    padding: 5px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: #0056A3;\n"
-"}"));
-        pushButton_7->setFlat(false);
-        deleteButton = new QPushButton(centralwidget);
+
+        horizontalLayout_4->addWidget(tableWidget);
+
+        deleteButton = new QPushButton(listClient);
         deleteButton->setObjectName("deleteButton");
-        deleteButton->setGeometry(QRect(640, 430, 93, 29));
-        QFont font2;
-        font2.setStrikeOut(false);
-        deleteButton->setFont(font2);
-        updateButton = new QPushButton(centralwidget);
+
+        horizontalLayout_4->addWidget(deleteButton);
+
+        updateButton = new QPushButton(listClient);
         updateButton->setObjectName("updateButton");
-        updateButton->setGeometry(QRect(800, 430, 93, 29));
+
+        horizontalLayout_4->addWidget(updateButton);
+
+        statisticsButton = new QPushButton(listClient);
+        statisticsButton->setObjectName("statisticsButton");
+
+        horizontalLayout_4->addWidget(statisticsButton);
+
+
+        verticalLayout_6->addLayout(horizontalLayout_4);
+
+        tabWidget->addTab(listClient, QString());
+        calendarTab = new QWidget();
+        calendarTab->setObjectName("calendarTab");
+        verticalLayout_7 = new QVBoxLayout(calendarTab);
+        verticalLayout_7->setObjectName("verticalLayout_7");
+        consultationCalendar = new QCalendarWidget(calendarTab);
+        consultationCalendar->setObjectName("consultationCalendar");
+        consultationCalendar->setMinimumSize(QSize(0, 400));
+        consultationCalendar->setGridVisible(true);
+
+        verticalLayout_7->addWidget(consultationCalendar);
+
+        calendarDetailsBox = new QGroupBox(calendarTab);
+        calendarDetailsBox->setObjectName("calendarDetailsBox");
+        verticalLayout_8 = new QVBoxLayout(calendarDetailsBox);
+        verticalLayout_8->setObjectName("verticalLayout_8");
+        selectedDateLabel = new QLabel(calendarDetailsBox);
+        selectedDateLabel->setObjectName("selectedDateLabel");
+        selectedDateLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        verticalLayout_8->addWidget(selectedDateLabel);
+
+        consultationCountLabel = new QLabel(calendarDetailsBox);
+        consultationCountLabel->setObjectName("consultationCountLabel");
+        consultationCountLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        verticalLayout_8->addWidget(consultationCountLabel);
+
+        dateConsultationsView = new QTableView(calendarDetailsBox);
+        dateConsultationsView->setObjectName("dateConsultationsView");
+        dateConsultationsView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        dateConsultationsView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+
+        verticalLayout_8->addWidget(dateConsultationsView);
+
+
+        verticalLayout_7->addWidget(calendarDetailsBox);
+
+        tabWidget->addTab(calendarTab, QString());
+        tab = new QWidget();
+        tab->setObjectName("tab");
+        verticalLayoutStats = new QVBoxLayout(tab);
+        verticalLayoutStats->setObjectName("verticalLayoutStats");
+        statsTextGroup = new QGroupBox(tab);
+        statsTextGroup->setObjectName("statsTextGroup");
+        verticalLayoutText = new QVBoxLayout(statsTextGroup);
+        verticalLayoutText->setObjectName("verticalLayoutText");
+        statsDisplay = new QTextEdit(statsTextGroup);
+        statsDisplay->setObjectName("statsDisplay");
+        statsDisplay->setReadOnly(true);
+
+        verticalLayoutText->addWidget(statsDisplay);
+
+
+        verticalLayoutStats->addWidget(statsTextGroup);
+
+        buttonLayout = new QHBoxLayout();
+        buttonLayout->setObjectName("buttonLayout");
+        horizontalSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        buttonLayout->addItem(horizontalSpacer2);
+
+        refreshStatsButton = new QPushButton(tab);
+        refreshStatsButton->setObjectName("refreshStatsButton");
+
+        buttonLayout->addWidget(refreshStatsButton);
+
+
+        verticalLayoutStats->addLayout(buttonLayout);
+
+        tabWidget->addTab(tab, QString());
+
+        verticalLayout_5->addWidget(tabWidget);
+
+
+        horizontalLayout->addWidget(frame_4);
+
+
+        verticalLayout->addWidget(frame_2);
+
         MainWindow->setCentralWidget(centralwidget);
-        menubar = new QMenuBar(MainWindow);
-        menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 1299, 26));
-        MainWindow->setMenuBar(menubar);
-        statusbar = new QStatusBar(MainWindow);
-        statusbar->setObjectName("statusbar");
-        MainWindow->setStatusBar(statusbar);
+        statusBar = new QStatusBar(MainWindow);
+        statusBar->setObjectName("statusBar");
+        MainWindow->setStatusBar(statusBar);
 
         retranslateUi(MainWindow);
+
+        tabWidget->setCurrentIndex(1);
+
 
         QMetaObject::connectSlotsByName(MainWindow);
     } // setupUi
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
-        label_6->setText(QCoreApplication::translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:'Segoe UI'; font-size:25pt; font-weight:700; font-style:italic;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:26pt; color:#0000ff;\">Ajouter un r\303\251union</span></p></body></html>", nullptr));
-        pushButton_2->setText(QCoreApplication::translate("MainWindow", "effacer", nullptr));
-        AddButton->setText(QCoreApplication::translate("MainWindow", "ajouter ", nullptr));
-        label_4->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:10pt;\">Agenda :</span></p></body></html>", nullptr));
-        label_7->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:12pt;\">date et heure</span></p></body></html>", nullptr));
-        label_8->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt;\">Durre :</span></p></body></html>", nullptr));
+        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Client Management System", nullptr));
+        menuButton->setText(QCoreApplication::translate("MainWindow", "Menu", nullptr));
+        label->setText(QCoreApplication::translate("MainWindow", "meeting Management System", nullptr));
+        pushButton->setText(QCoreApplication::translate("MainWindow", "Dashboard", nullptr));
+        pushButton_2->setText(QCoreApplication::translate("MainWindow", "Clients", nullptr));
+        pushButton_3->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
+        pushButton_4->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
+        pushButton_5->setText(QCoreApplication::translate("MainWindow", "Calendar", nullptr));
+        themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
+        label_sector->setText(QCoreApplication::translate("MainWindow", "organiser", nullptr));
+        label_contact->setText(QCoreApplication::translate("MainWindow", "participant", nullptr));
+        AddButton->setText(QCoreApplication::translate("MainWindow", "Add meet", nullptr));
+        label_date->setText(QCoreApplication::translate("MainWindow", "Consultation Date:", nullptr));
+        label_consultant->setText(QCoreApplication::translate("MainWindow", "duration", nullptr));
+        label_name->setText(QCoreApplication::translate("MainWindow", "title", nullptr));
         agenda->setItemText(0, QCoreApplication::translate("MainWindow", "car advice", nullptr));
         agenda->setItemText(1, QCoreApplication::translate("MainWindow", "life advice", nullptr));
-        agenda->setItemText(2, QCoreApplication::translate("MainWindow", "future adive", nullptr));
+        agenda->setItemText(2, QCoreApplication::translate("MainWindow", "future advice", nullptr));
 
-        label_9->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:12pt;\">Participants</span></p></body></html>", nullptr));
-        label_10->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:12pt;\">Organisateur</span></p></body></html>", nullptr));
-        label_11->setText(QCoreApplication::translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:12pt;\">Titre</span></p></body></html>", nullptr));
+        label_2->setText(QCoreApplication::translate("MainWindow", "agenda", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(ClientForm), QCoreApplication::translate("MainWindow", "Add meeting", nullptr));
+        searchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
+        searchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
+        searchButton->setText(QCoreApplication::translate("MainWindow", " Search", nullptr));
         QTableWidgetItem *___qtablewidgetitem = tableWidget->horizontalHeaderItem(0);
         ___qtablewidgetitem->setText(QCoreApplication::translate("MainWindow", "id", nullptr));
         QTableWidgetItem *___qtablewidgetitem1 = tableWidget->horizontalHeaderItem(1);
-        ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "Titre ", nullptr));
+        ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "title", nullptr));
         QTableWidgetItem *___qtablewidgetitem2 = tableWidget->horizontalHeaderItem(2);
-        ___qtablewidgetitem2->setText(QCoreApplication::translate("MainWindow", "Organisateur ", nullptr));
+        ___qtablewidgetitem2->setText(QCoreApplication::translate("MainWindow", "organisateur", nullptr));
         QTableWidgetItem *___qtablewidgetitem3 = tableWidget->horizontalHeaderItem(3);
-        ___qtablewidgetitem3->setText(QCoreApplication::translate("MainWindow", "Participants", nullptr));
+        ___qtablewidgetitem3->setText(QCoreApplication::translate("MainWindow", "particpant", nullptr));
         QTableWidgetItem *___qtablewidgetitem4 = tableWidget->horizontalHeaderItem(4);
-        ___qtablewidgetitem4->setText(QCoreApplication::translate("MainWindow", "Agenda ", nullptr));
+        ___qtablewidgetitem4->setText(QCoreApplication::translate("MainWindow", "agenda", nullptr));
         QTableWidgetItem *___qtablewidgetitem5 = tableWidget->horizontalHeaderItem(5);
-        ___qtablewidgetitem5->setText(QCoreApplication::translate("MainWindow", "Dur\303\251e ", nullptr));
-        QTableWidgetItem *___qtablewidgetitem6 = tableWidget->horizontalHeaderItem(6);
-        ___qtablewidgetitem6->setText(QCoreApplication::translate("MainWindow", "Statut ", nullptr));
-        pushButton_3->setText(QCoreApplication::translate("MainWindow", "Employee ", nullptr));
-        pushButton_4->setText(QCoreApplication::translate("MainWindow", "Client ", nullptr));
-        pushButton_5->setText(QCoreApplication::translate("MainWindow", "Reservation ", nullptr));
-        on_addButton_clicked->setText(QCoreApplication::translate("MainWindow", "r\303\251union", nullptr));
-        pushButton_7->setText(QCoreApplication::translate("MainWindow", "formation ", nullptr));
-        deleteButton->setText(QCoreApplication::translate("MainWindow", "delete", nullptr));
-        updateButton->setText(QCoreApplication::translate("MainWindow", "update", nullptr));
+        ___qtablewidgetitem5->setText(QCoreApplication::translate("MainWindow", "duration", nullptr));
+        deleteButton->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
+        updateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
+        statisticsButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(listClient), QCoreApplication::translate("MainWindow", "Manage meeting", nullptr));
+        calendarDetailsBox->setTitle(QCoreApplication::translate("MainWindow", "Consultation Details", nullptr));
+        selectedDateLabel->setText(QCoreApplication::translate("MainWindow", "Selected date: ", nullptr));
+        consultationCountLabel->setText(QCoreApplication::translate("MainWindow", "Consultations: 0", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(calendarTab), QCoreApplication::translate("MainWindow", "Consultation Calendar", nullptr));
+        statsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
+        refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
+        tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi
 
 };
