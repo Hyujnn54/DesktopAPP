@@ -1,5 +1,5 @@
-QT       += core gui
-QT+= sql
+QT       += core gui sql
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
@@ -12,15 +12,18 @@ SOURCES += \
     connection.cpp \
     main.cpp \
     mainwindow.cpp \
-    meeting.cpp
+    meeting.cpp \
+    updatedialog.cpp
 
 HEADERS += \
     connection.h \
     mainwindow.h \
-    meeting.h
+    meeting.h \
+    updatedialog.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    ui_updatemeetingdialog.ui
 
 TRANSLATIONS += \
     Interfaces_en_US.ts

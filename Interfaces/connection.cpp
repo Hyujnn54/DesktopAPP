@@ -1,6 +1,7 @@
 // connection.cpp
 #include "connection.h"
 #include <QDebug>
+#include <QSqlDriver>
 
 QSqlDatabase Connection::db = QSqlDatabase();
 bool Connection::isConnected = false;
@@ -17,28 +18,29 @@ Connection::~Connection()
 
 bool Connection::createconnect()
 {
-    // If already connected, return true
     if (isConnected && db.isOpen()) {
+        qDebug() << "Connection already open, returning true";
         return true;
     }
 
-    // If there's an existing connection, remove it
     if (QSqlDatabase::contains(QSqlDatabase::defaultConnection)) {
         QSqlDatabase::removeDatabase(QSqlDatabase::defaultConnection);
     }
 
-    // Create new connection
     db = QSqlDatabase::addDatabase("QODBC");
     db.setDatabaseName("Source_projet");
     db.setUserName("ahmed");
     db.setPassword("2004");
 
     isConnected = db.open();
-
     if (isConnected) {
         qDebug() << "Database connection established successfully";
+        qDebug() << "Driver Name:" << db.driverName();
+        qDebug() << "Database Name:" << db.databaseName();
+        qDebug() << "Connected to:" << db.connectionName();
     } else {
-        qDebug() << "Database connection failed: " << db.lastError().text();
+        qDebug() << "Database connection failed:" << db.lastError().text();
+        qDebug() << "Driver Error:" << db.driver()->lastError().text();
     }
 
     return isConnected;

@@ -5,7 +5,6 @@
 
 // Global connection object to ensure it persists throughout application lifetime
 static Connection g_connection;
-
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -21,8 +20,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        // Show more detailed error information
-        QString errorMsg = "Connection failed.\n" + QSqlDatabase::database().lastError().text();
+        QString errorMsg = "Connection failed.\nDetails: " + g_connection.getDatabase().lastError().text();
         QMessageBox::critical(nullptr, QObject::tr("Database is not open"),
                               QObject::tr(qPrintable(errorMsg)), QMessageBox::Cancel);
         return 1; // Exit with error

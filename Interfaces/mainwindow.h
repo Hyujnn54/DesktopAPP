@@ -19,12 +19,22 @@ public:
 
 private slots:
     void handleAddButtonClick();
-    void refreshTableWidget(); // Add method to refresh the table display
     void handleDeleteButtonClick();
     void handleUpdateButtonClick();
-    void updateInputFields() ;
+    void updateInputFields();
+    void handleSearchButtonClick();
+    void handleSearchTextChanged(const QString& text);
+    void handleSortCriteriaChanged(int index);
+    void handleStatisticsButtonClick();
+    void toggleTheme();
+    void toggleSidebar();
+
 private:
     Ui::MainWindow *ui;
+    void refreshTableWidget();
+    bool isDarkTheme;
+    void applyDarkTheme();
+    void applyLightTheme();
 };
 
 #endif // MAINWINDOW_H
