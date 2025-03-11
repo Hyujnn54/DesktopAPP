@@ -1,9 +1,9 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
-#include <connection.h>
+#include "connection.h"
 #include <QDebug>
-#include <sign.h>
+#include "sign.h"
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

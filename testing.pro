@@ -13,15 +13,18 @@ SOURCES += \
     employee.cpp \
     main.cpp \
     mainwindow.cpp \
-    sign.cpp
+    sign.cpp \
+    updateemployeedialog.cpp
 
 HEADERS += \
     connection.h \
     employee.h \
     mainwindow.h \
-    sign.h
+    sign.h \
+    updateemployeedialog.h
 
 FORMS += \
+    UpdateClientDialog.ui \
     mainwindow.ui \
     sign.ui
 

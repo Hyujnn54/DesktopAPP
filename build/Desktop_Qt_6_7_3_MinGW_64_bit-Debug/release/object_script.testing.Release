@@ -1,10 +1,11 @@
 release/connection.o
 release/employee.o
-release/login.o
-release/login.o
 release/main.o
 release/mainwindow.o
+release/sign.o
+release/updateemployeedialog.o
 release/qrc_resources.o
 release/qrc_qmake_qmake_qm_files.o
-release/moc_login.o
 release/moc_mainwindow.o
+release/moc_sign.o
+release/moc_updateemployeedialog.o

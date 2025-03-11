@@ -9,7 +9,7 @@
         Employee();
         Employee(QString& cin,QString& lastName,QString& firstName, QDate& dateOfBirth,
                  QString& phoneNumber, QString& email,  QString& gender,
-                int& salary, QDate& dateOfHire, QString& field);
+                int& salary, QDate& dateOfHire, QString& field, QString& imagePath, QString& role);
         int getId() const;
         QString getCIN() const;
         QString getLastName() const;
@@ -21,6 +21,8 @@
         int getSalary() const;
         QDate getDateOfHire() const;
         QString getField() const;
+        QString getImagePath() const;
+        QString getRole() const;
 
 
         void setCIN(const QString& cin);
@@ -33,10 +35,12 @@
         void setSalary(int salary);
         void setDateOfHire(const QDate& dateOfHire);
         void setField(const QString& field);
+        void setImagePath(const QString& imagePath);
+        void setRole(const QString& role);
         bool ajouter();
         QSqlQueryModel* loadEmployees();
         bool updateEmployee(int id, QString cin, QString lastName, QString firstName, QDate dateBirth,
-                            QString phone, QString email, QString gender, int salary, QDate dateHiring, QString specialty);
+                            QString phone, QString email, QString gender, int salary, QDate dateHiring, QString specialty, QString imagePath, QString role);
 
         bool deleteEmployee(int id);
 
@@ -52,6 +56,8 @@
         int salary;
         QDate dateOfHire;
         QString field;
+        QString imagePath;
+        QString role;
     };
 
 #endif

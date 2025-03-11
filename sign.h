@@ -14,6 +14,8 @@ class sign : public QMainWindow
 public:
     explicit sign(QWidget *parent = nullptr);
     ~sign();
+    void saveLoginCredentials(const QString &email, const QString &cin, bool remember); // Updated
+    void loadLoginCredentials();
 private slots :
     void handleLogin();
 private:
