@@ -8,6 +8,7 @@
 #include <QtCharts/QBarSet>
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
+#include <QtCharts/QPieSeries>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ChartWindow; }
@@ -24,10 +25,13 @@ public:
 private slots:
     void on_refreshChartButton_clicked();
     void on_statsFilterComboBox_currentIndexChanged(int index);
+    void on_chartTypeComboBox_currentIndexChanged(int index);
+    void on_resetChartButton_clicked(); // New slot for reset button
 
 private:
     Ui::ChartWindow *ui;
     Client Etmp;
+    QString currentChartType;
 
     void updateChart();
     void populateFilterValues();

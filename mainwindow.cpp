@@ -80,7 +80,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButton_5, &QPushButton::clicked, this, &MainWindow::sendConsultationReminders);
     connect(ui->pushButton_3, &QPushButton::clicked, this, &MainWindow::showStatistics);
     connect(ui->refreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_refreshStatsButton_clicked);
-    connect(ui->openChartButton, &QPushButton::clicked, this, &MainWindow::on_openChartButton_clicked); // New connection
 
     connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_searchInput_textChanged);
     connect(ui->searchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),

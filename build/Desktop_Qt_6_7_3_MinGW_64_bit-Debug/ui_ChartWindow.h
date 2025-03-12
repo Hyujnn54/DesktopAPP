@@ -35,7 +35,10 @@ public:
     QLabel *filterLabel;
     QComboBox *statsFilterComboBox;
     QComboBox *filterValueComboBox;
+    QLabel *chartTypeLabel;
+    QComboBox *chartTypeComboBox;
     QPushButton *refreshChartButton;
+    QPushButton *resetChartButton;
     QChartView *statsChartView;
     QStatusBar *statusBar;
 
@@ -72,10 +75,27 @@ public:
 
         filterLayout->addWidget(filterValueComboBox);
 
+        chartTypeLabel = new QLabel(chartGroupBox);
+        chartTypeLabel->setObjectName("chartTypeLabel");
+
+        filterLayout->addWidget(chartTypeLabel);
+
+        chartTypeComboBox = new QComboBox(chartGroupBox);
+        chartTypeComboBox->addItem(QString());
+        chartTypeComboBox->addItem(QString());
+        chartTypeComboBox->setObjectName("chartTypeComboBox");
+
+        filterLayout->addWidget(chartTypeComboBox);
+
         refreshChartButton = new QPushButton(chartGroupBox);
         refreshChartButton->setObjectName("refreshChartButton");
 
         filterLayout->addWidget(refreshChartButton);
+
+        resetChartButton = new QPushButton(chartGroupBox);
+        resetChartButton->setObjectName("resetChartButton");
+
+        filterLayout->addWidget(resetChartButton);
 
 
         chartLayout->addLayout(filterLayout);
@@ -109,7 +129,12 @@ public:
         statsFilterComboBox->setItemText(2, QCoreApplication::translate("ChartWindow", "By Consultant", nullptr));
 
         filterValueComboBox->setPlaceholderText(QCoreApplication::translate("ChartWindow", "Select filter value...", nullptr));
+        chartTypeLabel->setText(QCoreApplication::translate("ChartWindow", "Chart Type:", nullptr));
+        chartTypeComboBox->setItemText(0, QCoreApplication::translate("ChartWindow", "Bar Chart", nullptr));
+        chartTypeComboBox->setItemText(1, QCoreApplication::translate("ChartWindow", "Pie Chart", nullptr));
+
         refreshChartButton->setText(QCoreApplication::translate("ChartWindow", "Refresh Chart", nullptr));
+        resetChartButton->setText(QCoreApplication::translate("ChartWindow", "Reset", nullptr));
     } // retranslateUi
 
 };

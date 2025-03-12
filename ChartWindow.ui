@@ -57,9 +57,37 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="chartTypeLabel">
+           <property name="text">
+            <string>Chart Type:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="chartTypeComboBox">
+           <item>
+            <property name="text">
+             <string>Bar Chart</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Pie Chart</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="refreshChartButton">
            <property name="text">
             <string>Refresh Chart</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="resetChartButton">
+           <property name="text">
+            <string>Reset</string>
            </property>
           </widget>
          </item>
