@@ -40,6 +40,7 @@ public:
     QPushButton *refreshChartButton;
     QPushButton *resetChartButton;
     QChartView *statsChartView;
+    QLabel *chartDetailsLabel;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *ChartWindow)
@@ -83,6 +84,7 @@ public:
         chartTypeComboBox = new QComboBox(chartGroupBox);
         chartTypeComboBox->addItem(QString());
         chartTypeComboBox->addItem(QString());
+        chartTypeComboBox->addItem(QString());
         chartTypeComboBox->setObjectName("chartTypeComboBox");
 
         filterLayout->addWidget(chartTypeComboBox);
@@ -105,6 +107,12 @@ public:
         statsChartView->setMinimumSize(QSize(0, 400));
 
         chartLayout->addWidget(statsChartView);
+
+        chartDetailsLabel = new QLabel(chartGroupBox);
+        chartDetailsLabel->setObjectName("chartDetailsLabel");
+        chartDetailsLabel->setAlignment(Qt::AlignCenter);
+
+        chartLayout->addWidget(chartDetailsLabel);
 
 
         verticalLayout->addWidget(chartGroupBox);
@@ -132,9 +140,11 @@ public:
         chartTypeLabel->setText(QCoreApplication::translate("ChartWindow", "Chart Type:", nullptr));
         chartTypeComboBox->setItemText(0, QCoreApplication::translate("ChartWindow", "Bar Chart", nullptr));
         chartTypeComboBox->setItemText(1, QCoreApplication::translate("ChartWindow", "Pie Chart", nullptr));
+        chartTypeComboBox->setItemText(2, QCoreApplication::translate("ChartWindow", "Line Chart", nullptr));
 
         refreshChartButton->setText(QCoreApplication::translate("ChartWindow", "Refresh Chart", nullptr));
         resetChartButton->setText(QCoreApplication::translate("ChartWindow", "Reset", nullptr));
+        chartDetailsLabel->setText(QCoreApplication::translate("ChartWindow", "Hover over a chart element for details", nullptr));
     } // retranslateUi
 
 };

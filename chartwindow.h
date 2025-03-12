@@ -9,6 +9,8 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QPieSeries>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QDateTimeAxis>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ChartWindow; }
@@ -26,15 +28,23 @@ private slots:
     void on_refreshChartButton_clicked();
     void on_statsFilterComboBox_currentIndexChanged(int index);
     void on_chartTypeComboBox_currentIndexChanged(int index);
-    void on_resetChartButton_clicked(); // New slot for reset button
+    void on_resetChartButton_clicked();
+    void on_pieSliceHovered(QPieSlice *slice, bool state);
+    void on_barHovered(bool status, int index);
+    void on_lineHovered(QPointF point, bool state);
 
 private:
     Ui::ChartWindow *ui;
     Client Etmp;
     QString currentChartType;
+    QMap<QString, int> currentDataMap;
+    QBarSet *currentBarSet;
+    int hoveredBarIndex;
+    QMap<QDate, int> lineDataMap;
 
     void updateChart();
     void populateFilterValues();
+    void updateChartOptions(); // Added declaration
 };
 
 #endif // CHARTWINDOW_H
