@@ -22,6 +22,11 @@
 #include <QTextCharFormat>
 #include <QTime>
 #include "emailsender.h"
+#include <QtCharts/QChart>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -31,10 +36,11 @@ MainWindow::MainWindow(QWidget *parent)
     , emailAttempts(0)
     , emailSuccesses(0)
 {
+    qDebug() << "Starting MainWindow constructor";
     ui->setupUi(this);
-    applyLightTheme(); // Set default theme
+    applyLightTheme();
 
-    // Set up the datetime edit widget for consultations
+    // DateTimeEdit setup (unchanged)
     QDateTimeEdit *dateTimeEdit = new QDateTimeEdit(this);
     dateTimeEdit->setObjectName("consultation_datetime");
     dateTimeEdit->setCalendarPopup(true);
@@ -60,17 +66,10 @@ MainWindow::MainWindow(QWidget *parent)
         gridLayout->addWidget(dateTimeEdit, row, column);
     }
 
-    // Update search date widget to search date time
-    QDateTimeEdit *searchDateTimeEdit = new QDateTimeEdit(this);
-    searchDateTimeEdit->setObjectName("searchDateTimeEdit");
-    searchDateTimeEdit->setCalendarPopup(true);
-    searchDateTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm");
-    searchDateTimeEdit->setDateTime(QDateTime::currentDateTime());
-
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    // Connect existing buttons
+    // Connect buttons (remove refreshChartButton connection)
     connect(ui->menuButton, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
     connect(ui->add, &QPushButton::clicked, this, &MainWindow::on_addButtonclicked);
     connect(ui->Delet, &QPushButton::clicked, this, &MainWindow::on_removeButtonClicked);
@@ -78,18 +77,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->themeButton, &QPushButton::clicked, this, &MainWindow::toggleTheme);
     connect(ui->resetSearchButton, &QPushButton::clicked, this, &MainWindow::on_resetSearchButton_clicked);
     connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::tableViewHeaderClicked);
-
     connect(ui->pushButton_5, &QPushButton::clicked, this, &MainWindow::sendConsultationReminders);
     connect(ui->pushButton_3, &QPushButton::clicked, this, &MainWindow::showStatistics);
+    connect(ui->refreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_refreshStatsButton_clicked);
+    connect(ui->openChartButton, &QPushButton::clicked, this, &MainWindow::on_openChartButton_clicked); // New connection
 
-    // Connect dynamic search signals
     connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_searchInput_textChanged);
     connect(ui->searchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::on_searchCriteriaComboBox_currentIndexChanged);
 
-    connect(ui->refreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_refreshStatsButton_clicked);
-
-    // Setup calendar functionality
     setupCalendarView();
     QSqlQueryModel *model = Etmp.afficher();
     ui->tableView->setModel(model);
@@ -99,13 +95,6 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     checkAndSendReminders();
-
-    if (!ui->statsDisplay) {
-        qDebug() << "statsDisplay is nullptr in constructor";
-        QMessageBox::critical(this, "Error", "Statistics display text edit not found in UI.");
-    }
-
-    // Install event filter for calendar hover
     ui->consultationCalendar->installEventFilter(this);
 }
 
@@ -762,104 +751,155 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
 
 void MainWindow::on_exportPdfButton_clicked()
 {
-    static QElapsedTimer lastClickTime;
-    if (lastClickTime.isValid() && lastClickTime.elapsed() < 1000) {
-        qDebug() << "Ignoring rapid click";
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export PDF"), "", tr("PDF Files (*.pdf)"));
+    if (fileName.isEmpty())
         return;
-    }
-    lastClickTime.restart();
-
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save PDF"), "", tr("PDF Files (*.pdf)"));
-    if (fileName.isEmpty()) {
-        return; // No need to re-enable a button since we removed statsTable
-    }
-
-    if (!fileName.endsWith(".pdf", Qt::CaseInsensitive))
-        fileName += ".pdf";
-
-    qDebug() << "Exporting to:" << fileName;
 
     QPdfWriter pdfWriter(fileName);
     pdfWriter.setPageSize(QPageSize::A4);
-    pdfWriter.setPageMargins(QMarginsF(20, 20, 20, 20));
+    pdfWriter.setPageMargins(QMarginsF(20, 20, 20, 20)); // 20mm margins
+    pdfWriter.setResolution(300); // Higher resolution for clarity
 
     QPainter painter(&pdfWriter);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QAbstractItemModel* model = ui->tableView->model();
-    if (!model) {
-        QMessageBox::warning(this, "Export Error", "No data available to export.");
-        return;
+    // Scaling factor to convert from PDF points to painter coordinates
+    const qreal scaleFactor = pdfWriter.logicalDpiX() / 72.0; // Assuming 72 points per inch as base
+    const qreal mmToPoints = 2.83465; // 1 mm = 2.83465 points at 72 DPI
+    const qreal margin = 20 * mmToPoints * scaleFactor; // 20mm margin in scaled points
+    const qreal pageWidth = pdfWriter.width() - 2 * margin;
+    const qreal pageHeight = pdfWriter.height() - 2 * margin;
+
+    // Fonts
+    QFont titleFont("Arial", 14, QFont::Bold);
+    QFont headerFont("Arial", 10, QFont::Bold);
+    QFont bodyFont("Arial", 9);
+    QFont summaryFont("Arial", 11, QFont::Bold);
+
+    // Title
+    painter.setFont(titleFont);
+    painter.setPen(Qt::darkBlue);
+    QString title = "Client Management System Report";
+    QString date = QDate::currentDate().toString("MMMM d, yyyy"); // e.g., "March 11, 2025"
+    QString headerText = QString("%1\nGenerated on: %2").arg(title, date);
+    painter.drawText(QRectF(margin, margin, pageWidth, 50 * scaleFactor), Qt::AlignCenter, headerText);
+
+    // Move to table area
+    qreal yPos = margin + 60 * scaleFactor;
+
+    // Table Headers
+    QStringList headers = {"Name", "Sector", "Contact", "Email", "Date & Time", "Consultant"};
+    qreal columnWidths[] = {1.5, 1.2, 1.2, 2.0, 1.5, 0.6}; // Proportional widths
+    qreal totalWidthUnits = 0;
+    for (qreal width : columnWidths) totalWidthUnits += width;
+    qreal tableWidth = pageWidth;
+    qreal rowHeight = 30 * scaleFactor; // Increased for readability
+
+    // Calculate actual column widths
+    QVector<qreal> actualWidths(headers.size());
+    qreal accumulatedWidth = margin;
+    for (int i = 0; i < headers.size(); ++i) {
+        actualWidths[i] = (columnWidths[i] / totalWidthUnits) * tableWidth;
     }
 
-    const int rows = model->rowCount();
-    const int columns = model->columnCount();
-    const int margin = 100;
-    const int cellPadding = 50;
-    const int headerHeight = 300;
-    const int rowHeight = 200;
-
-    int pageWidth = pdfWriter.width() - 2 * margin;
-    int columnWidth = pageWidth / columns;
-
-    QFont headerFont("Arial", 12, QFont::Bold);
-    QFont dataFont("Arial", 10);
-
-    painter.setFont(QFont("Arial", 14, QFont::Bold));
-    painter.drawText(QRectF(margin, margin, pageWidth, 100),
-                     Qt::AlignCenter, "Client Management Report");
-
-    int yPos = margin + 200;
-
+    // Draw table headers
     painter.setFont(headerFont);
-    for (int col = 0; col < columns; ++col) {
-        QString header = model->headerData(col, Qt::Horizontal).toString();
-        QRectF cellRect(margin + col * columnWidth, yPos, columnWidth, headerHeight);
-        painter.drawText(cellRect.adjusted(cellPadding, cellPadding, -cellPadding, -cellPadding),
-                         Qt::AlignCenter, header);
-        painter.drawRect(cellRect);
+    painter.setBrush(QBrush(QColor(200, 220, 255))); // Light blue background for headers
+    painter.setPen(Qt::black);
+    painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
+    for (int i = 0; i < headers.size(); ++i) {
+        painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
+                         Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+        accumulatedWidth += actualWidths[i];
     }
-    yPos += headerHeight;
+    yPos += rowHeight;
 
-    painter.setFont(dataFont);
-    for (int row = 0; row < rows; ++row) {
-        if (yPos + rowHeight > pdfWriter.height() - margin) {
+    // Draw table data and track page number
+    QSqlQueryModel *model = Etmp.afficher();
+    int rowCount = model->rowCount();
+    int colCount = model->columnCount();
+    int pageNumber = 1;
+
+    painter.setFont(bodyFont);
+    painter.setBrush(Qt::NoBrush);
+    for (int row = 0; row < rowCount; ++row) {
+        if (yPos + rowHeight > pageHeight - margin) { // Page break
+            // Draw page number
+            painter.setFont(bodyFont);
+            painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
+                             Qt::AlignRight, QString("Page %1").arg(pageNumber++));
+
             pdfWriter.newPage();
             yPos = margin;
+
+            // Redraw headers on new page
             painter.setFont(headerFont);
-            for (int col = 0; col < columns; ++col) {
-                QString header = model->headerData(col, Qt::Horizontal).toString();
-                QRectF cellRect(margin + col * columnWidth, yPos, columnWidth, headerHeight);
-                painter.drawText(cellRect.adjusted(cellPadding, cellPadding, -cellPadding, -cellPadding),
-                                 Qt::AlignCenter, header);
-                painter.drawRect(cellRect);
+            painter.setBrush(QBrush(QColor(200, 220, 255)));
+            accumulatedWidth = margin;
+            painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
+            for (int i = 0; i < headers.size(); ++i) {
+                painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
+                                 Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+                accumulatedWidth += actualWidths[i];
             }
-            yPos += headerHeight;
+            yPos += rowHeight;
         }
 
-        for (int col = 0; col < columns; ++col) {
+        accumulatedWidth = margin;
+        painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
+        for (int col = 0; col < colCount; ++col) {
             QString text = model->data(model->index(row, col)).toString();
-            if (col == 4) { // Date & Time column
-                QDateTime dt = model->data(model->index(row, col)).toDateTime();
-                text = dt.toString("yyyy-MM-dd HH:mm");
-            }
-            QRectF cellRect(margin + col * columnWidth, yPos, columnWidth, rowHeight);
-            painter.drawText(cellRect.adjusted(cellPadding, cellPadding, -cellPadding, -cellPadding),
-                             Qt::AlignCenter, text);
-            painter.drawRect(cellRect);
+            QRectF textRect(accumulatedWidth + 2 * scaleFactor, yPos, actualWidths[col] - 4 * scaleFactor, rowHeight);
+            painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
+            accumulatedWidth += actualWidths[col];
         }
         yPos += rowHeight;
     }
 
-    painter.setFont(QFont("Arial", 8));
-    QString footer = QString("Generated on: %1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm"));
-    painter.drawText(QRectF(margin, pdfWriter.height() - margin, pageWidth, 100),
-                     Qt::AlignRight, footer);
+    // Draw page number on the last page
+    painter.setFont(bodyFont);
+    painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
+                     Qt::AlignRight, QString("Page %1").arg(pageNumber));
+
+    // Summary Section
+    yPos += 20 * scaleFactor; // Extra spacing
+    if (yPos + 60 * scaleFactor < pageHeight - margin) {
+        painter.setFont(summaryFont);
+        painter.setPen(Qt::darkGreen);
+        QDateTime start = QDateTime::currentDateTime().addDays(-30);
+        QDateTime end = QDateTime::currentDateTime();
+        int totalConsultations = Etmp.getTotalConsultations(start, end);
+        int uniqueClients = Etmp.getUniqueClients(start, end);
+        QString summary = QString("Summary (Last 30 Days):\n"
+                                  "Total Consultations: %1\n"
+                                  "Unique Clients: %2")
+                              .arg(totalConsultations)
+                              .arg(uniqueClients);
+        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
+    } else {
+        pdfWriter.newPage();
+        yPos = margin;
+        painter.setFont(summaryFont);
+        painter.setPen(Qt::darkGreen);
+        QDateTime start = QDateTime::currentDateTime().addDays(-30);
+        QDateTime end = QDateTime::currentDateTime();
+        int totalConsultations = Etmp.getTotalConsultations(start, end);
+        int uniqueClients = Etmp.getUniqueClients(start, end);
+        QString summary = QString("Summary (Last 30 Days):\n"
+                                  "Total Consultations: %1\n"
+                                  "Unique Clients: %2")
+                              .arg(totalConsultations)
+                              .arg(uniqueClients);
+        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
+        // Page number for summary page
+        painter.setFont(bodyFont);
+        painter.setPen(Qt::black);
+        painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
+                         Qt::AlignRight, QString("Page %1").arg(pageNumber + 1));
+    }
 
     painter.end();
-
-    QMessageBox::information(this, "Success", "PDF exported successfully!");
-    ui->statusBar->showMessage("PDF exported to: " + fileName);
+    QMessageBox::information(this, "Success", "PDF exported successfully to " + fileName);
 }
 
 void MainWindow::on_searchInput_textChanged()
@@ -999,16 +1039,25 @@ void MainWindow::updateStatisticsDisplay() {
 
 void MainWindow::checkAndSendReminders()
 {
+    qDebug() << "Starting checkAndSendReminders()";
+
     QDateTime now = QDateTime::currentDateTime();
     QDateTime reminderEnd = now.addSecs(24 * 60 * 60);
+    qDebug() << "Reminder range:" << now.toString() << "to" << reminderEnd.toString();
 
     QSqlQueryModel *model = Etmp.getUpcomingConsultations(now, reminderEnd);
+    if (!model) {
+        qDebug() << "Model is null in checkAndSendReminders()";
+        return;
+    }
     int rowCount = model->rowCount();
+    qDebug() << "Upcoming consultations count:" << rowCount;
 
     for (int row = 0; row < rowCount; ++row) {
         QString name = model->data(model->index(row, 0)).toString();
         QString email = model->data(model->index(row, 3)).toString();
         QDateTime consultationDate = model->data(model->index(row, 4)).toDateTime();
+        qDebug() << "Processing reminder for:" << name << "Email:" << email << "Date:" << consultationDate.toString();
 
         if (!email.isEmpty()) {
             QString subject = "Consultation Reminder";
@@ -1031,4 +1080,11 @@ void MainWindow::checkAndSendReminders()
     if (rowCount == 0) {
         ui->statusBar->showMessage("No upcoming consultations found.");
     }
+
+    qDebug() << "checkAndSendReminders() completed";
+}
+void MainWindow::on_openChartButton_clicked()
+{
+    ChartWindow *chartWindow = new ChartWindow(this);
+    chartWindow->show();
 }

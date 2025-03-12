@@ -105,6 +105,7 @@ public:
     QTextEdit *statsDisplay;
     QHBoxLayout *buttonLayout;
     QSpacerItem *horizontalSpacer2;
+    QPushButton *openChartButton;
     QPushButton *refreshStatsButton;
     QStatusBar *statusBar;
 
@@ -469,6 +470,11 @@ public:
 
         buttonLayout->addItem(horizontalSpacer2);
 
+        openChartButton = new QPushButton(tab);
+        openChartButton->setObjectName("openChartButton");
+
+        buttonLayout->addWidget(openChartButton);
+
         refreshStatsButton = new QPushButton(tab);
         refreshStatsButton->setObjectName("refreshStatsButton");
 
@@ -538,6 +544,7 @@ public:
         consultationCountLabel->setText(QCoreApplication::translate("MainWindow", "Consultations: 0", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(calendarTab), QCoreApplication::translate("MainWindow", "Consultation Calendar", nullptr));
         statsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
+        openChartButton->setText(QCoreApplication::translate("MainWindow", "View Chart", nullptr));
         refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi

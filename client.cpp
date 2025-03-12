@@ -94,30 +94,30 @@ bool Client::ajouter() {
 
 QSqlQueryModel* Client::afficher() {
     QSqlQueryModel *model = new QSqlQueryModel();
-    
-    // Add EMAIL to the query
-    model->setQuery("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients");
-    
+
+    QSqlQuery query;
+    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients");
+    if (!query.exec()) {
+        qDebug() << "Error in Client::afficher():" << query.lastError().text();
+        return model; // Return empty model on error
+    }
+
+    model->setQuery(std::move(query));
+
+    if (model->lastError().isValid()) {
+        qDebug() << "Model error in Client::afficher():" << model->lastError().text();
+    }
+
+    qDebug() << "Client::afficher() rowCount:" << model->rowCount();
+
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("Sector"));
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
-    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));  // Add this line
+    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
     model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
-    
+
     return model;
-}
-
-bool Client::removeByName(const QString& clientName) {
-    QSqlQuery query;
-    query.prepare("DELETE FROM Clients WHERE NAME = :clientName");
-    query.bindValue(":clientName", clientName);
-
-    if (!query.exec()) {
-        qDebug() << "Error deleting client:" << query.lastError().text();
-        return false;
-    }
-    return true;
 }
 
 
@@ -462,4 +462,19 @@ int Client::getUniqueClients(const QDateTime &start, const QDateTime &end)
     }
     qDebug() << "Error fetching unique clients:" << query.lastError().text();
     return 0;
+}
+
+bool Client::removeByName(const QString &name)
+{
+    QSqlQuery query;
+    query.prepare("DELETE FROM Clients WHERE NAME = :name");
+    query.bindValue(":name", name);
+
+    if (!query.exec()) {
+        qDebug() << "Error removing client by name:" << query.lastError().text();
+        return false;
+    }
+
+    qDebug() << "Client removed successfully:" << name;
+    return true;
 }

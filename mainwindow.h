@@ -5,6 +5,7 @@
 #include "qdatetimeedit.h"
 #include "updateclientdialog.h"
 #include "emailsender.h"
+#include "ChartWindow.h" // Include the new chart window
 #include <QPrinter>
 #include <QPdfWriter>
 #include <QPainter>
@@ -44,6 +45,7 @@ private slots:
     void sendConsultationReminders();
     void showStatistics();
     void on_refreshStatsButton_clicked();
+    void on_openChartButton_clicked(); // New slot
 
 private:
     Ui::MainWindow *ui;
@@ -66,12 +68,11 @@ private:
     void performSearch();
     EmailSender *emailSender;
     void checkAndSendReminders();
-    bool calendarHoverEventFilter(QObject* watched, QEvent* event); // New hover event filter
-    bool eventFilter(QObject* watched, QEvent* event) override; // Override eventFilter from QObject
+    bool calendarHoverEventFilter(QObject* watched, QEvent* event);
+    bool eventFilter(QObject* watched, QEvent* event) override;
+    void updateStatisticsDisplay();
 
     int emailAttempts = 0;
     int emailSuccesses = 0;
-    void updateStatisticsDisplay();
 };
-
 #endif // MAINWINDOW_H

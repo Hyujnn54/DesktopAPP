@@ -651,6 +651,13 @@
                  </spacer>
                 </item>
                 <item>
+                 <widget class="QPushButton" name="openChartButton">
+                  <property name="text">
+                   <string>View Chart</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QPushButton" name="refreshStatsButton">
                   <property name="text">
                    <string>Refresh Statistics</string>

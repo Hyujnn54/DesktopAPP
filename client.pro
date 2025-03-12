@@ -1,4 +1,4 @@
-QT += core gui sql printsupport network
+QT += core gui sql printsupport network charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -9,6 +9,7 @@ CONFIG += c++17
 message("C++ flags: $$QMAKE_CXXFLAGS")
 
 SOURCES += \
+    chartwindow.cpp \
     client.cpp \
     connection.cpp \
     emailsender.cpp \
@@ -17,6 +18,7 @@ SOURCES += \
     updateclientdialog.cpp
 
 HEADERS += \
+    chartwindow.h \
     client.h \
     connection.h \
     emailsender.h \
@@ -24,6 +26,7 @@ HEADERS += \
     updateclientdialog.h
 
 FORMS += \
+    ChartWindow.ui \
     mainwindow.ui \
     updateclientdialog.ui
 
