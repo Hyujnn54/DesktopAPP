@@ -334,7 +334,9 @@ public:
 
         notificationLabel = new QLabel(ClientForm);
         notificationLabel->setObjectName("notificationLabel");
-        notificationLabel->setPixmap(QPixmap(QString::fromUtf8("C:/Users/Mega Pc/Downloads/R.ico")));
+        notificationLabel->setPixmap(QPixmap(QString::fromUtf8("C:/Users/Mega Pc/Downloads/Ra.png")));
+        notificationLabel->setScaledContents(false);
+        notificationLabel->setWordWrap(false);
 
         gridLayout_2->addWidget(notificationLabel, 1, 5, 1, 1);
 

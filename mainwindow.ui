@@ -463,7 +463,13 @@ border-color: rgb(0, 0, 0);</string>
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap>C:/Users/Mega Pc/Downloads/R.ico</pixmap>
+               <pixmap>C:/Users/Mega Pc/Downloads/Ra.png</pixmap>
+              </property>
+              <property name="scaledContents">
+               <bool>false</bool>
+              </property>
+              <property name="wordWrap">
+               <bool>false</bool>
               </property>
              </widget>
             </item>

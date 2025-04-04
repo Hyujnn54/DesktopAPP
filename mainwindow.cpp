@@ -76,27 +76,39 @@ MainWindow::~MainWindow()
 }
 void MainWindow::onNotificationLabelClicked()
 {
-    resetNotificationCount(); // Reset when user clicks the label
+    if (notificationCount == 0) {
+        QMessageBox::information(this, "Notifications", "No recent changes.");
+    } else {
+        QString message = "Recent Changes:\n" + changeHistory.join("\n");
+        QMessageBox::information(this, "Notifications", message);
+    }
+    resetNotificationCount(); // Optional: Reset after viewing
 }
-void MainWindow::updateNotificationCount(int change)
+void MainWindow::updateNotificationCount(int change, const QString &changeDescription)
 {
     notificationCount += change;
     if (notificationCount < 0) notificationCount = 0;
 
-    qDebug() << "Before update - Count:" << notificationCount; // Debug
+    if (!changeDescription.isEmpty()) {
+        changeHistory.append(changeDescription);
+        if (changeHistory.size() > 10) changeHistory.removeFirst();
+    }
+
+    QString labelText = QString("<img src=':/images/notification_icon.png' width='16' height='16'> <a href='#'>Notifications: %1</a>").arg(notificationCount);
     if (notificationCount > 0) {
         ui->notificationLabel->setStyleSheet("background-color: #D93025; color: white; border-radius: 10px; padding: 2px 6px;");
     } else {
         ui->notificationLabel->setStyleSheet("font-weight: bold; color: #3A5DAE;");
     }
-    ui->notificationLabel->setText(QString("Notifications: %1").arg(notificationCount));
-    qDebug() << "After update - Count:" << notificationCount; // Debug
+    ui->notificationLabel->setText(labelText);
+    qDebug() << "Notification count updated to:" << notificationCount << "Change:" << changeDescription;
 }
 void MainWindow::resetNotificationCount()
 {
     notificationCount = 0;
+    changeHistory.clear(); // Clear history when resetting
     ui->notificationLabel->setStyleSheet("font-weight: bold; color: #3A5DAE;");
-    ui->notificationLabel->setText("Notifications: 0");
+    ui->notificationLabel->setText("<img src=':notification_icon.png' width='16' height='16'> <a href='#'>Notifications: 0</a>");
     qDebug() << "Notification count reset";
 }
 void MainWindow::exportToPdf()
@@ -281,8 +293,8 @@ void MainWindow::on_addButtonclicked()
     if (f.ajoutforma())
     {
         QMessageBox::information(this, "Success", "Formation added successfully!");
-        updateNotificationCount(1); // Increment count
-        refreshTableView(); // Refresh table, but don’t reset count
+        updateNotificationCount(1, QString("Added formation: %1").arg(formation));
+        refreshTableView();
     }
     else
     {
@@ -320,8 +332,7 @@ void MainWindow::refreshTableView()
 void MainWindow::on_deleteButtonClicked()
 {
     QItemSelectionModel *selectionModel = ui->tabtr->selectionModel();
-    if (!selectionModel->hasSelection())
-    {
+    if (!selectionModel->hasSelection()) {
         QMessageBox::warning(this, "Erreur", "Veuillez sélectionner une formation à supprimer !");
         return;
     }
@@ -331,8 +342,7 @@ void MainWindow::on_deleteButtonClicked()
     int idfor = ui->tabtr->model()->index(row, 0).data().toInt();
 
     formations f;
-    if (!f.exists(idfor))
-    {
+    if (!f.exists(idfor)) {
         QMessageBox::warning(this, "Erreur", "Cette formation n'existe pas !");
         return;
     }
@@ -340,7 +350,7 @@ void MainWindow::on_deleteButtonClicked()
     if (formations::deleteFormation(idfor))
     {
         QMessageBox::information(this, "Succès", "Formation supprimée avec succès !");
-        updateNotificationCount(1); // Increment count
+        updateNotificationCount(1, QString("Deleted formation ID: %1").arg(idfor));
         refreshTableView();
     }
     else
@@ -392,7 +402,7 @@ void MainWindow::on_updateButtonClicked()
         if (f.updateFormation(idfor, newFormation, newDescription, newTrainer, newDate, newTime, newPrix))
         {
             QMessageBox::information(this, "Succès", "Formation mise à jour avec succès !");
-            updateNotificationCount(1); // Increment count
+            updateNotificationCount(1, QString("Updated formation ID: %1 to %2").arg(idfor).arg(newFormation));
             refreshTableView();
         }
         else

@@ -5,7 +5,7 @@
 #include <QSqlQueryModel>
 #include <QSortFilterProxyModel>
 #include <QLabel> // Include for QLabel
-
+#include <QStringList>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -41,9 +41,10 @@ private:
     void applyDarkTheme();
     void applyLightTheme();
     QWidget *sidebarWidget;
-    void updateNotificationCount(int change);
+    void updateNotificationCount(int change, const QString &changeDescription = "");
     void resetNotificationCount();
     void refreshTableView(); // New: Reset count when viewed
+    QStringList changeHistory;
 };
 
 #endif // MAINWINDOW_H
