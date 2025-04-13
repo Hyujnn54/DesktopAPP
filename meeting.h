@@ -4,17 +4,20 @@
 #include <QString>
 #include <QSqlQuery>
 #include <QSqlQueryModel>
-#include <QSqlError> // Add for error handling
+#include <QSqlError>
+#include <QDateTime> // Add this for QDateTime
+#include <QPixmap>
 
 class meeting
 {
     QString title, organiser, participant, agenda;
     int id, duration;
+    QDateTime datem; // New datetime field
 
 public:
-    //constructeurs
-    meeting(){}
-    meeting(QString,QString,QString,QString,int) ;
+    // Constructors
+    meeting() {}
+    meeting(QString, QString, QString, QString, int, QDateTime); // Updated constructor
 
     // Getters
     int getId() const;
@@ -23,6 +26,7 @@ public:
     QString getParticipant() const;
     QString getAgenda() const;
     int getDuration() const;
+    QDateTime getDatem() const; // New getter
 
     // Setters
     void setId(const int &id);
@@ -31,14 +35,15 @@ public:
     void setParticipant(const QString &participant);
     void setAgenda(const QString &agenda);
     void setDuration(int duration);
-
+    void setDatem(const QDateTime &datem); // New setter
+    // New method to generate QR code
+    QPixmap generateQRCode() const;
     // Functionalities
     bool add();
     QSqlQueryModel* afficher();
     bool delet(int id);
     bool update();
-    QSqlQueryModel* searchByTitle(const QString& title); // Add this line
-
+    QSqlQueryModel* searchByTitle(const QString& title);
 };
 
 #endif // MEETING_H

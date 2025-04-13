@@ -1,4 +1,4 @@
-QT       += core gui sql
+QT += core gui sql charts network printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -13,14 +13,16 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     meeting.cpp \
-    updatemeeting.cpp
+    updatemeeting.cpp \
+    qrcodegen.cpp
 
 
 HEADERS += \
     connection.h \
     mainwindow.h \
     meeting.h \
-    updatemeeting.h
+    updatemeeting.h \
+    qrcodegen.hpp
 
 
 FORMS += \
