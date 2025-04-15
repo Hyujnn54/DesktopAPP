@@ -14,6 +14,7 @@ UpdateTrainingDialog::UpdateTrainingDialog(int idfor, const formations &currentD
 
     QFormLayout *form = new QFormLayout(this);
 
+
     // Create input fields with current data
     formationEdit = new QLineEdit(currentData.getFormation());
     descriptionEdit = new QLineEdit(currentData.getDescription());

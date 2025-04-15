@@ -18,6 +18,7 @@ public:
     int getTime() const;
     double getPrix() const; // Change return type to double
 
+
     void setIdfor(int idfor);
     void setFormation(const QString &formation);
     void setDescription(const QString &description);

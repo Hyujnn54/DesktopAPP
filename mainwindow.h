@@ -6,6 +6,12 @@
 #include <QSortFilterProxyModel>
 #include <QLabel> // Include for QLabel
 #include <QStringList>
+#include <QtCharts/QChartView>      // Add for chart view
+#include <QtCharts/QBarSeries>      // Add for bar series
+#include <QtCharts/QBarSet>         // Add for bar set
+#include <QtCharts/QBarCategoryAxis>
+#include <QNetworkAccessManager> // Added for SMS API requests
+#include <QNetworkReply>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -29,13 +35,16 @@ private slots:
     void exportToPdf();
     void onNotificationLabelClicked();
 
-
+    void on_refreshStatsButton_clicked();
+    void onSmsRequestFinished(QNetworkReply *reply); // For SMS response handling
 private:
     Ui::MainWindow *ui;
     formations formation;
     bool isDarkTheme;
     QSqlQueryModel *tableModel;
     QSortFilterProxyModel *proxyModel;
+
+
     int notificationCount; // New: Track unread notifications
     QLabel *notificationLabel; // New: Display notification count
     void applyDarkTheme();
@@ -45,6 +54,12 @@ private:
     void resetNotificationCount();
     void refreshTableView(); // New: Reset count when viewed
     QStringList changeHistory;
+    QNetworkAccessManager *networkManager; // For SMS API requests
+    int totalFormations;
+    double totalCost;
+    double avgCost;
+    void updateStatistics();
+
 };
 
 #endif // MAINWINDOW_H

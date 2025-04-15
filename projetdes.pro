@@ -9,9 +9,17 @@ QT    +=sql
 QT += core gui sql printsupport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QMAKE_CXXFLAGS += -O0
-
+QT += core gui sql # Ensure 'sql' is present
+QT += core gui sql
+QT += charts
+RESOURCES += resources.qrc
+QT += core gui sql charts  # Add 'charts' here
+QT += core gui sql network  # Added 'network' module
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Atelier_Connexion
 TEMPLATE = app
+
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -29,6 +37,7 @@ CONFIG += console
 
 SOURCES += \
         connection.cpp \
+        customsqlquerymodel.cpp \
         formations.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -36,6 +45,7 @@ SOURCES += \
 
 HEADERS += \
         connection.h \
+        customsqlquerymodel.h \
         formations.h \
         mainwindow.h \
         updatetrainingdialog.h

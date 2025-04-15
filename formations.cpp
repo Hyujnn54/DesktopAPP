@@ -19,6 +19,7 @@ formations::formations()
 {
 }
 
+
 // Parameterized constructor
 formations::formations(int idfor, QString &formation, QString &description, QString &trainer, QDate &datef, int &time, double &prix)
     : idfor(idfor),
