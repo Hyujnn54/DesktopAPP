@@ -5,6 +5,7 @@
 #include <QVariant>
 #include <QSqlError>
 #include <QMessageBox>
+#include <QFile>
 Employee::Employee()
     : cin(""), lastName(""), firstName(""), dateOfBirth(QDate::currentDate()),
     phoneNumber(""), email(""), gender("Homme"), salary(0),
@@ -99,18 +100,24 @@ bool Employee::ajouter() {
     QSqlQuery query;
     query.prepare("INSERT INTO EMPLOYEE (CIN, LAST_NAME, FIRST_NAME,DATE_BIRTH, PHONE, EMAIL, GENDER, SALARY,DATE_HIRING, SPECIALITY,IMAGE,ROLE)"
     "VALUES (:cin,:lastName, :firstName,:dateOfBirth, :phoneNumber, :email, :gender, :salary,:dateOfHire, :field, :imagePath, :role)");
-
+    QFile file(imagePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open image file for reading:" << imagePath;
+        return false;
+    }
+    QByteArray imageData = file.readAll();
+    file.close();
     query.bindValue(":cin", cin);
     query.bindValue(":lastName",lastName);
     query.bindValue(":firstName", firstName);
-    query.bindValue(":dateOfBirth", dateOfBirth.toString("dd/MM/yyyy"));
+    query.bindValue(":dateOfBirth", dateOfBirth);
     query.bindValue(":phoneNumber", phoneNumber);
     query.bindValue(":email", email);
     query.bindValue(":gender", gender);
     query.bindValue(":salary", salary);
-    query.bindValue(":dateOfHire", dateOfHire.toString("dd/MM/yyyy"));
+    query.bindValue(":dateOfHire", dateOfHire);
     query.bindValue(":field", field);
-    query.bindValue(":imagePath", imagePath);
+    query.bindValue(":imagePath", imageData);
     query.bindValue(":role", role);
 
     return query.exec(); // Execute query
@@ -118,7 +125,7 @@ bool Employee::ajouter() {
 QSqlQueryModel *Employee::loadEmployees(){
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
-    query.prepare("SELECT ID, CIN, LAST_NAME, FIRST_NAME, DATE_BIRTH, PHONE, EMAIL, GENDER, SALARY, DATE_HIRING, SPECIALITY,ROLE FROM EMPLOYEE");
+    query.prepare("SELECT ID, CIN, LAST_NAME, FIRST_NAME, DATE_BIRTH, PHONE, EMAIL, GENDER, SALARY, DATE_HIRING, SPECIALITY,IMAGE,ROLE FROM EMPLOYEE");
 
     if (query.exec()) {
         model->setQuery(std::move(query));
@@ -133,7 +140,8 @@ QSqlQueryModel *Employee::loadEmployees(){
         model->setHeaderData(8, Qt::Horizontal, QObject::tr("Salary"));
         model->setHeaderData(9, Qt::Horizontal, QObject::tr("Date of Hiring"));
         model->setHeaderData(10, Qt::Horizontal, QObject::tr("Speciality"));
-        model->setHeaderData(10, Qt::Horizontal, QObject::tr("Role"));
+        model->setHeaderData(11, Qt::Horizontal, QObject::tr("Image"));
+        model->setHeaderData(12, Qt::Horizontal, QObject::tr("Role"));
     } else {
         qDebug() << "Error loading employee list:" << query.lastError().text();
         delete model; // Clean up if query fails
@@ -143,27 +151,33 @@ QSqlQueryModel *Employee::loadEmployees(){
     return model;
 
 }
-bool Employee::updateEmployee(int id, QString cin, QString lastName, QString firstName, QDate dateBirth,
-                              QString phone, QString email, QString gender, int salary, QDate dateHiring,
-                              QString specialty, QString imagePath, QString role) {
+bool Employee::updateEmployee(int id, QString cin, QString lastName, QString firstName, QDate dateOfBirth,
+                              QString phoneNumber, QString email, QString gender, int salary, QDate dateOfHire,
+                              QString field, QString imagePath, QString role) {
     QSqlQuery query;
     query.prepare("UPDATE EMPLOYEE SET CIN = :cin, LAST_NAME = :lastName, FIRST_NAME = :firstName, "
-                  "DATE_BIRTH = :dateBirth, PHONE = :phone, EMAIL = :email, GENDER = :gender, "
-                  "SALARY = :salary, DATE_HIRING = :dateHiring, SPECIALITY = :specialty, "
-                  "IMAGE = :imagePath, ROLE = :role WHERE ID = :id");
-
+                  "DATE_BIRTH = :dateOfBirth, PHONE = :phoneNumber, EMAIL = :email, GENDER = :gender, "
+                  "SALARY = :salary, DATE_HIRING = :dateOfHire, SPECIALITY = :field, "
+                  "IMAGE = :imagePath, ROLE = :role WHERE ID = :id");// Explicitly specify as integer
+    QFile file(imagePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open image file for reading:" << imagePath;
+        return false;
+    }
+    QByteArray imageData = file.readAll();
+    file.close();
     query.bindValue(":id", id);
     query.bindValue(":cin", cin);
     query.bindValue(":lastName", lastName);
     query.bindValue(":firstName", firstName);
-    query.bindValue(":dateOfBirth", dateOfBirth.toString("dd/MM/yyyy"));
-    query.bindValue(":phone", phone);
+    query.bindValue(":dateOfBirth", dateOfBirth); // Convert QDate to string
+    query.bindValue(":phoneNumber", phoneNumber);
     query.bindValue(":email", email);
     query.bindValue(":gender", gender);
-    query.bindValue(":salary", salary);
-    query.bindValue(":dateOfHire", dateOfHire.toString("dd/MM/yyyy"));
-    query.bindValue(":specialty", specialty);
-    query.bindValue(":imagePath", imagePath);
+    query.bindValue(":salary", salary); // Explicitly specify as integer
+    query.bindValue(":dateOfHire", dateOfHire); // Convert QDate to string
+    query.bindValue(":field", field);
+    query.bindValue(":imagePath", imageData);
     query.bindValue(":role", role);
 
     return query.exec();

@@ -47,6 +47,8 @@ public:
     QCheckBox *rememberMeCheckBox;
     QSpacerItem *verticalSpacer_2;
     QPushButton *signBtn;
+    QSpacerItem *verticalSpacer_6;
+    QPushButton *faceIdBtn;
     QHBoxLayout *horizontalLayout_2;
     QSpacerItem *horizontalSpacer_2;
     QLabel *noteLabel;
@@ -194,6 +196,16 @@ public:
 
         verticalLayout_2->addWidget(signBtn);
 
+        verticalSpacer_6 = new QSpacerItem(20, 10, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Fixed);
+
+        verticalLayout_2->addItem(verticalSpacer_6);
+
+        faceIdBtn = new QPushButton(loginFrame);
+        faceIdBtn->setObjectName("faceIdBtn");
+        faceIdBtn->setMinimumSize(QSize(0, 45));
+
+        verticalLayout_2->addWidget(faceIdBtn);
+
 
         verticalLayout->addWidget(loginFrame);
 
@@ -240,6 +252,7 @@ public:
         lineEdit_pwd->setPlaceholderText(QCoreApplication::translate("sign", "Enter your CIN", nullptr));
         rememberMeCheckBox->setText(QCoreApplication::translate("sign", "Remember me", nullptr));
         signBtn->setText(QCoreApplication::translate("sign", "Sign In", nullptr));
+        faceIdBtn->setText(QCoreApplication::translate("sign", "Face ID", nullptr));
         noteLabel->setText(QCoreApplication::translate("sign", "<html><head/><body><p>Contact HR for account assistance</p></body></html>", nullptr));
     } // retranslateUi
 

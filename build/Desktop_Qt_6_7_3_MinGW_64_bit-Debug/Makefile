@@ -390,6 +390,7 @@ Makefile: ../../testing.pro C:/Qt/6.7.3/mingw_64/mkspecs/win32-g++/qmake.conf C:
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/exclusive_builds_post.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/default_post.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/lrelease.prf \
+		C:/Qt/6.7.3/mingw_64/mkspecs/features/win32/console.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/qml_debug.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/precompile_header.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/warn_on.prf \
@@ -402,17 +403,19 @@ Makefile: ../../testing.pro C:/Qt/6.7.3/mingw_64/mkspecs/win32-g++/qmake.conf C:
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/uic.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/qmake_use.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/file_copies.prf \
-		C:/Qt/6.7.3/mingw_64/mkspecs/features/win32/windows.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/testcase_targets.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/exceptions.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/yacc.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/lex.prf \
 		../../testing.pro \
+		C:/Qt/6.7.3/mingw_64/lib/Qt6Charts.prl \
+		C:/Qt/6.7.3/mingw_64/lib/Qt6OpenGLWidgets.prl \
+		C:/Qt/6.7.3/mingw_64/lib/Qt6PrintSupport.prl \
 		C:/Qt/6.7.3/mingw_64/lib/Qt6Widgets.prl \
+		C:/Qt/6.7.3/mingw_64/lib/Qt6OpenGL.prl \
 		C:/Qt/6.7.3/mingw_64/lib/Qt6Gui.prl \
 		C:/Qt/6.7.3/mingw_64/lib/Qt6Sql.prl \
 		C:/Qt/6.7.3/mingw_64/lib/Qt6Core.prl \
-		C:/Qt/6.7.3/mingw_64/lib/Qt6EntryPoint.prl \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/build_pass.prf \
 		../../resources.qrc \
 		debug/qmake_qmake_qm_files.qrc \
@@ -738,6 +741,7 @@ C:/Qt/6.7.3/mingw_64/mkspecs/features/resolve_config.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/exclusive_builds_post.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/default_post.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/lrelease.prf:
+C:/Qt/6.7.3/mingw_64/mkspecs/features/win32/console.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/qml_debug.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/precompile_header.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/warn_on.prf:
@@ -750,17 +754,19 @@ C:/Qt/6.7.3/mingw_64/mkspecs/features/win32/opengl.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/uic.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/qmake_use.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/file_copies.prf:
-C:/Qt/6.7.3/mingw_64/mkspecs/features/win32/windows.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/testcase_targets.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/exceptions.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/yacc.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/lex.prf:
 ../../testing.pro:
+C:/Qt/6.7.3/mingw_64/lib/Qt6Charts.prl:
+C:/Qt/6.7.3/mingw_64/lib/Qt6OpenGLWidgets.prl:
+C:/Qt/6.7.3/mingw_64/lib/Qt6PrintSupport.prl:
 C:/Qt/6.7.3/mingw_64/lib/Qt6Widgets.prl:
+C:/Qt/6.7.3/mingw_64/lib/Qt6OpenGL.prl:
 C:/Qt/6.7.3/mingw_64/lib/Qt6Gui.prl:
 C:/Qt/6.7.3/mingw_64/lib/Qt6Sql.prl:
 C:/Qt/6.7.3/mingw_64/lib/Qt6Core.prl:
-C:/Qt/6.7.3/mingw_64/lib/Qt6EntryPoint.prl:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/build_pass.prf:
 ../../resources.qrc:
 debug/qmake_qmake_qm_files.qrc:

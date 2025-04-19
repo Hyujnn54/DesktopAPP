@@ -27,7 +27,6 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
-#include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -57,6 +56,7 @@ public:
     QPushButton *pushButton_3;
     QPushButton *pushButton_4;
     QPushButton *themeButton;
+    QPushButton *logoutButton;
     QFrame *frame_4;
     QVBoxLayout *verticalLayout_5;
     QTabWidget *tabWidget;
@@ -104,15 +104,15 @@ public:
     QPushButton *deleteBtn;
     QPushButton *modifyBtn;
     QPushButton *saveUpdateBtn;
+    QPushButton *downloadBtn;
     QWidget *tab;
     QVBoxLayout *verticalLayoutStats;
-    QGroupBox *statsTextGroup;
-    QVBoxLayout *verticalLayoutText;
-    QTextEdit *statsDisplay;
+    QWidget *chartsContainer;
+    QVBoxLayout *chartsLayout;
     QHBoxLayout *buttonLayout;
     QSpacerItem *horizontalSpacer2;
     QPushButton *refreshStatsButton;
-    QStatusBar *statusBar;
+    QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -204,6 +204,11 @@ public:
         themeButton->setObjectName("themeButton");
 
         verticalLayout_3->addWidget(themeButton);
+
+        logoutButton = new QPushButton(frame_6);
+        logoutButton->setObjectName("logoutButton");
+
+        verticalLayout_3->addWidget(logoutButton);
 
 
         verticalLayout_2->addWidget(frame_6);
@@ -431,6 +436,11 @@ public:
 
         horizontalLayout_4->addWidget(saveUpdateBtn);
 
+        downloadBtn = new QPushButton(listEmployee);
+        downloadBtn->setObjectName("downloadBtn");
+
+        horizontalLayout_4->addWidget(downloadBtn);
+
 
         verticalLayout_6->addLayout(horizontalLayout_4);
 
@@ -439,18 +449,12 @@ public:
         tab->setObjectName("tab");
         verticalLayoutStats = new QVBoxLayout(tab);
         verticalLayoutStats->setObjectName("verticalLayoutStats");
-        statsTextGroup = new QGroupBox(tab);
-        statsTextGroup->setObjectName("statsTextGroup");
-        verticalLayoutText = new QVBoxLayout(statsTextGroup);
-        verticalLayoutText->setObjectName("verticalLayoutText");
-        statsDisplay = new QTextEdit(statsTextGroup);
-        statsDisplay->setObjectName("statsDisplay");
-        statsDisplay->setReadOnly(true);
+        chartsContainer = new QWidget(tab);
+        chartsContainer->setObjectName("chartsContainer");
+        chartsLayout = new QVBoxLayout(chartsContainer);
+        chartsLayout->setObjectName("chartsLayout");
 
-        verticalLayoutText->addWidget(statsDisplay);
-
-
-        verticalLayoutStats->addWidget(statsTextGroup);
+        verticalLayoutStats->addWidget(chartsContainer);
 
         buttonLayout = new QHBoxLayout();
         buttonLayout->setObjectName("buttonLayout");
@@ -477,9 +481,9 @@ public:
         verticalLayout->addWidget(frame_2);
 
         MainWindow->setCentralWidget(centralwidget);
-        statusBar = new QStatusBar(MainWindow);
-        statusBar->setObjectName("statusBar");
-        MainWindow->setStatusBar(statusBar);
+        statusbar = new QStatusBar(MainWindow);
+        statusbar->setObjectName("statusbar");
+        MainWindow->setStatusBar(statusbar);
 
         retranslateUi(MainWindow);
 
@@ -499,6 +503,7 @@ public:
         pushButton_3->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
         pushButton_4->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
         themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
+        logoutButton->setText(QCoreApplication::translate("MainWindow", "Logout", nullptr));
         dateEdit_hiring->setDisplayFormat(QCoreApplication::translate("MainWindow", "d/M/yyyy", nullptr));
         label_8->setText(QCoreApplication::translate("MainWindow", "Salary", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "First Name", nullptr));
@@ -536,8 +541,8 @@ public:
         deleteBtn->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
         modifyBtn->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
         saveUpdateBtn->setText(QCoreApplication::translate("MainWindow", "Save Update", nullptr));
+        downloadBtn->setText(QCoreApplication::translate("MainWindow", "Download", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(listEmployee), QCoreApplication::translate("MainWindow", "Manage Employees", nullptr));
-        statsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
         refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi

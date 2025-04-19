@@ -40,7 +40,7 @@
         bool ajouter();
         QSqlQueryModel* loadEmployees();
         bool updateEmployee(int id, QString cin, QString lastName, QString firstName, QDate dateBirth,
-                            QString phone, QString email, QString gender, int salary, QDate dateHiring, QString specialty, QString imagePath, QString role);
+                            QString phone, QString email, QString gender, int salary, QDate dateHiring, QString field, QString imagePath, QString role);
 
         bool deleteEmployee(int id);
 
