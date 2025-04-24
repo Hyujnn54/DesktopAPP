@@ -29,9 +29,10 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_addButtonclicked();
-    void on_removeButtonClicked();
+    void on_addButton_clicked();
+    void on_deleteButton_clicked();
     void on_updateButtonClicked();
+    void on_searchButton_clicked();
     void toggleSidebar();
     void toggleTheme();
     void on_searchInput_textChanged();
@@ -51,6 +52,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     Client Etmp;
+    Client client;
     QWidget *sidebarWidget;
     bool isDarkTheme;
     QMap<QDate, int> consultationCountMap;
@@ -73,7 +75,8 @@ private:
     bool calendarHoverEventFilter(QObject* watched, QEvent* event);
     bool eventFilter(QObject* watched, QEvent* event) override;
     void updateStatisticsDisplay();
-    void loadEmployees(); // New method to load employees
+    void loadEmployees();
+    void refreshClientTable(); // Added declaration
 
     int emailAttempts = 0;
     int emailSuccesses = 0;

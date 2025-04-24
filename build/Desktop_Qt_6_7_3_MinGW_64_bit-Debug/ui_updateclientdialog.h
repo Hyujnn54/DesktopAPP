@@ -11,6 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QDateTimeEdit>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QFormLayout>
@@ -36,7 +37,7 @@ public:
     QLineEdit *contactLineEdit;
     QLabel *label_4;
     QLabel *label_5;
-    QLineEdit *consultantLineEdit;
+    QComboBox *consultantComboBox;
     QDateTimeEdit *consultationDateTime;
     QLineEdit *emailLineEdit;
     QLabel *label_email;
@@ -94,10 +95,10 @@ public:
 
         formLayout->setWidget(5, QFormLayout::LabelRole, label_5);
 
-        consultantLineEdit = new QLineEdit(UpdateClientDialog);
-        consultantLineEdit->setObjectName("consultantLineEdit");
+        consultantComboBox = new QComboBox(UpdateClientDialog);
+        consultantComboBox->setObjectName("consultantComboBox");
 
-        formLayout->setWidget(5, QFormLayout::FieldRole, consultantLineEdit);
+        formLayout->setWidget(5, QFormLayout::FieldRole, consultantComboBox);
 
         consultationDateTime = new QDateTimeEdit(UpdateClientDialog);
         consultationDateTime->setObjectName("consultationDateTime");

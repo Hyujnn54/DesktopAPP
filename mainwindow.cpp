@@ -76,8 +76,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Connect buttons
     connect(ui->menuButton, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
-    connect(ui->add, &QPushButton::clicked, this, &MainWindow::on_addButtonclicked);
-    connect(ui->Delet, &QPushButton::clicked, this, &MainWindow::on_removeButtonClicked);
+    connect(ui->add, &QPushButton::clicked, this, &MainWindow::on_addButton_clicked);
+    connect(ui->Delet, &QPushButton::clicked, this, &MainWindow::on_deleteButton_clicked);
     connect(ui->update, &QPushButton::clicked, this, &MainWindow::on_updateButtonClicked);
     connect(ui->themeButton, &QPushButton::clicked, this, &MainWindow::toggleTheme);
     connect(ui->resetSearchButton, &QPushButton::clicked, this, &MainWindow::on_resetSearchButton_clicked);
@@ -91,14 +91,7 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::on_searchCriteriaComboBox_currentIndexChanged);
 
     setupCalendarView();
-    QSqlQueryModel *model = Etmp.afficher();
-    ui->tableView->setModel(model);
-    ui->tableView->resizeColumnsToContents();
-    for (int i = 0; i < model->columnCount(); ++i) {
-        ui->tableView->showColumn(i);
-    }
-
-    checkAndSendReminders();
+    refreshClientTable();
     ui->consultationCalendar->installEventFilter(this);
 }
 
@@ -121,11 +114,11 @@ void MainWindow::loadEmployees()
     ui->ConsultantComboBox->addItem("Select Consultant...");
 
     while (query.next()) {
-        QString id = query.value("ID").toString(); // Convert NUMBER to QString
+        QString id = query.value("ID").toString();
         QString firstName = query.value("FIRST_NAME").toString();
         QString lastName = query.value("LAST_NAME").toString();
         QString fullName = QString("%1 %2").arg(firstName, lastName).trimmed();
-        employeeMap[fullName] = id; // Store ID as QString
+        employeeMap[fullName] = id;
         ui->ConsultantComboBox->addItem(fullName);
         qDebug() << "Added employee:" << fullName << "with ID:" << id;
     }
@@ -141,41 +134,73 @@ void MainWindow::loadEmployees()
 
 void MainWindow::on_updateButtonClicked()
 {
-    QString name = ui->Name->text().trimmed();
-    QString newName = ui->Name->text().trimmed();
-    QString newSector = ui->Sector->text().trimmed();
-    QString newContact = ui->Contact_info->text().trimmed();
-    QString newEmail = ui->Email->text().trimmed();
-    QDateTimeEdit *dateTimeEdit = findChild<QDateTimeEdit*>("consultation_datetime");
-    QDateTime newDateTime = dateTimeEdit ? dateTimeEdit->dateTime() : QDateTime::currentDateTime();
-    QString consultantName = ui->ConsultantComboBox->currentText();
-    QString newConsultant = employeeMap.value(consultantName, "-1"); // Changed to QString
-
-    if (newConsultant == "-1") {
-        QMessageBox::warning(this, "Input Error", "Please select a valid consultant.");
+    QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
+    if (!selectionModel->hasSelection()) {
+        QMessageBox::warning(this, "No Selection", "Please select a client to update.");
         return;
     }
 
-    Client c;
-    if (c.updateClient(name, newName, newSector, newContact, newEmail, newDateTime, newConsultant)) {
-        QMessageBox::information(this, "Success", "Client updated successfully!");
-        QSqlQueryModel *model = Etmp.afficher();
-        ui->tableView->setModel(model);
-        ui->Name->clear();
-        ui->Sector->clear();
-        ui->Contact_info->clear();
-        ui->Email->clear();
-        if (dateTimeEdit) {
-            dateTimeEdit->setDateTime(QDateTime::currentDateTime());
+    QModelIndexList selectedRows = selectionModel->selectedRows();
+    if (selectedRows.isEmpty()) {
+        QMessageBox::warning(this, "No Selection", "Please select a client to update.");
+        return;
+    }
+
+    QModelIndex index = selectedRows.at(0);
+    QSqlQueryModel *model = qobject_cast<QSqlQueryModel*>(ui->tableView->model());
+    if (!model) {
+        qDebug() << "Failed to get table model";
+        return;
+    }
+
+    // Assuming columns: 0=Name, 1=Sector, 2=Contact, 3=Email, 4=Date & Time, 5=Consultant Name
+    QString originalName = model->data(model->index(index.row(), 0)).toString();
+    QString sector = model->data(model->index(index.row(), 1)).toString();
+    QString contactInfo = model->data(model->index(index.row(), 2)).toString();
+    QString email = model->data(model->index(index.row(), 3)).toString();
+    QDateTime consultationDateTime = model->data(model->index(index.row(), 4)).toDateTime();
+
+    // Fetch the CONSULTANT_ID by querying the database since the table shows the consultant name
+    QSqlQuery query;
+    query.prepare("SELECT CONSULTANT_ID FROM AHMED.CLIENTS WHERE NAME = :name");
+    query.bindValue(":name", originalName);
+    if (!query.exec() || !query.next()) {
+        qDebug() << "Error fetching CONSULTANT_ID:" << query.lastError().text();
+        QMessageBox::warning(this, "Error", "Failed to fetch consultant information.");
+        return;
+    }
+    QString consultantId = query.value("CONSULTANT_ID").toString();
+    qDebug() << "Fetched CONSULTANT_ID for update:" << consultantId;
+
+    UpdateClientDialog dialog(this);
+    dialog.setClientData(originalName, sector, contactInfo, email, consultationDateTime, consultantId);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString newName = dialog.getName();
+        QString newSector = dialog.getSector();
+        QString newContactInfo = dialog.getContactInfo();
+        QString newEmail = dialog.getEmail();
+        QDateTime newConsultationDateTime = dialog.getConsultationDateTime();
+        QString newConsultantId = dialog.getConsultant();
+
+        // Validate the consultant selection
+        if (newConsultantId.isEmpty()) {
+            QMessageBox::warning(this, "Invalid Selection", "Please select a valid consultant.");
+            return;
         }
-        ui->ConsultantComboBox->setCurrentIndex(0);
-        updateCalendarConsultations();
-    } else {
-        QMessageBox::critical(this, "Error", "Failed to update client.");
+
+        Client client;
+        bool success = client.updateClient(originalName, newName, newSector, newContactInfo, newEmail, newConsultationDateTime, newConsultantId);
+        if (success) {
+            QMessageBox::information(this, "Success", "Client updated successfully.");
+            refreshClientTable();
+        } else {
+            QMessageBox::warning(this, "Error", "Failed to update client.");
+        }
     }
 }
 
-void MainWindow::on_addButtonclicked()
+void MainWindow::on_addButton_clicked()
 {
     // Validate inputs first
     if (!validateInputs()) {
@@ -203,8 +228,7 @@ void MainWindow::on_addButtonclicked()
     if (result.first) {
         QMessageBox::information(this, "Success", "Client added successfully!");
         // Refresh the table view
-        QSqlQueryModel *model = Etmp.afficher();
-        ui->tableView->setModel(model);
+        refreshClientTable();
         // Clear input fields
         ui->Name->clear();
         ui->Sector->clear();
@@ -221,7 +245,8 @@ void MainWindow::on_addButtonclicked()
     }
 }
 
-void MainWindow::on_removeButtonClicked() {
+void MainWindow::on_deleteButton_clicked()
+{
     QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
 
     qDebug() << "Selected Rows Count:" << selectedRows.count();
@@ -237,20 +262,21 @@ void MainWindow::on_removeButtonClicked() {
     Client c;
     if (c.removeByName(clientName)) {
         QMessageBox::information(this, "Success", "Client removed successfully!");
-        QSqlQueryModel *model = Etmp.afficher();
-        ui->tableView->setModel(model);
+        refreshClientTable();
         updateCalendarConsultations();
     } else {
         QMessageBox::critical(this, "Error", "Failed to remove the client.");
     }
 }
 
-void MainWindow::toggleSidebar() {
+void MainWindow::toggleSidebar()
+{
     bool isVisible = ui->sideMenu->isVisible();
     ui->sideMenu->setVisible(!isVisible);
 }
 
-void MainWindow::toggleTheme() {
+void MainWindow::toggleTheme()
+{
     isDarkTheme = !isDarkTheme;
     if (isDarkTheme) {
         applyDarkTheme();
@@ -259,7 +285,8 @@ void MainWindow::toggleTheme() {
     }
 }
 
-void MainWindow::applyLightTheme() {
+void MainWindow::applyLightTheme()
+{
     QString styleSheet = R"(
         QWidget {
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -371,7 +398,8 @@ void MainWindow::applyLightTheme() {
     qApp->setStyleSheet(styleSheet);
 }
 
-void MainWindow::applyDarkTheme() {
+void MainWindow::applyDarkTheme()
+{
     QString styleSheet = R"(
         QWidget {
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -492,16 +520,12 @@ void MainWindow::applyDarkTheme() {
 void MainWindow::on_resetSearchButton_clicked()
 {
     ui->searchInput->clear();
-    QSqlQueryModel *model = Etmp.afficher();
-    ui->tableView->setModel(model);
-    ui->tableView->resizeColumnsToContents();
-    for (int i = 0; i < model->columnCount(); ++i) {
-        ui->tableView->showColumn(i);
-    }
+    refreshClientTable();
     ui->statusBar->showMessage("Showing all clients");
 }
 
-void MainWindow::tableViewHeaderClicked(int logicalIndex) {
+void MainWindow::tableViewHeaderClicked(int logicalIndex)
+{
     static Qt::SortOrder currentOrder = Qt::AscendingOrder;
     currentOrder = (currentOrder == Qt::AscendingOrder) ? Qt::DescendingOrder : Qt::AscendingOrder;
 
@@ -523,7 +547,8 @@ void MainWindow::tableViewHeaderClicked(int logicalIndex) {
     ui->statusBar->showMessage(QString("Sorted by %1 (%2)").arg(column, order));
 }
 
-bool MainWindow::validateInputs() {
+bool MainWindow::validateInputs()
+{
     QString name = ui->Name->text().trimmed();
     if (!isValidName(name)) {
         QMessageBox::warning(this, "Input Error", "Name cannot be empty or contain numbers.");
@@ -574,7 +599,8 @@ bool MainWindow::validateInputs() {
     return true;
 }
 
-bool MainWindow::isValidName(const QString &name) {
+bool MainWindow::isValidName(const QString &name)
+{
     if (name.isEmpty()) return false;
     for (const QChar &ch : name) {
         if (ch.isDigit()) return false;
@@ -582,22 +608,26 @@ bool MainWindow::isValidName(const QString &name) {
     return true;
 }
 
-bool MainWindow::isValidDateTime(const QDateTime &dateTime) {
+bool MainWindow::isValidDateTime(const QDateTime &dateTime)
+{
     return dateTime >= QDateTime::currentDateTime();
 }
 
-bool MainWindow::isValidDate(const QDate &date) {
+bool MainWindow::isValidDate(const QDate &date)
+{
     return date >= QDate::currentDate();
 }
 
-bool MainWindow::isValidConsultant(const QString &consultant) {
+bool MainWindow::isValidConsultant(const QString &consultant)
+{
     if (consultant.isEmpty()) return false;
     bool ok;
     consultant.toInt(&ok);
     return ok;
 }
 
-void MainWindow::setupCalendarView() {
+void MainWindow::setupCalendarView()
+{
     connect(ui->consultationCalendar, &QCalendarWidget::selectionChanged,
             this, &MainWindow::on_consultationCalendar_selectionChanged);
     connect(ui->consultationCalendar, &QCalendarWidget::activated,
@@ -652,7 +682,8 @@ void MainWindow::on_consultationCalendar_activated(const QDate &date)
     ui->tabWidget->setCurrentIndex(0);
 }
 
-void MainWindow::updateSelectedDateInfo(const QDate &date) {
+void MainWindow::updateSelectedDateInfo(const QDate &date)
+{
     ui->selectedDateLabel->setText(QString("Selected date: %1").arg(date.toString("yyyy-MM-dd")));
     int count = consultationCountMap.value(date, 0);
     ui->consultationCountLabel->setText(QString("Consultations: %1").arg(count));
@@ -661,7 +692,8 @@ void MainWindow::updateSelectedDateInfo(const QDate &date) {
     ui->dateConsultationsView->resizeColumnsToContents();
 }
 
-bool MainWindow::calendarHoverEventFilter(QObject* watched, QEvent* event) {
+bool MainWindow::calendarHoverEventFilter(QObject* watched, QEvent* event)
+{
     if (watched == ui->consultationCalendar && event->type() == QEvent::HoverMove) {
         QHoverEvent* hoverEvent = static_cast<QHoverEvent*>(event);
         QPoint pos = hoverEvent->position().toPoint();
@@ -704,7 +736,8 @@ bool MainWindow::calendarHoverEventFilter(QObject* watched, QEvent* event) {
     return false;
 }
 
-bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+bool MainWindow::eventFilter(QObject* watched, QEvent* event)
+{
     if (calendarHoverEventFilter(watched, event)) {
         return true;
     }
@@ -921,7 +954,8 @@ void MainWindow::on_refreshStatsButton_clicked()
     }
 }
 
-void MainWindow::updateStatisticsDisplay() {
+void MainWindow::updateStatisticsDisplay()
+{
     QDate startDate = QDate::currentDate().addDays(-30);
     QDate endDate = QDate::currentDate();
     QDateTime start = QDateTime(startDate, QTime(0, 0, 0));
@@ -1015,4 +1049,19 @@ void MainWindow::on_openChartButton_clicked()
 {
     ChartWindow *chartWindow = new ChartWindow(this);
     chartWindow->show();
+}
+
+void MainWindow::refreshClientTable()
+{
+    QSqlQueryModel *model = Etmp.afficher();
+    ui->tableView->setModel(model);
+    ui->tableView->resizeColumnsToContents();
+    for (int i = 0; i < model->columnCount(); ++i) {
+        ui->tableView->showColumn(i);
+    }
+}
+
+void MainWindow::on_searchButton_clicked()
+{
+    performSearch();
 }
