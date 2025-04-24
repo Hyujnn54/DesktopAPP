@@ -37,6 +37,8 @@ void ChartWindow::updateChart()
     qDebug() << "Filter Type:" << filterType << "Filter Value:" << filterValue << "Chart Type:" << currentChartType;
 
     currentDataMap.clear();
+    lineDataMap.clear(); // Clear lineDataMap for line charts
+
     if (filterType == "By Sector") {
         QSqlQueryModel *model = filterValue.isEmpty() ? Etmp.afficher() : Etmp.searchBySector(filterValue);
         qDebug() << "Sector Model Row Count:" << model->rowCount();
@@ -53,6 +55,14 @@ void ChartWindow::updateChart()
                 QString name = model->data(model->index(row, 0)).toString();
                 currentDataMap[name] += 1;
             }
+
+            // For line chart: populate lineDataMap with consultations per day
+            QDate startDate = date.addDays(-7); // Last 7 days
+            QDate endDate = date;
+            for (QDate d = startDate; d <= endDate; d = d.addDays(1)) {
+                QSqlQueryModel *dailyModel = Etmp.getConsultationsForDate(d);
+                lineDataMap[d] = dailyModel->rowCount();
+            }
         } else {
             qDebug() << "Invalid date:" << filterValue;
         }
@@ -60,7 +70,7 @@ void ChartWindow::updateChart()
         bool ok;
         int consultantId = filterValue.toInt(&ok);
         if (ok) {
-            QSqlQueryModel *model = Etmp.searchByConsultant(consultantId);
+            QSqlQueryModel *model = Etmp.searchByConsultant(QString::number(consultantId));
             qDebug() << "Consultant Model Row Count:" << model->rowCount();
             for (int row = 0; row < model->rowCount(); ++row) {
                 QString name = model->data(model->index(row, 0)).toString();
@@ -72,8 +82,8 @@ void ChartWindow::updateChart()
     }
 
     qDebug() << "DataMap Contents:" << currentDataMap;
-    if (currentDataMap.isEmpty()) {
-        qDebug() << "Error: DataMap is empty, no chart will be generated.";
+    if (currentDataMap.isEmpty() && lineDataMap.isEmpty()) {
+        qDebug() << "Error: DataMap and lineDataMap are empty, no chart will be generated.";
         ui->chartDetailsLabel->setText("No data available");
         return;
     }
@@ -147,6 +157,52 @@ void ChartWindow::updateChart()
 
         // Connect hover signal
         connect(series, &QPieSeries::hovered, this, &ChartWindow::on_pieSliceHovered);
+    } else if (currentChartType == "Line Chart") {
+        qDebug() << "Creating Line Chart...";
+        QLineSeries *series = new QLineSeries();
+
+        // Populate the line series with data from lineDataMap
+        QDateTimeAxis *axisX = new QDateTimeAxis();
+        axisX->setFormat("yyyy-MM-dd");
+        axisX->setTitleText("Date");
+
+        QValueAxis *axisY = new QValueAxis();
+        axisY->setTitleText("Consultations");
+        axisY->setLabelFormat("%d");
+
+        int maxValue = 0;
+        QDateTime minDateTime, maxDateTime;
+        bool firstPoint = true;
+
+        for (auto it = lineDataMap.begin(); it != lineDataMap.end(); ++it) {
+            QDateTime dateTime(it.key(), QTime(0, 0));
+            qint64 timestamp = dateTime.toMSecsSinceEpoch();
+            series->append(timestamp, it.value());
+
+            if (it.value() > maxValue) maxValue = it.value();
+
+            if (firstPoint) {
+                minDateTime = dateTime;
+                maxDateTime = dateTime;
+                firstPoint = false;
+            } else {
+                if (dateTime < minDateTime) minDateTime = dateTime;
+                if (dateTime > maxDateTime) maxDateTime = dateTime;
+            }
+        }
+
+        chart->addSeries(series);
+
+        axisX->setRange(minDateTime, maxDateTime);
+        chart->addAxis(axisX, Qt::AlignBottom);
+        series->attachAxis(axisX);
+
+        axisY->setRange(0, qMax(1, maxValue + 1));
+        chart->addAxis(axisY, Qt::AlignLeft);
+        series->attachAxis(axisY);
+
+        // Connect hover signal
+        connect(series, &QLineSeries::hovered, this, &ChartWindow::on_lineHovered);
     }
 
     ui->statsChartView->setChart(chart);
@@ -161,17 +217,17 @@ void ChartWindow::populateFilterValues()
     QString filterType = ui->statsFilterComboBox->currentText();
 
     if (filterType == "By Sector") {
-        QSqlQuery query("SELECT DISTINCT SECTOR FROM Clients");
+        QSqlQuery query("SELECT DISTINCT SECTOR FROM AHMED.CLIENTS");
         while (query.next()) {
             ui->filterValueComboBox->addItem(query.value(0).toString());
         }
     } else if (filterType == "By Date") {
-        QSqlQuery query("SELECT DISTINCT CONSULTATION_DATE FROM Clients");
+        QSqlQuery query("SELECT DISTINCT CONSULTATION_TIMESTAMP FROM AHMED.CLIENTS");
         while (query.next()) {
             ui->filterValueComboBox->addItem(query.value(0).toDateTime().toString("yyyy-MM-dd"));
         }
     } else if (filterType == "By Consultant") {
-        QSqlQuery query("SELECT DISTINCT CONSULTANT FROM Clients");
+        QSqlQuery query("SELECT DISTINCT CONSULTANT_ID FROM AHMED.CLIENTS");
         while (query.next()) {
             ui->filterValueComboBox->addItem(query.value(0).toString());
         }
@@ -184,13 +240,13 @@ void ChartWindow::on_refreshChartButton_clicked()
     updateChart();
 }
 
-void ChartWindow::on_statsFilterComboBox_currentIndexChanged(int index)
+void ChartWindow::on_statsFilterComboBox_currentIndexChanged(int /*index*/)
 {
     populateFilterValues();
     updateChart();
 }
 
-void ChartWindow::on_chartTypeComboBox_currentIndexChanged(int index)
+void ChartWindow::on_chartTypeComboBox_currentIndexChanged(int /*index*/)
 {
     currentChartType = ui->chartTypeComboBox->currentText();
     updateChart();
@@ -270,5 +326,36 @@ void ChartWindow::on_barHovered(bool status, int index)
         chart->setAnimationOptions(QChart::SeriesAnimations);
 
         ui->chartDetailsLabel->setText("Hover over a chart element for details");
+    }
+}
+
+void ChartWindow::on_lineHovered(QPointF point, bool state)
+{
+    if (state) {
+        // Find the closest date in lineDataMap to the hovered point's x-value
+        QDate closestDate;
+        int value = 0;
+        qreal minDistance = std::numeric_limits<qreal>::max();
+        QDateTime hoveredDateTime = QDateTime::fromMSecsSinceEpoch(point.x());
+        QDate hoveredDate = hoveredDateTime.date();
+
+        for (auto it = lineDataMap.begin(); it != lineDataMap.end(); ++it) {
+            qreal distance = qAbs(it.key().daysTo(hoveredDate));
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestDate = it.key();
+                value = it.value();
+            }
+        }
+
+        if (minDistance <= 1) { // Allow a small tolerance for matching dates
+            ui->chartDetailsLabel->setText(QString("Date: %1\nConsultations: %2")
+                                               .arg(closestDate.toString("yyyy-MM-dd"))
+                                               .arg(value));
+        } else {
+            ui->chartDetailsLabel->setText("Hover over a point for details");
+        }
+    } else {
+        ui->chartDetailsLabel->setText("Hover over a point for details");
     }
 }

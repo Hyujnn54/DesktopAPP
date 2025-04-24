@@ -63,7 +63,7 @@ public:
     QTabWidget *tabWidget;
     QWidget *ClientForm;
     QGridLayout *gridLayout_2;
-    QLineEdit *Consultant;
+    QComboBox *ConsultantComboBox;
     QDateTimeEdit *searchDateButton_2;
     QLabel *label_contact;
     QLabel *label_sector;
@@ -274,10 +274,10 @@ public:
         ClientForm->setContextMenuPolicy(Qt::ContextMenuPolicy::PreventContextMenu);
         gridLayout_2 = new QGridLayout(ClientForm);
         gridLayout_2->setObjectName("gridLayout_2");
-        Consultant = new QLineEdit(ClientForm);
-        Consultant->setObjectName("Consultant");
+        ConsultantComboBox = new QComboBox(ClientForm);
+        ConsultantComboBox->setObjectName("ConsultantComboBox");
 
-        gridLayout_2->addWidget(Consultant, 5, 1, 1, 1);
+        gridLayout_2->addWidget(ConsultantComboBox, 5, 1, 1, 1);
 
         searchDateButton_2 = new QDateTimeEdit(ClientForm);
         searchDateButton_2->setObjectName("searchDateButton_2");
@@ -500,7 +500,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -517,9 +517,10 @@ public:
         pushButton_4->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
         pushButton_5->setText(QCoreApplication::translate("MainWindow", "Calendar", nullptr));
         themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
+        ConsultantComboBox->setPlaceholderText(QCoreApplication::translate("MainWindow", "Select Consultant...", nullptr));
         label_contact->setText(QCoreApplication::translate("MainWindow", "Contact Info:", nullptr));
         label_sector->setText(QCoreApplication::translate("MainWindow", "Sector:", nullptr));
-        label_consultant->setText(QCoreApplication::translate("MainWindow", "Consultant ID:", nullptr));
+        label_consultant->setText(QCoreApplication::translate("MainWindow", "Consultant:", nullptr));
         add->setText(QCoreApplication::translate("MainWindow", "Add Client", nullptr));
         label_name->setText(QCoreApplication::translate("MainWindow", "Name:", nullptr));
         label_date->setText(QCoreApplication::translate("MainWindow", "Consultation Date:", nullptr));

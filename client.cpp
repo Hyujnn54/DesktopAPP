@@ -6,19 +6,19 @@
 // Default constructor
 Client::Client()
     : clientId(0), name(""), sector(""), contactInfo(""), email(""),
-    consultationDateTime(QDateTime::currentDateTime()), consultant(0) {}
+    consultationDateTime(QDateTime::currentDateTime()), consultantId("") {}
 
 // Updated parameterized constructor
 Client::Client(const QString& name, const QString& sector,
                const QString& contactInfo, const QString& email,
-               const QDateTime& consultationDateTime, int consultant)
+               const QDateTime& consultationDateTime, const QString& consultant)
     : clientId(1),
     name(name),
     sector(sector),
     contactInfo(contactInfo),
     email(email),
     consultationDateTime(consultationDateTime),
-    consultant(consultant) {}
+    consultantId(consultant) {}
 
 // Getters
 int Client::getClientId() const {
@@ -45,8 +45,8 @@ QDateTime Client::getConsultationDateTime() const {
     return consultationDateTime;
 }
 
-int Client::getConsultant() const {
-    return consultant;
+QString Client::getConsultant() const {
+    return consultantId;
 }
 
 // Setters
@@ -70,36 +70,49 @@ void Client::setConsultationDateTime(const QDateTime& consultationDateTime) {
     this->consultationDateTime = consultationDateTime;
 }
 
-void Client::setConsultant(int consultant) {
-    this->consultant = consultant;
+void Client::setConsultant(const QString& consultant) {
+    this->consultantId = consultant;
 }
 
-bool Client::ajouter() {
+QPair<bool, QString> Client::ajouter(QString name, QString sector, QString contact, QString email, QDateTime dateTime, QString consultant) {
     QSqlQuery query;
-    query.prepare("INSERT INTO Clients (CLIENT_ID, NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT) "
-                  "VALUES (clients_seq.NEXTVAL, :name, :sector, :contactInfo, :email, TO_DATE(:consultationDateTime, 'YYYY-MM-DD HH24:MI:SS'), :consultant)");
+    query.prepare("INSERT INTO AHMED.CLIENTS (CLIENT_ID, NAME, SECTOR, CONTACT_INFO, CONSULTATION_DATE, EMAIL, CONSULTANT_ID) "
+                  "VALUES (CLIENTS_SEQ.NEXTVAL, :name, :sector, :contact_info, TO_TIMESTAMP(:consultation_timestamp, 'YYYY-MM-DD HH24:MI:SS'), :email, :consultant_id)");
     query.bindValue(":name", name);
     query.bindValue(":sector", sector);
-    query.bindValue(":contactInfo", contactInfo);
+    query.bindValue(":contact_info", contact);
+    query.bindValue(":consultation_timestamp", dateTime.toString("yyyy-MM-dd HH:mm:ss"));
     query.bindValue(":email", email);
-    query.bindValue(":consultationDateTime", consultationDateTime.toString("yyyy-MM-dd HH:mm:ss"));
-    query.bindValue(":consultant", consultant);
+    query.bindValue(":consultant_id", consultant.toInt());
+
+    qDebug() << "Inserting client with values:"
+             << "Name:" << name
+             << "Sector:" << sector
+             << "Contact Info:" << contact
+             << "Consultation Timestamp:" << dateTime.toString()
+             << "Email:" << email
+             << "Consultant ID:" << consultant;
 
     if (!query.exec()) {
-        qDebug() << "Error inserting client:" << query.lastError().text();
-        return false;
+        QString error = query.lastError().text();
+        qDebug() << "Error inserting client:" << error;
+        return qMakePair(false, error);
     }
-    return true;
+    qDebug() << "Client inserted successfully.";
+    return qMakePair(true, QString("Client added successfully"));
 }
 
 QSqlQueryModel* Client::afficher() {
     QSqlQueryModel *model = new QSqlQueryModel();
 
     QSqlQuery query;
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID");
     if (!query.exec()) {
         qDebug() << "Error in Client::afficher():" << query.lastError().text();
-        return model; // Return empty model on error
+        return model;
     }
 
     model->setQuery(std::move(query));
@@ -115,20 +128,18 @@ QSqlQueryModel* Client::afficher() {
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
 
     return model;
 }
 
-
-
-
 bool Client::updateClient(const QString& originalName, const QString& newName, const QString& sector,
-    const QString& contactInfo, const QString& email, const QDateTime& consultationDateTime, int consultant) {
+                          const QString& contactInfo, const QString& email, const QDateTime& consultationDateTime,
+                          const QString& consultant) {
     QSqlQuery query;
-    query.prepare("UPDATE Clients SET NAME = :newName, SECTOR = :sector, "
-                  "CONTACT_INFO = :contactInfo, EMAIL = :email, CONSULTATION_DATE = TO_DATE(:consultationDateTime, 'YYYY-MM-DD HH24:MI:SS'), "
-                  "CONSULTANT = :consultant WHERE NAME = :originalName");
+    query.prepare("UPDATE AHMED.CLIENTS SET NAME = :newName, SECTOR = :sector, "
+                  "CONTACT_INFO = :contactInfo, EMAIL = :email, CONSULTATION_DATE = TO_TIMESTAMP(:consultationDateTime, 'YYYY-MM-DD HH24:MI:SS'), "
+                  "CONSULTANT_ID = :consultant WHERE NAME = :originalName");
     query.bindValue(":newName", newName);
     query.bindValue(":sector", sector);
     query.bindValue(":contactInfo", contactInfo);
@@ -147,8 +158,11 @@ bool Client::updateClient(const QString& originalName, const QString& newName, c
 QSqlQueryModel* Client::searchByName(const QString& name) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE NAME LIKE :name");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.NAME LIKE :name");
     query.bindValue(":name", "%" + name + "%");
 
     if (!query.exec()) {
@@ -160,9 +174,9 @@ QSqlQueryModel* Client::searchByName(const QString& name) {
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("Sector"));
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
-    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email")); // Added
+    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
 
@@ -170,22 +184,25 @@ QSqlQueryModel* Client::searchBySector(const QString& sector) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
 
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE SECTOR LIKE :sector");
-    query.bindValue(":sector", "%" + sector + "%"); // Using LIKE for partial matches
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.SECTOR LIKE :sector");
+    query.bindValue(":sector", "%" + sector + "%");
 
     if (!query.exec()) {
         qDebug() << "Error searching by sector:" << query.lastError().text();
-        return model; // Return empty model
+        return model;
     }
 
     model->setQuery(std::move(query));
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("Sector"));
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
-    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email")); // Added
+    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
 
@@ -193,11 +210,13 @@ QSqlQueryModel* Client::searchByDateTime(const QDateTime& dateTime) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
 
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE CONSULTATION_DATE = TO_DATE(:dateTime, 'YYYY-MM-DD HH24:MI:SS')");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.CONSULTATION_DATE = TO_TIMESTAMP(:dateTime, 'YYYY-MM-DD HH24:MI:SS')");
     query.bindValue(":dateTime", dateTime.toString("yyyy-MM-dd HH:mm:ss"));
 
-    // Debug info
     qDebug() << "Searching by date/time:" << dateTime.toString("yyyy-MM-dd HH:mm:ss");
 
     if (!query.exec()) {
@@ -211,22 +230,25 @@ QSqlQueryModel* Client::searchByDateTime(const QDateTime& dateTime) {
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("Sector"));
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
-    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email")); // Added
+    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
 
 QSqlQueryModel* Client::sortByColumn(int column, Qt::SortOrder order) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
-    QStringList columnNames = {"NAME", "SECTOR", "CONTACT_INFO", "EMAIL", "CONSULTATION_DATE", "CONSULTANT"};
+    QStringList columnNames = {"c.NAME", "c.SECTOR", "c.CONTACT_INFO", "c.EMAIL", "c.CONSULTATION_DATE", "e.FIRST_NAME || ' ' || e.LAST_NAME"};
     if (column < 0 || column >= columnNames.size()) {
         qDebug() << "Invalid column index for sorting";
         return model;
     }
     QString sortOrder = (order == Qt::AscendingOrder) ? "ASC" : "DESC";
-    QString queryText = QString("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients "
+    QString queryText = QString("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                                "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                                "FROM AHMED.CLIENTS c "
+                                "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
                                 "ORDER BY %1 %2").arg(columnNames[column], sortOrder);
 
     if (!query.exec(queryText)) {
@@ -238,9 +260,9 @@ QSqlQueryModel* Client::sortByColumn(int column, Qt::SortOrder order) {
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
     model->setHeaderData(1, Qt::Horizontal, QObject::tr("Sector"));
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
-    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email")); // Added
+    model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
 
@@ -248,7 +270,7 @@ QMap<QDateTime, int> Client::getConsultationCountsByDateTime() {
     QMap<QDateTime, int> countMap;
     QSqlQuery query;
 
-    query.prepare("SELECT CONSULTATION_DATE, COUNT(*) FROM Clients GROUP BY CONSULTATION_DATE");
+    query.prepare("SELECT CONSULTATION_DATE, COUNT(*) FROM AHMED.CLIENTS GROUP BY CONSULTATION_DATE");
 
     if (query.exec()) {
         while (query.next()) {
@@ -267,7 +289,6 @@ QMap<QDate, int> Client::getConsultationCountsByDate() {
     QMap<QDate, int> dateCountMap;
     QMap<QDateTime, int> dateTimeCountMap = getConsultationCountsByDateTime();
 
-    // Convert QDateTime keys to QDate keys, combining counts for the same date
     for (auto it = dateTimeCountMap.begin(); it != dateTimeCountMap.end(); ++it) {
         QDate date = it.key().date();
         dateCountMap[date] += it.value();
@@ -276,16 +297,18 @@ QMap<QDate, int> Client::getConsultationCountsByDate() {
     return dateCountMap;
 }
 
-
 QSqlQueryModel* Client::getConsultationsForDate(const QDate& date) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
     QString startDateStr = date.toString("yyyy-MM-dd") + " 00:00:00";
     QString endDateStr = date.toString("yyyy-MM-dd") + " 23:59:59";
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD HH24:MI:SS') "
-                  "AND TO_DATE(:endDate, 'YYYY-MM-DD HH24:MI:SS') "
-                  "ORDER BY CONSULTATION_DATE");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.CONSULTATION_DATE BETWEEN TO_TIMESTAMP(:startDate, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_TIMESTAMP(:endDate, 'YYYY-MM-DD HH24:MI:SS') "
+                  "ORDER BY c.CONSULTATION_DATE");
     query.bindValue(":startDate", startDateStr);
     query.bindValue(":endDate", endDateStr);
 
@@ -294,9 +317,9 @@ QSqlQueryModel* Client::getConsultationsForDate(const QDate& date) {
         model->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
         model->setHeaderData(1, Qt::Horizontal, QObject::tr("Sector"));
         model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
-        model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email")); // Added
+        model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
         model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-        model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+        model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     } else {
         qDebug() << "Get consultations for date failed: " << query.lastError().text();
     }
@@ -306,8 +329,11 @@ QSqlQueryModel* Client::getConsultationsForDate(const QDate& date) {
 QSqlQueryModel* Client::searchByEmail(const QString &email) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE EMAIL LIKE :email");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.EMAIL LIKE :email");
     query.bindValue(":email", "%" + email + "%");
 
     if (!query.exec()) {
@@ -321,15 +347,18 @@ QSqlQueryModel* Client::searchByEmail(const QString &email) {
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
 
 QSqlQueryModel* Client::searchByContact(const QString &contact) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE CONTACT_INFO LIKE :contact");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.CONTACT_INFO LIKE :contact");
     query.bindValue(":contact", "%" + contact + "%");
 
     if (!query.exec()) {
@@ -343,15 +372,18 @@ QSqlQueryModel* Client::searchByContact(const QString &contact) {
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
 
-QSqlQueryModel* Client::searchByConsultant(int consultant) {
+QSqlQueryModel* Client::searchByConsultant(const QString &consultant) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE CONSULTANT = :consultant");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.CONSULTANT_ID = :consultant");
     query.bindValue(":consultant", consultant);
 
     if (!query.exec()) {
@@ -365,17 +397,19 @@ QSqlQueryModel* Client::searchByConsultant(int consultant) {
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
 
-QSqlQueryModel* Client::getUpcomingConsultations(const QDateTime &start, const QDateTime &end)
-{
+QSqlQueryModel* Client::getUpcomingConsultations(const QDateTime &start, const QDateTime &end) {
     QSqlQueryModel* model = new QSqlQueryModel();
     QSqlQuery query;
-    query.prepare("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, CONSULTANT FROM Clients "
-                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
-                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS')");
+    query.prepare("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                  "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                  "FROM AHMED.CLIENTS c "
+                  "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+                  "WHERE c.CONSULTATION_DATE BETWEEN TO_TIMESTAMP(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_TIMESTAMP(:end, 'YYYY-MM-DD HH24:MI:SS')");
     query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
     query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
 
@@ -390,15 +424,15 @@ QSqlQueryModel* Client::getUpcomingConsultations(const QDateTime &start, const Q
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Contact"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Email"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Date & Time"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Consultant Name"));
     return model;
 }
-int Client::getTotalConsultations(const QDateTime &start, const QDateTime &end)
-{
+
+int Client::getTotalConsultations(const QDateTime &start, const QDateTime &end) {
     QSqlQuery query;
-    query.prepare("SELECT COUNT(*) FROM Clients "
-                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
-                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS')");
+    query.prepare("SELECT COUNT(*) FROM AHMED.CLIENTS "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_TIMESTAMP(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_TIMESTAMP(:end, 'YYYY-MM-DD HH24:MI:SS')");
     query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
     query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
 
@@ -409,12 +443,11 @@ int Client::getTotalConsultations(const QDateTime &start, const QDateTime &end)
     return 0;
 }
 
-int Client::getUpcomingConsultationsCount(const QDateTime &start, const QDateTime &end)
-{
+int Client::getUpcomingConsultationsCount(const QDateTime &start, const QDateTime &end) {
     QSqlQuery query;
-    query.prepare("SELECT COUNT(*) FROM Clients "
-                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
-                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS')");
+    query.prepare("SELECT COUNT(*) FROM AHMED.CLIENTS "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_TIMESTAMP(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_TIMESTAMP(:end, 'YYYY-MM-DD HH24:MI:SS')");
     query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
     query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
 
@@ -425,13 +458,12 @@ int Client::getUpcomingConsultationsCount(const QDateTime &start, const QDateTim
     return 0;
 }
 
-QMap<QDate, int> Client::getConsultationsPerDay(const QDateTime &start, const QDateTime &end)
-{
+QMap<QDate, int> Client::getConsultationsPerDay(const QDateTime &start, const QDateTime &end) {
     QMap<QDate, int> result;
     QSqlQuery query;
-    query.prepare("SELECT TRUNC(CONSULTATION_DATE), COUNT(*) FROM Clients "
-                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
-                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS') "
+    query.prepare("SELECT TRUNC(CONSULTATION_DATE), COUNT(*) FROM AHMED.CLIENTS "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_TIMESTAMP(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_TIMESTAMP(:end, 'YYYY-MM-DD HH24:MI:SS') "
                   "GROUP BY TRUNC(CONSULTATION_DATE)");
     query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
     query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
@@ -448,12 +480,11 @@ QMap<QDate, int> Client::getConsultationsPerDay(const QDateTime &start, const QD
     return result;
 }
 
-int Client::getUniqueClients(const QDateTime &start, const QDateTime &end)
-{
+int Client::getUniqueClients(const QDateTime &start, const QDateTime &end) {
     QSqlQuery query;
-    query.prepare("SELECT COUNT(DISTINCT NAME) FROM Clients "
-                  "WHERE CONSULTATION_DATE BETWEEN TO_DATE(:start, 'YYYY-MM-DD HH24:MI:SS') "
-                  "AND TO_DATE(:end, 'YYYY-MM-DD HH24:MI:SS')");
+    query.prepare("SELECT COUNT(DISTINCT NAME) FROM AHMED.CLIENTS "
+                  "WHERE CONSULTATION_DATE BETWEEN TO_TIMESTAMP(:start, 'YYYY-MM-DD HH24:MI:SS') "
+                  "AND TO_TIMESTAMP(:end, 'YYYY-MM-DD HH24:MI:SS')");
     query.bindValue(":start", start.toString("yyyy-MM-dd HH:mm:ss"));
     query.bindValue(":end", end.toString("yyyy-MM-dd HH:mm:ss"));
 
@@ -464,10 +495,9 @@ int Client::getUniqueClients(const QDateTime &start, const QDateTime &end)
     return 0;
 }
 
-bool Client::removeByName(const QString &name)
-{
+bool Client::removeByName(const QString &name) {
     QSqlQuery query;
-    query.prepare("DELETE FROM Clients WHERE NAME = :name");
+    query.prepare("DELETE FROM AHMED.CLIENTS WHERE NAME = :name");
     query.bindValue(":name", name);
 
     if (!query.exec()) {

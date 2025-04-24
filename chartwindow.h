@@ -11,6 +11,7 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QDateTimeAxis>
+#include <QSqlQuery> // Added for QSqlQuery
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ChartWindow; }

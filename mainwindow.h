@@ -5,7 +5,7 @@
 #include "qdatetimeedit.h"
 #include "updateclientdialog.h"
 #include "emailsender.h"
-#include "ChartWindow.h" // Include the new chart window
+#include "ChartWindow.h"
 #include <QPrinter>
 #include <QPdfWriter>
 #include <QPainter>
@@ -14,6 +14,7 @@
 #include <QPalette>
 #include <QHoverEvent>
 #include <QToolTip>
+#include <QMap>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -45,7 +46,7 @@ private slots:
     void sendConsultationReminders();
     void showStatistics();
     void on_refreshStatsButton_clicked();
-    void on_openChartButton_clicked(); // New slot
+    void on_openChartButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -55,6 +56,7 @@ private:
     QMap<QDate, int> consultationCountMap;
     QMap<QDateTime, int> consultationDateTimeMap;
     QDate lastHoveredDate;
+    QMap<QString, QString> employeeMap; // Map employee names to IDs
 
     void applyDarkTheme();
     void applyLightTheme();
@@ -71,6 +73,7 @@ private:
     bool calendarHoverEventFilter(QObject* watched, QEvent* event);
     bool eventFilter(QObject* watched, QEvent* event) override;
     void updateStatisticsDisplay();
+    void loadEmployees(); // New method to load employees
 
     int emailAttempts = 0;
     int emailSuccesses = 0;
