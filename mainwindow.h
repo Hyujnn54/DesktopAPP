@@ -20,12 +20,14 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+class FormationWindow;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(bool dbConnected, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
@@ -48,6 +50,8 @@ private slots:
     void showStatistics();
     void on_refreshStatsButton_clicked();
     void on_openChartButton_clicked();
+    void on_pushButton_clicked(); // Slot for "Training" button
+    void on_pushButton_formations_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -59,6 +63,7 @@ private:
     QMap<QDateTime, int> consultationDateTimeMap;
     QDate lastHoveredDate;
     QMap<QString, QString> employeeMap; // Map employee names to IDs
+    bool m_dbConnected;
 
     void applyDarkTheme();
     void applyLightTheme();
@@ -76,7 +81,7 @@ private:
     bool eventFilter(QObject* watched, QEvent* event) override;
     void updateStatisticsDisplay();
     void loadEmployees();
-    void refreshClientTable(); // Added declaration
+    void refreshClientTable();
 
     int emailAttempts = 0;
     int emailSuccesses = 0;

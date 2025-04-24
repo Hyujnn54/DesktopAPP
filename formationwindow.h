@@ -1,6 +1,7 @@
 #ifndef FORMATIONWINDOW_H
 #define FORMATIONWINDOW_H
 #include "formations.h"
+#include "ui_formationwindow.h"
 #include <QMainWindow>
 #include <QSqlQueryModel>
 #include <QSortFilterProxyModel>
@@ -14,15 +15,16 @@
 #include <QNetworkReply>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class formationwindow; } // Use lowercase 'formationwindow'
 QT_END_NAMESPACE
+
+class MainWindow;
 
 class FormationWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    FormationWindow(QWidget *parent = nullptr);
+    explicit FormationWindow(bool dbConnected, QWidget *parent = nullptr);
     ~FormationWindow();
 
 private slots:
@@ -37,15 +39,17 @@ private slots:
     void onNotificationLabelClicked();
     void on_refreshStatsButton_clicked();
     void onSmsRequestFinished(QNetworkReply *reply);
+    void on_pushButton_2_clicked();
 
 private:
-    Ui::formationwindow *ui; // Use lowercase 'formationwindow'
+    Ui::formationwindow *ui;
     formations formation;
     bool isDarkTheme;
     QSqlQueryModel *tableModel;
     QSortFilterProxyModel *proxyModel;
     int notificationCount;
     QLabel *notificationLabel;
+    bool m_dbConnected; // Store the database connection status
     void applyDarkTheme();
     void applyLightTheme();
     QWidget *sidebarWidget;

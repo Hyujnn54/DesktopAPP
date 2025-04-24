@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "formationwindow.h"
 #include <QMessageBox>
 #include <QDate>
 #include <QDateTime>
@@ -28,19 +29,22 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , isDarkTheme(false)
-    , emailSender(new EmailSender(this))
-    , emailAttempts(0)
-    , emailSuccesses(0)
+MainWindow::MainWindow(bool dbConnected, QWidget *parent)
+    : QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    isDarkTheme(false),
+    emailSender(new EmailSender(this)),
+    emailAttempts(0),
+    m_dbConnected(dbConnected), // Moved up to match declaration order
+    emailSuccesses(0) // Moved down to match declaration order
 {
     qDebug() << "Starting MainWindow constructor";
     ui->setupUi(this);
     applyLightTheme();
 
-    // DateTimeEdit setup
+    setAttribute(Qt::WA_DeleteOnClose); // Ensure the window is deleted when closed
+
+    // Rest of the constructor remains unchanged...
     QDateTimeEdit *dateTimeEdit = new QDateTimeEdit(this);
     dateTimeEdit->setObjectName("consultation_datetime");
     dateTimeEdit->setCalendarPopup(true);
@@ -71,10 +75,25 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    // Load employees into the combo box
-    loadEmployees();
+    // If database connection failed, adjust UI behavior
+    if (!m_dbConnected) {
+        // Disable database-dependent UI elements
+        ui->add->setEnabled(false);
+        ui->Delet->setEnabled(false);
+        ui->update->setEnabled(false);
+        ui->pushButton_formations->setEnabled(false);
+        ui->searchInput->setEnabled(false);
+        ui->resetSearchButton->setEnabled(false);
+        ui->refreshStatsButton->setEnabled(false);
+        ui->pushButton_3->setEnabled(false); // Statistics button
+        ui->pushButton_5->setEnabled(false); // Send reminders button
+        // Show a status message
+        statusBar()->showMessage("Database not connected. Some features are disabled.");
+    } else {
+        loadEmployees();
+        refreshClientTable();
+    }
 
-    // Connect buttons
     connect(ui->menuButton, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
     connect(ui->add, &QPushButton::clicked, this, &MainWindow::on_addButton_clicked);
     connect(ui->Delet, &QPushButton::clicked, this, &MainWindow::on_deleteButton_clicked);
@@ -85,13 +104,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButton_5, &QPushButton::clicked, this, &MainWindow::sendConsultationReminders);
     connect(ui->pushButton_3, &QPushButton::clicked, this, &MainWindow::showStatistics);
     connect(ui->refreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_refreshStatsButton_clicked);
-
+    connect(ui->pushButton_formations, &QPushButton::clicked, this, &MainWindow::on_pushButton_formations_clicked);
     connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_searchInput_textChanged);
     connect(ui->searchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::on_searchCriteriaComboBox_currentIndexChanged);
 
     setupCalendarView();
-    refreshClientTable();
     ui->consultationCalendar->installEventFilter(this);
 }
 
@@ -100,8 +118,24 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::on_pushButton_clicked()
+{
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot open Formation Window: Database is not connected.");
+        return;
+    }
+    qDebug() << "Push button clicked";
+    FormationWindow *formationWindow = new FormationWindow(m_dbConnected, this);
+    formationWindow->show();
+}
+
 void MainWindow::loadEmployees()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot load employees: Database is not connected.");
+        return;
+    }
+
     QSqlQuery query;
     query.prepare("SELECT ID, FIRST_NAME, LAST_NAME FROM AHMED.EMPLOYEE");
     if (!query.exec()) {
@@ -134,6 +168,11 @@ void MainWindow::loadEmployees()
 
 void MainWindow::on_updateButtonClicked()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot update client: Database is not connected.");
+        return;
+    }
+
     QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
     if (!selectionModel->hasSelection()) {
         QMessageBox::warning(this, "No Selection", "Please select a client to update.");
@@ -202,6 +241,11 @@ void MainWindow::on_updateButtonClicked()
 
 void MainWindow::on_addButton_clicked()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot add client: Database is not connected.");
+        return;
+    }
+
     // Validate inputs first
     if (!validateInputs()) {
         return;
@@ -247,6 +291,11 @@ void MainWindow::on_addButton_clicked()
 
 void MainWindow::on_deleteButton_clicked()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot delete client: Database is not connected.");
+        return;
+    }
+
     QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
 
     qDebug() << "Selected Rows Count:" << selectedRows.count();
@@ -526,6 +575,11 @@ void MainWindow::on_resetSearchButton_clicked()
 
 void MainWindow::tableViewHeaderClicked(int logicalIndex)
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot sort table: Database is not connected.");
+        return;
+    }
+
     static Qt::SortOrder currentOrder = Qt::AscendingOrder;
     currentOrder = (currentOrder == Qt::AscendingOrder) ? Qt::DescendingOrder : Qt::AscendingOrder;
 
@@ -641,6 +695,11 @@ void MainWindow::setupCalendarView()
 
 void MainWindow::updateCalendarConsultations()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot update calendar: Database is not connected.");
+        return;
+    }
+
     QMap<QDateTime, int> dtMap = Etmp.getConsultationCountsByDateTime();
     consultationCountMap.clear();
 
@@ -687,9 +746,11 @@ void MainWindow::updateSelectedDateInfo(const QDate &date)
     ui->selectedDateLabel->setText(QString("Selected date: %1").arg(date.toString("yyyy-MM-dd")));
     int count = consultationCountMap.value(date, 0);
     ui->consultationCountLabel->setText(QString("Consultations: %1").arg(count));
-    QSqlQueryModel *model = Etmp.getConsultationsForDate(date);
-    ui->dateConsultationsView->setModel(model);
-    ui->dateConsultationsView->resizeColumnsToContents();
+    if (m_dbConnected) {
+        QSqlQueryModel *model = Etmp.getConsultationsForDate(date);
+        ui->dateConsultationsView->setModel(model);
+        ui->dateConsultationsView->resizeColumnsToContents();
+    }
 }
 
 bool MainWindow::calendarHoverEventFilter(QObject* watched, QEvent* event)
@@ -746,6 +807,11 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 
 void MainWindow::on_exportPdfButton_clicked()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot export PDF: Database is not connected.");
+        return;
+    }
+
     QString fileName = QFileDialog::getSaveFileName(this, tr("Export PDF"), "", tr("PDF Files (*.pdf)"));
     if (fileName.isEmpty())
         return;
@@ -896,6 +962,11 @@ void MainWindow::on_searchCriteriaComboBox_currentIndexChanged()
 
 void MainWindow::performSearch()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot perform search: Database is not connected.");
+        return;
+    }
+
     QString searchType = ui->searchCriteriaComboBox->currentText();
     QString searchText = ui->searchInput->text().trimmed();
     QSqlQueryModel *model = nullptr;
@@ -934,17 +1005,30 @@ void MainWindow::performSearch()
 
 void MainWindow::sendConsultationReminders()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot send reminders: Database is not connected.");
+        return;
+    }
     checkAndSendReminders();
 }
 
 void MainWindow::showStatistics()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot show statistics: Database is not connected.");
+        return;
+    }
     ui->tabWidget->setCurrentIndex(3);
     updateStatisticsDisplay();
 }
 
 void MainWindow::on_refreshStatsButton_clicked()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot refresh statistics: Database is not connected.");
+        return;
+    }
+
     static QElapsedTimer lastRefresh;
     if (!lastRefresh.isValid() || lastRefresh.elapsed() > 1000) {
         lastRefresh.start();
@@ -1053,6 +1137,11 @@ void MainWindow::on_openChartButton_clicked()
 
 void MainWindow::refreshClientTable()
 {
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot refresh table: Database is not connected.");
+        return;
+    }
+
     QSqlQueryModel *model = Etmp.afficher();
     ui->tableView->setModel(model);
     ui->tableView->resizeColumnsToContents();
@@ -1064,4 +1153,14 @@ void MainWindow::refreshClientTable()
 void MainWindow::on_searchButton_clicked()
 {
     performSearch();
+}
+
+void MainWindow::on_pushButton_formations_clicked()
+{
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot open Formation Window: Database is not connected.");
+        return;
+    }
+    FormationWindow *formationWindow = new FormationWindow(m_dbConnected, this);
+    formationWindow->show();
 }

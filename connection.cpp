@@ -1,3 +1,4 @@
+#include "connection.h"
 #include <QSqlError>
 #include <QDebug>
 
@@ -15,6 +16,8 @@ bool Connection::createconnect() {
     // Try to open the connection
     if (!db.open()) {
         qDebug() << "Database connection failed:" << db.lastError().text();
+        qDebug() << "Driver error:" << db.lastError().driverText();
+        qDebug() << "Database error:" << db.lastError().databaseText();
         return false;
     }
 
@@ -27,4 +30,3 @@ void Connection::closeconnect() {
         db.close();
     }
 }
-

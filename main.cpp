@@ -1,33 +1,27 @@
-
-#include "connection.h"
 #include "mainwindow.h"
+#include "connection.h"
 #include <QApplication>
 #include <QMessageBox>
+#include <QSqlDatabase>
 #include <QDebug>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     QApplication a(argc, argv);
-    QCoreApplication::addLibraryPath("D:/qt/6.7.3/mingw_64/plugins");
 
-    Connection c; // Keep connection in scope
-    bool test = c.createconnect();
-    MainWindow w; // Note: Replace MainWindow with FormationWindow if needed
-    if (test) {
-        w.show();
-        QMessageBox::information(nullptr, QObject::tr("database is open"),
-                                 QObject::tr("connection successful.\n"
-                                             "Click Cancel to exit."),
-                                 QMessageBox::Cancel);
+    // Check available drivers
+    qDebug() << "Available SQL drivers:" << QSqlDatabase::drivers();
 
-    } else {
-        QMessageBox::critical(nullptr, QObject::tr("database is not open"),
-                              QObject::tr("connection failed.\n"
-                                          "Click Cancel to exit."),
-                              QMessageBox::Cancel);
-        qDebug() << "Failed to connect!";
-        return -1; // Exit if connection fails
+    // Create an instance of Connection and attempt to establish the database connection
+    Connection conn;
+    bool dbConnected = conn.createconnect();
+    if (!dbConnected) {
+        QMessageBox::warning(nullptr, "Database Warning",
+                             "Failed to connect to the database. Some features may be unavailable.");
+        // Continue running the application instead of exiting
     }
 
-    return a.exec(); // Keep the Qt event loop running
+    MainWindow w(dbConnected); // Pass the connection status to MainWindow
+    w.show();
+    return a.exec();
 }
-
