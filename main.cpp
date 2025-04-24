@@ -1,3 +1,4 @@
+
 #include "connection.h"
 #include "mainwindow.h"
 #include <QApplication>
@@ -17,6 +18,7 @@ int main(int argc, char *argv[]) {
                                  QObject::tr("connection successful.\n"
                                              "Click Cancel to exit."),
                                  QMessageBox::Cancel);
+
     } else {
         QMessageBox::critical(nullptr, QObject::tr("database is not open"),
                               QObject::tr("connection failed.\n"
@@ -28,3 +30,4 @@ int main(int argc, char *argv[]) {
 
     return a.exec(); // Keep the Qt event loop running
 }
+

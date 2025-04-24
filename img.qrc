@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/imgs">
+        <file>file.ico</file>
+        <file>delete.ico</file>
+    </qresource>
+</RCC>

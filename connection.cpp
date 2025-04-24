@@ -1,4 +1,3 @@
-#include "connection.h"
 #include <QSqlError>
 #include <QDebug>
 
@@ -28,3 +27,4 @@ void Connection::closeconnect() {
         db.close();
     }
 }
+
