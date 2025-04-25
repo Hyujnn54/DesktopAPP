@@ -1,0 +1,11 @@
+release/chatbotdialog.o
+release/connection.o
+release/main.o
+release/mainwindow.o
+release/meeting.o
+release/updatemeeting.o
+release/qrcodegen.o
+release/qrc_qmake_qmake_qm_files.o
+release/moc_chatbotdialog.o
+release/moc_mainwindow.o
+release/moc_updatemeeting.o
