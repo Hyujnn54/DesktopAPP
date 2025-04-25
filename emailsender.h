@@ -11,16 +11,19 @@ class EmailSender : public QObject
 public:
     explicit EmailSender(QObject *parent = nullptr);
     bool sendEmail(const QString &to, const QString &subject, const QString &body);
+    bool isLastSendSuccessful() const { return lastSendSuccessful; }
 
 private:
     QString smtpServer = "smtp.gmail.com";
     int smtpPort = 465; // SSL port for Gmail
     QString senderEmail = "shaco54lol@gmail.com"; // Replace with your Gmail
     QString senderPassword = "pezy bnhw gtpb bnre"; // Replace with your App Password
+    bool lastSendSuccessful = false; // Tracks success of last send attempt
 
     bool connectToServer(QSslSocket &socket);
     bool authenticate(QSslSocket &socket);
     bool sendData(QSslSocket &socket, const QString &data);
+    bool checkResponse(QSslSocket &socket, const QString &expectedCode);
 };
 
 #endif // EMAILSENDER_H

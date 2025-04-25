@@ -9,10 +9,8 @@ EmailSender::EmailSender(QObject *parent) : QObject(parent)
 
 bool EmailSender::sendEmail(const QString &to, const QString &subject, const QString &body)
 {
+    lastSendSuccessful = false; // Reset before attempting to send
     QSslSocket socket;
-    // Remove setProtocol or use a modern TLS version
-    // socket.setProtocol(QSsl::TlsV1_2); // Optional: Explicitly use TLS 1.2
-    // By default, QSslSocket will negotiate the best available protocol (TLS)
 
     // Connect to SMTP server
     if (!connectToServer(socket)) {
@@ -23,38 +21,50 @@ bool EmailSender::sendEmail(const QString &to, const QString &subject, const QSt
     // Authenticate
     if (!authenticate(socket)) {
         qDebug() << "Authentication failed";
+        socket.disconnectFromHost();
         return false;
     }
 
     // Send email
     QString mailFrom = "MAIL FROM:<" + senderEmail + ">\r\n";
-    if (!sendData(socket, mailFrom)) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "MAIL FROM response:" << socket.readAll();
+    if (!sendData(socket, mailFrom) || !checkResponse(socket, "250")) {
+        qDebug() << "MAIL FROM failed";
+        socket.disconnectFromHost();
+        return false;
+    }
 
     QString rcptTo = "RCPT TO:<" + to + ">\r\n";
-    if (!sendData(socket, rcptTo)) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "RCPT TO response:" << socket.readAll();
+    if (!sendData(socket, rcptTo) || !checkResponse(socket, "250")) {
+        qDebug() << "RCPT TO failed";
+        socket.disconnectFromHost();
+        return false;
+    }
 
-    if (!sendData(socket, "DATA\r\n")) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "DATA response:" << socket.readAll();
+    if (!sendData(socket, "DATA\r\n") || !checkResponse(socket, "354")) {
+        qDebug() << "DATA command failed";
+        socket.disconnectFromHost();
+        return false;
+    }
 
     QString emailData = "From: " + senderEmail + "\r\n"
                                                  "To: " + to + "\r\n"
                                "Subject: " + subject + "\r\n"
                                     "\r\n" + body + "\r\n"
                                  ".\r\n";
-    if (!sendData(socket, emailData)) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "Email data response:" << socket.readAll();
+    if (!sendData(socket, emailData) || !checkResponse(socket, "250")) {
+        qDebug() << "Email data send failed";
+        socket.disconnectFromHost();
+        return false;
+    }
 
-    if (!sendData(socket, "QUIT\r\n")) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "QUIT response:" << socket.readAll();
+    if (!sendData(socket, "QUIT\r\n") || !checkResponse(socket, "221")) {
+        qDebug() << "QUIT command failed";
+        socket.disconnectFromHost();
+        return false;
+    }
 
     socket.disconnectFromHost();
+    lastSendSuccessful = true; // Email sent successfully
     return true;
 }
 
@@ -65,30 +75,36 @@ bool EmailSender::connectToServer(QSslSocket &socket)
         qDebug() << "Connection error:" << socket.errorString();
         return false;
     }
-    socket.waitForReadyRead(5000);
-    qDebug() << "Server response:" << socket.readAll();
+    if (!checkResponse(socket, "220")) {
+        qDebug() << "Invalid server greeting";
+        return false;
+    }
     return true;
 }
 
 bool EmailSender::authenticate(QSslSocket &socket)
 {
-    if (!sendData(socket, "EHLO localhost\r\n")) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "EHLO response:" << socket.readAll();
+    if (!sendData(socket, "EHLO localhost\r\n") || !checkResponse(socket, "250")) {
+        qDebug() << "EHLO failed";
+        return false;
+    }
 
-    if (!sendData(socket, "AUTH LOGIN\r\n")) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "AUTH LOGIN response:" << socket.readAll();
+    if (!sendData(socket, "AUTH LOGIN\r\n") || !checkResponse(socket, "334")) {
+        qDebug() << "AUTH LOGIN failed";
+        return false;
+    }
 
     QByteArray emailBase64 = senderEmail.toUtf8().toBase64();
-    if (!sendData(socket, emailBase64 + "\r\n")) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "Email response:" << socket.readAll();
+    if (!sendData(socket, emailBase64 + "\r\n") || !checkResponse(socket, "334")) {
+        qDebug() << "Email authentication failed";
+        return false;
+    }
 
     QByteArray passwordBase64 = senderPassword.toUtf8().toBase64();
-    if (!sendData(socket, passwordBase64 + "\r\n")) return false;
-    socket.waitForReadyRead(5000);
-    qDebug() << "Password response:" << socket.readAll();
+    if (!sendData(socket, passwordBase64 + "\r\n") || !checkResponse(socket, "235")) {
+        qDebug() << "Password authentication failed";
+        return false;
+    }
 
     return true;
 }
@@ -99,4 +115,15 @@ bool EmailSender::sendData(QSslSocket &socket, const QString &data)
     stream << data;
     stream.flush();
     return socket.waitForBytesWritten(5000);
+}
+
+bool EmailSender::checkResponse(QSslSocket &socket, const QString &expectedCode)
+{
+    if (!socket.waitForReadyRead(5000)) {
+        qDebug() << "No response from server";
+        return false;
+    }
+    QByteArray response = socket.readAll();
+    qDebug() << "Server response:" << response;
+    return response.startsWith(expectedCode.toUtf8());
 }

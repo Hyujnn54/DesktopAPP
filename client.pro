@@ -14,23 +14,28 @@ message("C++ flags: $$QMAKE_CXXFLAGS")
 SOURCES += \
     chartwindow.cpp \
     client.cpp \
+    clientmanager.cpp \
     connection.cpp \
     customsqlquerymodel.cpp \
     emailsender.cpp \
     formations.cpp \
     main.cpp \
     mainwindow.cpp \
+    trainingmanager.cpp \
     updateclientdialog.cpp \
     updatetrainingdialog.cpp
 
 HEADERS += \
+    ClickableLabel.h \
     chartwindow.h \
     client.h \
+    clientmanager.h \
     connection.h \
     customsqlquerymodel.h \
     emailsender.h \
     formations.h \
     mainwindow.h \
+    trainingmanager.h \
     updateclientdialog.h \
     updatetrainingdialog.h
 

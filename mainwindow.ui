@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Client and Training Management System</string>
+   <string>Client, Training, and Meeting Management System</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -151,7 +151,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Client and Training Management System</string>
+             <string>Client, Training, and Meeting Management System</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -290,6 +290,13 @@
               <widget class="QPushButton" name="trainingSectionButton">
                <property name="text">
                 <string>Training</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="meetingSectionButton">
+               <property name="text">
+                <string>Meetings</string>
                </property>
               </widget>
              </item>
@@ -838,6 +845,314 @@
                      <widget class="QPushButton" name="trainingExportButton">
                       <property name="text">
                        <string>PDF</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="meetingPage">
+             <layout class="QVBoxLayout" name="meetingPageLayout">
+              <item>
+               <widget class="QTabWidget" name="meetingTabWidget">
+                <property name="currentIndex">
+                 <number>2</number>
+                </property>
+                <widget class="QWidget" name="meetingAddTab">
+                 <attribute name="title">
+                  <string>Add Meeting</string>
+                 </attribute>
+                 <layout class="QGridLayout" name="meetingAddGridLayout">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="meetingTitleLabel">
+                    <property name="text">
+                     <string>Title</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QLineEdit" name="meetingTitleInput"/>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="meetingOrganiserLabel">
+                    <property name="text">
+                     <string>Organiser</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QLineEdit" name="meetingOrganiserInput"/>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="meetingParticipantLabel">
+                    <property name="text">
+                     <string>Participant</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QLineEdit" name="meetingParticipantInput"/>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="meetingAgendaLabel">
+                    <property name="text">
+                     <string>Agenda</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QComboBox" name="meetingAgendaComboBox">
+                    <item>
+                     <property name="text">
+                      <string>car advice</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>life advice</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>future advice</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="meetingDateLabel">
+                    <property name="text">
+                     <string>Date and Time:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="2">
+                   <widget class="QDateTimeEdit" name="meetingDateTimeEdit"/>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="meetingDurationLabel">
+                    <property name="text">
+                     <string>Duration (min)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="2">
+                   <widget class="QLineEdit" name="meetingDurationInput"/>
+                  </item>
+                  <item row="6" column="2">
+                   <widget class="QPushButton" name="meetingAddButton">
+                    <property name="text">
+                     <string>Add Meeting</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3" rowspan="7">
+                   <spacer name="meetingAddHorizontalSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="meetingManageTab">
+                 <attribute name="title">
+                  <string>Manage Meetings</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="meetingManageLayout">
+                  <item>
+                   <widget class="QGroupBox" name="meetingSearchGroupBox">
+                    <property name="title">
+                     <string>Search</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="meetingSearchLayout">
+                     <item>
+                      <widget class="QComboBox" name="meetingSearchCriteriaComboBox">
+                       <item>
+                        <property name="text">
+                         <string>Title</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Organiser</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Participant</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Agenda</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Date Time</string>
+                        </property>
+                       </item>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="meetingSearchInput">
+                       <property name="placeholderText">
+                        <string>Type to search...</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="meetingResetSearchButton">
+                       <property name="text">
+                        <string>Reset Search</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QTableWidget" name="meetingTableWidget">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                      <horstretch>1</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="selectionMode">
+                     <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+                    </property>
+                    <property name="selectionBehavior">
+                     <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+                    </property>
+                    <column>
+                     <property name="text">
+                      <string>ID</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Title</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Organiser</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Participant</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Agenda</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Duration</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Date and Time</string>
+                     </property>
+                    </column>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="meetingManageButtonLayout">
+                    <item>
+                     <spacer name="meetingManageHorizontalSpacer">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="meetingDeleteButton">
+                      <property name="text">
+                       <string>Delete</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="meetingUpdateButton">
+                      <property name="text">
+                       <string>Update</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="meetingExportPdfButton">
+                      <property name="text">
+                       <string>PDF</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="meetingGenerateQRCodeButton">
+                      <property name="text">
+                       <string>Generate QR Code</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="meetingChatTab">
+                 <attribute name="title">
+                  <string>Chat Assistant</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="meetingChatLayout">
+                  <item>
+                   <widget class="QTextEdit" name="meetingChatTextEdit">
+                    <property name="readOnly">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="meetingChatInputLayout">
+                    <item>
+                     <widget class="QLineEdit" name="meetingChatInputLineEdit">
+                      <property name="placeholderText">
+                       <string>Type your message here...</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="meetingChatSendButton">
+                      <property name="text">
+                       <string>Send</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="meetingChatClearButton">
+                      <property name="text">
+                       <string>Clear Chat</string>
                       </property>
                      </widget>
                     </item>

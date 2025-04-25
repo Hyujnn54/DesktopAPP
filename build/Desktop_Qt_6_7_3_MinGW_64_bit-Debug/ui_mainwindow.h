@@ -31,6 +31,8 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
+#include <QtWidgets/QTableWidget>
+#include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -58,6 +60,7 @@ public:
     QLabel *trainingNotificationLabel;
     QPushButton *clientSectionButton;
     QPushButton *trainingSectionButton;
+    QPushButton *meetingSectionButton;
     QPushButton *reportsButton;
     QPushButton *settingsButton;
     QPushButton *statisticsButton;
@@ -139,6 +142,46 @@ public:
     QPushButton *trainingDeleteButton;
     QPushButton *trainingUpdateButton;
     QPushButton *trainingExportButton;
+    QWidget *meetingPage;
+    QVBoxLayout *meetingPageLayout;
+    QTabWidget *meetingTabWidget;
+    QWidget *meetingAddTab;
+    QGridLayout *meetingAddGridLayout;
+    QLabel *meetingTitleLabel;
+    QLineEdit *meetingTitleInput;
+    QLabel *meetingOrganiserLabel;
+    QLineEdit *meetingOrganiserInput;
+    QLabel *meetingParticipantLabel;
+    QLineEdit *meetingParticipantInput;
+    QLabel *meetingAgendaLabel;
+    QComboBox *meetingAgendaComboBox;
+    QLabel *meetingDateLabel;
+    QDateTimeEdit *meetingDateTimeEdit;
+    QLabel *meetingDurationLabel;
+    QLineEdit *meetingDurationInput;
+    QPushButton *meetingAddButton;
+    QSpacerItem *meetingAddHorizontalSpacer;
+    QWidget *meetingManageTab;
+    QVBoxLayout *meetingManageLayout;
+    QGroupBox *meetingSearchGroupBox;
+    QHBoxLayout *meetingSearchLayout;
+    QComboBox *meetingSearchCriteriaComboBox;
+    QLineEdit *meetingSearchInput;
+    QPushButton *meetingResetSearchButton;
+    QTableWidget *meetingTableWidget;
+    QHBoxLayout *meetingManageButtonLayout;
+    QSpacerItem *meetingManageHorizontalSpacer;
+    QPushButton *meetingDeleteButton;
+    QPushButton *meetingUpdateButton;
+    QPushButton *meetingExportPdfButton;
+    QPushButton *meetingGenerateQRCodeButton;
+    QWidget *meetingChatTab;
+    QVBoxLayout *meetingChatLayout;
+    QTextEdit *meetingChatTextEdit;
+    QHBoxLayout *meetingChatInputLayout;
+    QLineEdit *meetingChatInputLineEdit;
+    QPushButton *meetingChatSendButton;
+    QPushButton *meetingChatClearButton;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -255,6 +298,11 @@ public:
         trainingSectionButton->setObjectName("trainingSectionButton");
 
         verticalLayout_3->addWidget(trainingSectionButton);
+
+        meetingSectionButton = new QPushButton(frame_6);
+        meetingSectionButton->setObjectName("meetingSectionButton");
+
+        verticalLayout_3->addWidget(meetingSectionButton);
 
         reportsButton = new QPushButton(frame_6);
         reportsButton->setObjectName("reportsButton");
@@ -641,6 +689,213 @@ public:
         trainingPageLayout->addWidget(trainingTabWidget);
 
         mainStackedWidget->addWidget(trainingPage);
+        meetingPage = new QWidget();
+        meetingPage->setObjectName("meetingPage");
+        meetingPageLayout = new QVBoxLayout(meetingPage);
+        meetingPageLayout->setObjectName("meetingPageLayout");
+        meetingTabWidget = new QTabWidget(meetingPage);
+        meetingTabWidget->setObjectName("meetingTabWidget");
+        meetingAddTab = new QWidget();
+        meetingAddTab->setObjectName("meetingAddTab");
+        meetingAddGridLayout = new QGridLayout(meetingAddTab);
+        meetingAddGridLayout->setObjectName("meetingAddGridLayout");
+        meetingTitleLabel = new QLabel(meetingAddTab);
+        meetingTitleLabel->setObjectName("meetingTitleLabel");
+
+        meetingAddGridLayout->addWidget(meetingTitleLabel, 0, 0, 1, 1);
+
+        meetingTitleInput = new QLineEdit(meetingAddTab);
+        meetingTitleInput->setObjectName("meetingTitleInput");
+
+        meetingAddGridLayout->addWidget(meetingTitleInput, 0, 2, 1, 1);
+
+        meetingOrganiserLabel = new QLabel(meetingAddTab);
+        meetingOrganiserLabel->setObjectName("meetingOrganiserLabel");
+
+        meetingAddGridLayout->addWidget(meetingOrganiserLabel, 1, 0, 1, 1);
+
+        meetingOrganiserInput = new QLineEdit(meetingAddTab);
+        meetingOrganiserInput->setObjectName("meetingOrganiserInput");
+
+        meetingAddGridLayout->addWidget(meetingOrganiserInput, 1, 2, 1, 1);
+
+        meetingParticipantLabel = new QLabel(meetingAddTab);
+        meetingParticipantLabel->setObjectName("meetingParticipantLabel");
+
+        meetingAddGridLayout->addWidget(meetingParticipantLabel, 2, 0, 1, 1);
+
+        meetingParticipantInput = new QLineEdit(meetingAddTab);
+        meetingParticipantInput->setObjectName("meetingParticipantInput");
+
+        meetingAddGridLayout->addWidget(meetingParticipantInput, 2, 2, 1, 1);
+
+        meetingAgendaLabel = new QLabel(meetingAddTab);
+        meetingAgendaLabel->setObjectName("meetingAgendaLabel");
+
+        meetingAddGridLayout->addWidget(meetingAgendaLabel, 3, 0, 1, 1);
+
+        meetingAgendaComboBox = new QComboBox(meetingAddTab);
+        meetingAgendaComboBox->addItem(QString());
+        meetingAgendaComboBox->addItem(QString());
+        meetingAgendaComboBox->addItem(QString());
+        meetingAgendaComboBox->setObjectName("meetingAgendaComboBox");
+
+        meetingAddGridLayout->addWidget(meetingAgendaComboBox, 3, 2, 1, 1);
+
+        meetingDateLabel = new QLabel(meetingAddTab);
+        meetingDateLabel->setObjectName("meetingDateLabel");
+
+        meetingAddGridLayout->addWidget(meetingDateLabel, 4, 0, 1, 1);
+
+        meetingDateTimeEdit = new QDateTimeEdit(meetingAddTab);
+        meetingDateTimeEdit->setObjectName("meetingDateTimeEdit");
+
+        meetingAddGridLayout->addWidget(meetingDateTimeEdit, 4, 2, 1, 1);
+
+        meetingDurationLabel = new QLabel(meetingAddTab);
+        meetingDurationLabel->setObjectName("meetingDurationLabel");
+
+        meetingAddGridLayout->addWidget(meetingDurationLabel, 5, 0, 1, 1);
+
+        meetingDurationInput = new QLineEdit(meetingAddTab);
+        meetingDurationInput->setObjectName("meetingDurationInput");
+
+        meetingAddGridLayout->addWidget(meetingDurationInput, 5, 2, 1, 1);
+
+        meetingAddButton = new QPushButton(meetingAddTab);
+        meetingAddButton->setObjectName("meetingAddButton");
+
+        meetingAddGridLayout->addWidget(meetingAddButton, 6, 2, 1, 1);
+
+        meetingAddHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        meetingAddGridLayout->addItem(meetingAddHorizontalSpacer, 0, 3, 7, 1);
+
+        meetingTabWidget->addTab(meetingAddTab, QString());
+        meetingManageTab = new QWidget();
+        meetingManageTab->setObjectName("meetingManageTab");
+        meetingManageLayout = new QVBoxLayout(meetingManageTab);
+        meetingManageLayout->setObjectName("meetingManageLayout");
+        meetingSearchGroupBox = new QGroupBox(meetingManageTab);
+        meetingSearchGroupBox->setObjectName("meetingSearchGroupBox");
+        meetingSearchLayout = new QHBoxLayout(meetingSearchGroupBox);
+        meetingSearchLayout->setObjectName("meetingSearchLayout");
+        meetingSearchCriteriaComboBox = new QComboBox(meetingSearchGroupBox);
+        meetingSearchCriteriaComboBox->addItem(QString());
+        meetingSearchCriteriaComboBox->addItem(QString());
+        meetingSearchCriteriaComboBox->addItem(QString());
+        meetingSearchCriteriaComboBox->addItem(QString());
+        meetingSearchCriteriaComboBox->addItem(QString());
+        meetingSearchCriteriaComboBox->setObjectName("meetingSearchCriteriaComboBox");
+
+        meetingSearchLayout->addWidget(meetingSearchCriteriaComboBox);
+
+        meetingSearchInput = new QLineEdit(meetingSearchGroupBox);
+        meetingSearchInput->setObjectName("meetingSearchInput");
+
+        meetingSearchLayout->addWidget(meetingSearchInput);
+
+        meetingResetSearchButton = new QPushButton(meetingSearchGroupBox);
+        meetingResetSearchButton->setObjectName("meetingResetSearchButton");
+
+        meetingSearchLayout->addWidget(meetingResetSearchButton);
+
+
+        meetingManageLayout->addWidget(meetingSearchGroupBox);
+
+        meetingTableWidget = new QTableWidget(meetingManageTab);
+        if (meetingTableWidget->columnCount() < 7)
+            meetingTableWidget->setColumnCount(7);
+        QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
+        meetingTableWidget->setHorizontalHeaderItem(0, __qtablewidgetitem);
+        QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
+        meetingTableWidget->setHorizontalHeaderItem(1, __qtablewidgetitem1);
+        QTableWidgetItem *__qtablewidgetitem2 = new QTableWidgetItem();
+        meetingTableWidget->setHorizontalHeaderItem(2, __qtablewidgetitem2);
+        QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
+        meetingTableWidget->setHorizontalHeaderItem(3, __qtablewidgetitem3);
+        QTableWidgetItem *__qtablewidgetitem4 = new QTableWidgetItem();
+        meetingTableWidget->setHorizontalHeaderItem(4, __qtablewidgetitem4);
+        QTableWidgetItem *__qtablewidgetitem5 = new QTableWidgetItem();
+        meetingTableWidget->setHorizontalHeaderItem(5, __qtablewidgetitem5);
+        QTableWidgetItem *__qtablewidgetitem6 = new QTableWidgetItem();
+        meetingTableWidget->setHorizontalHeaderItem(6, __qtablewidgetitem6);
+        meetingTableWidget->setObjectName("meetingTableWidget");
+        QSizePolicy sizePolicy2(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Expanding);
+        sizePolicy2.setHorizontalStretch(1);
+        sizePolicy2.setVerticalStretch(0);
+        sizePolicy2.setHeightForWidth(meetingTableWidget->sizePolicy().hasHeightForWidth());
+        meetingTableWidget->setSizePolicy(sizePolicy2);
+        meetingTableWidget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        meetingTableWidget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+
+        meetingManageLayout->addWidget(meetingTableWidget);
+
+        meetingManageButtonLayout = new QHBoxLayout();
+        meetingManageButtonLayout->setObjectName("meetingManageButtonLayout");
+        meetingManageHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        meetingManageButtonLayout->addItem(meetingManageHorizontalSpacer);
+
+        meetingDeleteButton = new QPushButton(meetingManageTab);
+        meetingDeleteButton->setObjectName("meetingDeleteButton");
+
+        meetingManageButtonLayout->addWidget(meetingDeleteButton);
+
+        meetingUpdateButton = new QPushButton(meetingManageTab);
+        meetingUpdateButton->setObjectName("meetingUpdateButton");
+
+        meetingManageButtonLayout->addWidget(meetingUpdateButton);
+
+        meetingExportPdfButton = new QPushButton(meetingManageTab);
+        meetingExportPdfButton->setObjectName("meetingExportPdfButton");
+
+        meetingManageButtonLayout->addWidget(meetingExportPdfButton);
+
+        meetingGenerateQRCodeButton = new QPushButton(meetingManageTab);
+        meetingGenerateQRCodeButton->setObjectName("meetingGenerateQRCodeButton");
+
+        meetingManageButtonLayout->addWidget(meetingGenerateQRCodeButton);
+
+
+        meetingManageLayout->addLayout(meetingManageButtonLayout);
+
+        meetingTabWidget->addTab(meetingManageTab, QString());
+        meetingChatTab = new QWidget();
+        meetingChatTab->setObjectName("meetingChatTab");
+        meetingChatLayout = new QVBoxLayout(meetingChatTab);
+        meetingChatLayout->setObjectName("meetingChatLayout");
+        meetingChatTextEdit = new QTextEdit(meetingChatTab);
+        meetingChatTextEdit->setObjectName("meetingChatTextEdit");
+        meetingChatTextEdit->setReadOnly(true);
+
+        meetingChatLayout->addWidget(meetingChatTextEdit);
+
+        meetingChatInputLayout = new QHBoxLayout();
+        meetingChatInputLayout->setObjectName("meetingChatInputLayout");
+        meetingChatInputLineEdit = new QLineEdit(meetingChatTab);
+        meetingChatInputLineEdit->setObjectName("meetingChatInputLineEdit");
+
+        meetingChatInputLayout->addWidget(meetingChatInputLineEdit);
+
+        meetingChatSendButton = new QPushButton(meetingChatTab);
+        meetingChatSendButton->setObjectName("meetingChatSendButton");
+
+        meetingChatInputLayout->addWidget(meetingChatSendButton);
+
+        meetingChatClearButton = new QPushButton(meetingChatTab);
+        meetingChatClearButton->setObjectName("meetingChatClearButton");
+
+        meetingChatInputLayout->addWidget(meetingChatClearButton);
+
+
+        meetingChatLayout->addLayout(meetingChatInputLayout);
+
+        meetingTabWidget->addTab(meetingChatTab, QString());
+
+        meetingPageLayout->addWidget(meetingTabWidget);
+
+        mainStackedWidget->addWidget(meetingPage);
 
         verticalLayout_5->addWidget(mainStackedWidget);
 
@@ -660,6 +915,7 @@ public:
         mainStackedWidget->setCurrentIndex(0);
         clientTabWidget->setCurrentIndex(1);
         trainingTabWidget->setCurrentIndex(0);
+        meetingTabWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -667,12 +923,13 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Client and Training Management System", nullptr));
+        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Client, Training, and Meeting Management System", nullptr));
         menuButton->setText(QCoreApplication::translate("MainWindow", "Menu", nullptr));
-        headerLabel->setText(QCoreApplication::translate("MainWindow", "Client and Training Management System", nullptr));
+        headerLabel->setText(QCoreApplication::translate("MainWindow", "Client, Training, and Meeting Management System", nullptr));
         trainingNotificationLabel->setText(QCoreApplication::translate("MainWindow", "Notifications: 0", nullptr));
         clientSectionButton->setText(QCoreApplication::translate("MainWindow", "Clients", nullptr));
         trainingSectionButton->setText(QCoreApplication::translate("MainWindow", "Training", nullptr));
+        meetingSectionButton->setText(QCoreApplication::translate("MainWindow", "Meetings", nullptr));
         reportsButton->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
         settingsButton->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
         statisticsButton->setText(QCoreApplication::translate("MainWindow", "Statistics", nullptr));
@@ -725,6 +982,50 @@ public:
         trainingUpdateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
         trainingExportButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
         trainingTabWidget->setTabText(trainingTabWidget->indexOf(trainingManageTab), QCoreApplication::translate("MainWindow", "Manage Training", nullptr));
+        meetingTitleLabel->setText(QCoreApplication::translate("MainWindow", "Title", nullptr));
+        meetingOrganiserLabel->setText(QCoreApplication::translate("MainWindow", "Organiser", nullptr));
+        meetingParticipantLabel->setText(QCoreApplication::translate("MainWindow", "Participant", nullptr));
+        meetingAgendaLabel->setText(QCoreApplication::translate("MainWindow", "Agenda", nullptr));
+        meetingAgendaComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "car advice", nullptr));
+        meetingAgendaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "life advice", nullptr));
+        meetingAgendaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "future advice", nullptr));
+
+        meetingDateLabel->setText(QCoreApplication::translate("MainWindow", "Date and Time:", nullptr));
+        meetingDurationLabel->setText(QCoreApplication::translate("MainWindow", "Duration (min)", nullptr));
+        meetingAddButton->setText(QCoreApplication::translate("MainWindow", "Add Meeting", nullptr));
+        meetingTabWidget->setTabText(meetingTabWidget->indexOf(meetingAddTab), QCoreApplication::translate("MainWindow", "Add Meeting", nullptr));
+        meetingSearchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
+        meetingSearchCriteriaComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Title", nullptr));
+        meetingSearchCriteriaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Organiser", nullptr));
+        meetingSearchCriteriaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Participant", nullptr));
+        meetingSearchCriteriaComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Agenda", nullptr));
+        meetingSearchCriteriaComboBox->setItemText(4, QCoreApplication::translate("MainWindow", "Date Time", nullptr));
+
+        meetingSearchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
+        meetingResetSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
+        QTableWidgetItem *___qtablewidgetitem = meetingTableWidget->horizontalHeaderItem(0);
+        ___qtablewidgetitem->setText(QCoreApplication::translate("MainWindow", "ID", nullptr));
+        QTableWidgetItem *___qtablewidgetitem1 = meetingTableWidget->horizontalHeaderItem(1);
+        ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "Title", nullptr));
+        QTableWidgetItem *___qtablewidgetitem2 = meetingTableWidget->horizontalHeaderItem(2);
+        ___qtablewidgetitem2->setText(QCoreApplication::translate("MainWindow", "Organiser", nullptr));
+        QTableWidgetItem *___qtablewidgetitem3 = meetingTableWidget->horizontalHeaderItem(3);
+        ___qtablewidgetitem3->setText(QCoreApplication::translate("MainWindow", "Participant", nullptr));
+        QTableWidgetItem *___qtablewidgetitem4 = meetingTableWidget->horizontalHeaderItem(4);
+        ___qtablewidgetitem4->setText(QCoreApplication::translate("MainWindow", "Agenda", nullptr));
+        QTableWidgetItem *___qtablewidgetitem5 = meetingTableWidget->horizontalHeaderItem(5);
+        ___qtablewidgetitem5->setText(QCoreApplication::translate("MainWindow", "Duration", nullptr));
+        QTableWidgetItem *___qtablewidgetitem6 = meetingTableWidget->horizontalHeaderItem(6);
+        ___qtablewidgetitem6->setText(QCoreApplication::translate("MainWindow", "Date and Time", nullptr));
+        meetingDeleteButton->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
+        meetingUpdateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
+        meetingExportPdfButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
+        meetingGenerateQRCodeButton->setText(QCoreApplication::translate("MainWindow", "Generate QR Code", nullptr));
+        meetingTabWidget->setTabText(meetingTabWidget->indexOf(meetingManageTab), QCoreApplication::translate("MainWindow", "Manage Meetings", nullptr));
+        meetingChatInputLineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type your message here...", nullptr));
+        meetingChatSendButton->setText(QCoreApplication::translate("MainWindow", "Send", nullptr));
+        meetingChatClearButton->setText(QCoreApplication::translate("MainWindow", "Clear Chat", nullptr));
+        meetingTabWidget->setTabText(meetingTabWidget->indexOf(meetingChatTab), QCoreApplication::translate("MainWindow", "Chat Assistant", nullptr));
     } // retranslateUi
 
 };
