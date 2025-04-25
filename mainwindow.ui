@@ -25,19 +25,10 @@
   <property name="windowTitle">
    <string>Client and Training Management System</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QFrame" name="header">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
       <property name="minimumSize">
        <size>
         <width>0</width>
@@ -76,13 +67,13 @@
         <widget class="QFrame" name="frame_3">
          <property name="minimumSize">
           <size>
-           <width>50</width>
+           <width>114</width>
            <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>151</width>
+           <width>167</width>
            <height>16777215</height>
           </size>
          </property>
@@ -110,12 +101,6 @@
           </property>
           <item>
            <widget class="QPushButton" name="menuButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -144,6 +129,12 @@
        </item>
        <item>
         <widget class="QFrame" name="frame_5">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Shape::StyledPanel</enum>
          </property>
@@ -207,7 +198,7 @@
          </property>
          <property name="maximumSize">
           <size>
-           <width>150</width>
+           <width>201</width>
            <height>16777215</height>
           </size>
          </property>
@@ -237,13 +228,13 @@
            <widget class="QFrame" name="frame_6">
             <property name="minimumSize">
              <size>
-              <width>125</width>
+              <width>147</width>
               <height>600</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>150</width>
+              <width>185</width>
               <height>16777215</height>
              </size>
             </property>
@@ -270,18 +261,21 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="dashboardButton">
+              <widget class="QLabel" name="trainingNotificationLabel">
+               <property name="maximumSize">
+                <size>
+                 <width>1000</width>
+                 <height>60</height>
+                </size>
+               </property>
                <property name="styleSheet">
-                <string notr="true">#label {
-    color: white;
-    padding: 5px;
-    font-size: 15pt;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-}</string>
+                <string notr="true">font-weight: bold; color: #3A5DAE;</string>
                </property>
                <property name="text">
-                <string>Dashboard</string>
+                <string>Notifications: 0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -314,9 +308,9 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="calendarButton">
+              <widget class="QPushButton" name="statisticsButton">
                <property name="text">
-                <string>Calendar</string>
+                <string>Statistics</string>
                </property>
               </widget>
              </item>
@@ -341,6 +335,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="maximumSize">
+          <size>
+           <width>1200</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="frameShape">
           <enum>QFrame::Shape::StyledPanel</enum>
          </property>
@@ -351,7 +351,7 @@
           <item>
            <widget class="QStackedWidget" name="mainStackedWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="clientPage">
              <layout class="QVBoxLayout" name="clientPageLayout">
@@ -496,7 +496,7 @@
                        </item>
                        <item>
                         <property name="text">
-                         <string>Date  Time</string>
+                         <string>Date Time</string>
                         </property>
                        </item>
                        <item>
@@ -632,60 +632,6 @@
                   </item>
                  </layout>
                 </widget>
-                <widget class="QWidget" name="clientStatsTab">
-                 <attribute name="title">
-                  <string>Statistics</string>
-                 </attribute>
-                 <layout class="QVBoxLayout" name="clientStatsLayout">
-                  <item>
-                   <widget class="QGroupBox" name="clientStatsTextGroup">
-                    <property name="title">
-                     <string>Statistical Summary</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="clientStatsTextLayout">
-                     <item>
-                      <widget class="QTextEdit" name="clientStatsDisplay">
-                       <property name="readOnly">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="clientStatsButtonLayout">
-                    <item>
-                     <spacer name="clientStatsHorizontalSpacer">
-                      <property name="orientation">
-                       <enum>Qt::Orientation::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="clientOpenChartButton">
-                      <property name="text">
-                       <string>View Chart</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="clientRefreshStatsButton">
-                      <property name="text">
-                       <string>Refresh Statistics</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </widget>
                </widget>
               </item>
              </layout>
@@ -695,7 +641,7 @@
               <item>
                <widget class="QTabWidget" name="trainingTabWidget">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="trainingAddTab">
                  <property name="contextMenuPolicy">
@@ -757,22 +703,6 @@
                   </item>
                   <item row="3" column="2">
                    <widget class="QSpinBox" name="trainingTimeSpinBox"/>
-                  </item>
-                  <item row="1" column="6">
-                   <widget class="QLabel" name="trainingNotificationLabel">
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="pixmap">
-                     <pixmap>../../../../Mega Pc/Downloads/Ra.png</pixmap>
-                    </property>
-                    <property name="scaledContents">
-                     <bool>false</bool>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
                   </item>
                   <item row="0" column="2">
                    <widget class="QLineEdit" name="trainingNameInput"/>
@@ -846,11 +776,6 @@
                          <string>Time</string>
                         </property>
                        </item>
-                       <item>
-                        <property name="text">
-                         <string/>
-                        </property>
-                       </item>
                       </widget>
                      </item>
                      <item>
@@ -920,30 +845,6 @@
                   </item>
                  </layout>
                 </widget>
-                <widget class="QWidget" name="trainingStatsTab">
-                 <attribute name="title">
-                  <string>Statistics</string>
-                 </attribute>
-                 <layout class="QVBoxLayout" name="trainingStatsLayout">
-                  <item>
-                   <widget class="QChartView" name="trainingStatsChartView">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>400</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="trainingRefreshStatsButton">
-                    <property name="text">
-                     <string>Refresh Statistics</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
                </widget>
               </item>
              </layout>
@@ -960,13 +861,6 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QChartView</class>
-   <extends>QGraphicsView</extends>
-   <header>qchartview.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

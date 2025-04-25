@@ -1,68 +1,48 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "updatetrainingdialog.h"
+#include "updateclientdialog.h"
 #include <QMessageBox>
-#include <QDate>
-#include <QDateTime>
-#include <QDateTimeEdit>
-#include <QComboBox>
-#include <QRadioButton>
-#include <QLineEdit>
-#include <QDateEdit>
-#include <QSpinBox>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
-#include <QString>
-#include <QSqlDatabase>
-#include <QVariant>
-#include <QSqlRecord>
-#include <QSqlQueryModel>
-#include <QSqlTableModel>
-#include <QInputDialog>
-#include <QCalendarWidget>
+#include <QDateTimeEdit>
+#include <QGridLayout>
+#include <QFileDialog>
 #include <QTextCharFormat>
-#include <QTime>
-#include <QFormLayout>
-#include <QDialogButtonBox>
-#include <QStandardItemModel>
-#include <QTableView>
+#include <QUrlQuery>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
-#include <QtCharts/QChart>
-#include <QtCharts/QBarSeries>
-#include <QtCharts/QBarSet>
-#include <QtCharts/QBarCategoryAxis>
-#include <QtCharts/QValueAxis>
-#include <QUrlQuery>
+#include <QSettings>
+#include <QNetworkReply>
+#include <QToolTip>
 
 MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWindow),
-    isDarkTheme(false),
     m_dbConnected(dbConnected),
+    chartWindow(nullptr),
     emailSender(new EmailSender(this)),
+    networkManager(new QNetworkAccessManager(this)),
+    clientTableModel(new QSqlQueryModel(this)),
+    clientProxyModel(new QSortFilterProxyModel(this)),
+    trainingTableModel(new QSqlQueryModel(this)),
+    trainingProxyModel(new QSortFilterProxyModel(this)),
     emailAttempts(0),
     emailSuccesses(0),
-    clientTableModel(nullptr), // Initialize
-    clientProxyModel(new QSortFilterProxyModel(this)), // Initialize
-    trainingTableModel(nullptr),
-    trainingProxyModel(new QSortFilterProxyModel(this)),
-    notificationCount(0),
-    changeHistory(),
-    networkManager(new QNetworkAccessManager(this)),
-    totalFormations(0),
-    totalCost(0.0),
-    avgCost(0.0)
+    consultationTableModel(nullptr) // Initialize to nullptr
 {
-    qDebug() << "Starting MainWindow constructor";
     ui->setupUi(this);
     applyLightTheme();
-
     setAttribute(Qt::WA_DeleteOnClose);
 
-    // Client Management Initialization
+    ui->trainingNotificationLabel->setProperty("clickable", true);
+    ui->trainingNotificationLabel->setStyleSheet("QLabel { font-weight: bold; color: #3A5DAE; } "
+                                                 "QLabel[clickable=true]:hover { text-decoration: underline; }");
+    connect(ui->trainingNotificationLabel, &QLabel::linkActivated, this, &::MainWindow::handleTrainingNotificationLabelClick);
+    ui->trainingNotificationLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+
+    // Initialize client input form
     QDateTimeEdit *dateTimeEdit = new QDateTimeEdit(this);
     dateTimeEdit->setObjectName("consultation_datetime");
     dateTimeEdit->setCalendarPopup(true);
@@ -86,126 +66,117 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
         gridLayout->removeWidget(ui->clientConsultationDateEdit);
         ui->clientConsultationDateEdit->deleteLater();
         gridLayout->addWidget(dateTimeEdit, row, column);
-    } else {
-        qDebug() << "Failed to cast layout to QGridLayout";
     }
 
+    // Initialize client table view
     ui->clientTableView->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->clientTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-
-    // Initialize clientTableModel and clientProxyModel
     if (m_dbConnected) {
-        clientTableModel = new QSqlQueryModel(this);
-        QSqlQuery query;
-        query.exec("SELECT NAME, SECTOR, CONTACT_INFO, EMAIL, CONSULTATION_DATE, "
-                   "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
-                   "FROM AHMED.CLIENTS c LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID");
-        clientTableModel->setQuery(std::move(query));
+        clientTableModel->setQuery("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                                   "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                                   "FROM AHMED.CLIENTS c LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID");
         clientProxyModel->setSourceModel(clientTableModel);
         ui->clientTableView->setModel(clientProxyModel);
         ui->clientTableView->resizeColumnsToContents();
     }
 
-    // Training Management Initialization
+    // Initialize consultation table model
+    if (m_dbConnected) {
+        consultationTableModel = new QSqlTableModel(this);
+        consultationTableModel->setTable("AHMED.CLIENTS");
+        ui->clientDateConsultationsView->setModel(consultationTableModel);
+        consultationTableModel->select(); // Initial load
+        ui->clientDateConsultationsView->resizeColumnsToContents();
+    }
+
+    // Initialize training input form
     ui->trainingDateEdit->setDate(QDate::currentDate());
-    ui->trainingNotificationLabel->setText("Notifications: 0");
+    ui->trainingNotificationLabel->setText("<a href='notifications'>Notifications: 0</a>");
     ui->trainingNotificationLabel->setStyleSheet("font-weight: bold; color: #3A5DAE;");
+    ui->trainingTableView->setSortingEnabled(true);
 
     QRegularExpression formationRx("[A-Za-z0-9\\s]{1,50}");
     QRegularExpression descriptionRx("[A-Za-z0-9\\s,.!?]{1,200}");
     QRegularExpression trainerRx("[A-Za-z\\s]{1,50}");
     QRegularExpression phoneRx("\\+\\d{10,15}");
-
-    QValidator *formationValidator = new QRegularExpressionValidator(formationRx, this);
-    QValidator *descriptionValidator = new QRegularExpressionValidator(descriptionRx, this);
-    QValidator *trainerValidator = new QRegularExpressionValidator(trainerRx, this);
-    QValidator *phoneValidator = new QRegularExpressionValidator(phoneRx, this);
-
-    ui->trainingNameInput->setValidator(formationValidator);
-    ui->trainingDescriptionInput->setValidator(descriptionValidator);
-    ui->trainingTrainerInput->setValidator(trainerValidator);
-    ui->trainingPhoneNumberInput->setValidator(phoneValidator);
-
+    ui->trainingNameInput->setValidator(new QRegularExpressionValidator(formationRx, this));
+    ui->trainingDescriptionInput->setValidator(new QRegularExpressionValidator(descriptionRx, this));
+    ui->trainingTrainerInput->setValidator(new QRegularExpressionValidator(trainerRx, this));
+    ui->trainingPhoneNumberInput->setValidator(new QRegularExpressionValidator(phoneRx, this));
     ui->trainingTimeSpinBox->setRange(1, 30);
     ui->trainingPriceSpinBox->setRange(1, 1000);
-    ui->trainingTableView->setSortingEnabled(true);
 
-    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::on_trainingSmsRequestFinished);
-
-    // Disable UI elements if database is not connected
+    // Disable UI if database is not connected
     if (!m_dbConnected) {
-        // Client Management
         ui->clientAddButton->setEnabled(false);
         ui->clientDeleteButton->setEnabled(false);
         ui->clientUpdateButton->setEnabled(false);
         ui->clientSearchInput->setEnabled(false);
         ui->clientResetSearchButton->setEnabled(false);
-        ui->clientRefreshStatsButton->setEnabled(false);
-        ui->calendarButton->setEnabled(false);
-
-        // Training Management
+        ui->statisticsButton->setEnabled(false);
         ui->trainingAddButton->setEnabled(false);
         ui->trainingDeleteButton->setEnabled(false);
         ui->trainingUpdateButton->setEnabled(false);
         ui->trainingExportButton->setEnabled(false);
-        ui->trainingRefreshStatsButton->setEnabled(false);
         ui->trainingSearchInput->setEnabled(false);
         ui->trainingResetSearchButton->setEnabled(false);
-
         statusBar()->showMessage("Database not connected. Some features are disabled.");
     } else {
         loadEmployees();
         refreshClientTable();
         refreshTrainingTableView();
-        updateTrainingStatistics();
     }
 
-    // Connections for Client Management
+    connect(ui->clientUpdateButton, &QPushButton::clicked, this, &MainWindow::on_clientUpdateButtonClicked);
+    // Connect signals (removed manual connections for client section buttons)
     connect(ui->menuButton, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
     connect(ui->themeButton, &QPushButton::clicked, this, &MainWindow::toggleTheme);
-    connect(ui->clientAddButton, &QPushButton::clicked, this, &MainWindow::on_clientAddButton_clicked);
-    connect(ui->clientDeleteButton, &QPushButton::clicked, this, &MainWindow::on_clientDeleteButton_clicked);
-    connect(ui->clientUpdateButton, &QPushButton::clicked, this, &MainWindow::on_clientUpdateButtonClicked);
-    connect(ui->clientResetSearchButton, &QPushButton::clicked, this, &MainWindow::on_clientResetSearchButton_clicked);
     connect(ui->clientTableView->horizontalHeader(), &QHeaderView::sectionClicked, this, &MainWindow::on_clientTableViewHeaderClicked);
-    connect(ui->calendarButton, &QPushButton::clicked, this, &MainWindow::sendConsultationReminders);
-    connect(ui->reportsButton, &QPushButton::clicked, this, &MainWindow::updateClientStatisticsDisplay);
-    connect(ui->clientRefreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_clientRefreshStatsButton_clicked);
+    connect(ui->statisticsButton, &QPushButton::clicked, this, &MainWindow::on_statisticsButton_clicked);
+    connect(ui->reportsButton, &QPushButton::clicked, this, &MainWindow::sendConsultationReminders);
     connect(ui->clientSearchInput, &QLineEdit::textChanged, this, &MainWindow::on_clientSearchInput_textChanged);
     connect(ui->clientSearchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::on_clientSearchCriteriaComboBox_currentIndexChanged);
-    connect(ui->clientExportPdfButton, &QPushButton::clicked, this, &MainWindow::on_clientExportPdfButton_clicked);
-    connect(ui->clientOpenChartButton, &QPushButton::clicked, this, &MainWindow::on_clientOpenChartButton_clicked);
-
-    // Connections for Training Management
     connect(ui->trainingAddButton, &QPushButton::clicked, this, &MainWindow::on_trainingAddButtonClicked);
     connect(ui->trainingDeleteButton, &QPushButton::clicked, this, &MainWindow::on_trainingDeleteButtonClicked);
     connect(ui->trainingUpdateButton, &QPushButton::clicked, this, &MainWindow::on_trainingUpdateButtonClicked);
     connect(ui->trainingExportButton, &QPushButton::clicked, this, &MainWindow::on_trainingExportButtonClicked);
-    connect(ui->trainingRefreshStatsButton, &QPushButton::clicked, this, &MainWindow::on_trainingRefreshStatsButton_clicked);
     connect(ui->trainingSearchInput, &QLineEdit::textChanged, this, &MainWindow::on_trainingSearchInput_textChanged);
     connect(ui->trainingResetSearchButton, &QPushButton::clicked, this, &MainWindow::on_trainingResetSearchButton_clicked);
-
-    // Navigation Connections
+    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::on_trainingSmsRequestFinished);
     connect(ui->clientSectionButton, &QPushButton::clicked, this, &MainWindow::on_clientSectionButton_clicked);
     connect(ui->trainingSectionButton, &QPushButton::clicked, this, &MainWindow::on_trainingSectionButton_clicked);
 
     setupCalendarView();
-    ui->clientConsultationCalendar->installEventFilter(this);
 }
 
 MainWindow::~MainWindow()
 {
-    delete clientTableModel; // Added
-    delete clientProxyModel; // Added
+    delete chartWindow;
+    delete clientTableModel;
+    delete clientProxyModel;
     delete trainingTableModel;
     delete trainingProxyModel;
+    delete consultationTableModel; // Added
+    delete emailSender;
+    delete networkManager;
     delete ui;
+}
+
+void MainWindow::on_statisticsButton_clicked()
+{
+    if (!m_dbConnected) {
+        QMessageBox::warning(this, "Database Error", "Cannot open statistics: Database is not connected.");
+        return;
+    }
+    if (!chartWindow) {
+        chartWindow = new ChartWindow(this);
+    }
+    chartWindow->show();
 }
 
 void MainWindow::on_clientSectionButton_clicked()
 {
-    // Find the index of the page containing the client section
     int clientPageIndex = -1;
     for (int i = 0; i < ui->mainStackedWidget->count(); ++i) {
         if (ui->mainStackedWidget->widget(i)->findChild<QTabWidget*>("clientTabWidget")) {
@@ -213,19 +184,16 @@ void MainWindow::on_clientSectionButton_clicked()
             break;
         }
     }
-
     if (clientPageIndex != -1) {
         ui->mainStackedWidget->setCurrentIndex(clientPageIndex);
-        refreshClientTable(); // Ensure the table is refreshed when the tab is opened
+        refreshClientTable();
     } else {
-        qDebug() << "Error: Could not find client page in mainStackedWidget";
-        QMessageBox::critical(this, "UI Error", "Failed to switch to Client Section: clientTabWidget not found.");
+        QMessageBox::critical(this, "UI Error", "Failed to switch to Client Section.");
     }
 }
 
 void MainWindow::on_trainingSectionButton_clicked()
 {
-    // Find the index of the page containing the training section
     int trainingPageIndex = -1;
     for (int i = 0; i < ui->mainStackedWidget->count(); ++i) {
         if (ui->mainStackedWidget->widget(i)->findChild<QWidget*>("trainingTabWidget")) {
@@ -233,27 +201,23 @@ void MainWindow::on_trainingSectionButton_clicked()
             break;
         }
     }
-
     if (trainingPageIndex != -1) {
         ui->mainStackedWidget->setCurrentIndex(trainingPageIndex);
-        refreshTrainingTableView(); // Ensure the table is refreshed when the tab is opened
-        updateTrainingStatistics();
+        refreshTrainingTableView();
     } else {
-        qDebug() << "Error: Could not find training page in mainStackedWidget";
-        QMessageBox::critical(this, "UI Error", "Failed to switch to Training Section: trainingTabWidget not found.");
+        QMessageBox::critical(this, "UI Error", "Failed to switch to Training Section.");
     }
 }
+
 void MainWindow::on_clientAddButton_clicked()
 {
     if (!m_dbConnected) {
         QMessageBox::warning(this, "Database Error", "Cannot add client: Database is not connected.");
         return;
     }
-
     if (!validateClientInputs()) {
         return;
     }
-
     QString name = ui->clientNameInput->text().trimmed();
     QString sector = ui->clientSectorInput->text().trimmed();
     QString contact = ui->clientContactInfoInput->text().trimmed();
@@ -267,10 +231,10 @@ void MainWindow::on_clientAddButton_clicked()
         QMessageBox::warning(this, "Input Error", "Please select a valid consultant.");
         return;
     }
-
     auto result = client.ajouter(name, sector, contact, email, dateTime, consultant);
     if (result.first) {
         QMessageBox::information(this, "Success", "Client added successfully!");
+        addNotification("Added", QString("Client: %1").arg(name)); // Add notification
         refreshClientTable();
         ui->clientNameInput->clear();
         ui->clientSectorInput->clear();
@@ -292,18 +256,16 @@ void MainWindow::on_clientDeleteButton_clicked()
         QMessageBox::warning(this, "Database Error", "Cannot delete client: Database is not connected.");
         return;
     }
-
     QModelIndexList selectedRows = ui->clientTableView->selectionModel()->selectedRows();
     if (selectedRows.isEmpty()) {
         QMessageBox::warning(this, "Selection Error", "Please select a client to remove.");
         return;
     }
-
     int row = selectedRows.first().row();
-    QString clientName = ui->clientTableView->model()->data(ui->clientTableView->model()->index(row, 0)).toString();
-
+    QString clientName = clientProxyModel->data(clientProxyModel->index(row, 0)).toString();
     if (client.removeByName(clientName)) {
         QMessageBox::information(this, "Success", "Client removed successfully!");
+        addNotification("Deleted", QString("Client: %1").arg(clientName)); // Add notification
         refreshClientTable();
         updateCalendarConsultations();
     } else {
@@ -317,54 +279,35 @@ void MainWindow::on_clientUpdateButtonClicked()
         QMessageBox::warning(this, "Database Error", "Cannot update client: Database is not connected.");
         return;
     }
-
     QModelIndexList selectedIndexes = ui->clientTableView->selectionModel()->selectedRows();
     if (selectedIndexes.isEmpty()) {
         QMessageBox::warning(this, "Selection Error", "Please select a client to update.");
         return;
     }
-
     QModelIndex index = clientProxyModel->mapToSource(selectedIndexes.first());
-
-    // Column indices based on Client::afficher() query
-    QString name = clientTableModel->data(clientTableModel->index(index.row(), 0)).toString(); // NAME
-    QString sector = clientTableModel->data(clientTableModel->index(index.row(), 1)).toString(); // SECTOR
-    QString contactInfo = clientTableModel->data(clientTableModel->index(index.row(), 2)).toString(); // CONTACT_INFO
-    QString email = clientTableModel->data(clientTableModel->index(index.row(), 3)).toString(); // EMAIL
-    QDateTime consultationDateTime = clientTableModel->data(clientTableModel->index(index.row(), 4)).toDateTime(); // CONSULTATION_DATE
-    QString consultantName = clientTableModel->data(clientTableModel->index(index.row(), 5)).toString(); // CONSULTANT_NAME
-
-    // Debug the extracted data
-    qDebug() << "Selected row:" << index.row();
-    qDebug() << "Name:" << name;
-    qDebug() << "Sector:" << sector;
-    qDebug() << "Contact:" << contactInfo;
-    qDebug() << "Email:" << email;
-    qDebug() << "Consultation DateTime:" << consultationDateTime.toString("yyyy-MM-dd HH:mm:ss");
-    qDebug() << "Consultant Name:" << consultantName;
-
-    // Get consultant ID from employeeMap
+    QString name = clientTableModel->data(clientTableModel->index(index.row(), 0)).toString();
+    QString sector = clientTableModel->data(clientTableModel->index(index.row(), 1)).toString();
+    QString contactInfo = clientTableModel->data(clientTableModel->index(index.row(), 2)).toString();
+    QString email = clientTableModel->data(clientTableModel->index(index.row(), 3)).toString();
+    QDateTime consultationDateTime = clientTableModel->data(clientTableModel->index(index.row(), 4)).toDateTime();
+    QString consultantName = clientTableModel->data(clientTableModel->index(index.row(), 5)).toString();
     QString consultantId = employeeMap.key(consultantName, "-1");
-    qDebug() << "Consultant ID:" << consultantId;
 
     UpdateClientDialog dialog(this);
     dialog.setClientData(name, sector, contactInfo, email, consultationDateTime, consultantId);
-
     if (dialog.exec() == QDialog::Accepted) {
-        QString originalName = name; // Store original name for update
+        QString originalName = name;
         QString newName = dialog.getName();
         QString newSector = dialog.getSector();
         QString newContactInfo = dialog.getContactInfo();
         QString newEmail = dialog.getEmail();
         QDateTime newConsultationDateTime = dialog.getConsultationDateTime();
         QString newConsultantId = dialog.getConsultant();
-
-        bool success = updateClient(originalName, newName, newSector, newContactInfo, newEmail, newConsultationDateTime, newConsultantId);
-        if (success) {
+        if (updateClient(originalName, newName, newSector, newContactInfo, newEmail, newConsultationDateTime, newConsultantId)) {
             QMessageBox::information(this, "Success", "Client updated successfully!");
+            addNotification("Updated", QString("Client: %1").arg(newName)); // Add notification
             refreshClientTable();
             updateCalendarConsultations();
-            addChangeToHistory("Updated", newName);
         } else {
             QMessageBox::critical(this, "Error", "Failed to update client.");
         }
@@ -376,33 +319,21 @@ void MainWindow::on_clientSearchInput_textChanged()
     if (!m_dbConnected) {
         return;
     }
-
     QString searchText = ui->clientSearchInput->text().trimmed();
-    int criteriaIndex = ui->clientSearchCriteriaComboBox->currentIndex();
-
-    // Column indices based on query: 0=NAME, 1=SECTOR, 2=CONTACT_INFO, 3=EMAIL, 4=CONSULTATION_DATE, 5=CONSULTANT_NAME
-    int column = criteriaIndex; // Map combo box index to column
-
-    if (searchText.isEmpty()) {
-        clientProxyModel->setFilterRegularExpression(""); // Clear filter
-    } else {
-        QRegularExpression regExp(searchText, QRegularExpression::CaseInsensitiveOption);
-        clientProxyModel->setFilterRegularExpression(regExp);
-        clientProxyModel->setFilterKeyColumn(column);
-    }
-
-    qDebug() << "Filtered row count:" << clientProxyModel->rowCount();
+    int column = ui->clientSearchCriteriaComboBox->currentIndex();
+    clientProxyModel->setFilterRegularExpression(QRegularExpression(searchText, QRegularExpression::CaseInsensitiveOption));
+    clientProxyModel->setFilterKeyColumn(column);
 }
 
 void MainWindow::on_clientSearchCriteriaComboBox_currentIndexChanged()
 {
-    performClientSearch();
+    on_clientSearchInput_textChanged();
 }
 
 void MainWindow::on_clientResetSearchButton_clicked()
 {
     ui->clientSearchInput->clear();
-    refreshClientTable();
+    clientProxyModel->setFilterRegularExpression("");
     ui->statusBar->showMessage("Showing all clients");
 }
 
@@ -412,24 +343,12 @@ void MainWindow::on_clientTableViewHeaderClicked(int logicalIndex)
         QMessageBox::warning(this, "Database Error", "Cannot sort table: Database is not connected.");
         return;
     }
-
     static Qt::SortOrder currentOrder = Qt::AscendingOrder;
     currentOrder = (currentOrder == Qt::AscendingOrder) ? Qt::DescendingOrder : Qt::AscendingOrder;
-
     QSqlQueryModel* sortedModel = client.sortByColumn(logicalIndex, currentOrder);
-    ui->clientTableView->setModel(sortedModel);
-
-    QString column;
-    switch (logicalIndex) {
-    case 0: column = "Name"; break;
-    case 1: column = "Sector"; break;
-    case 2: column = "Contact"; break;
-    case 3: column = "Email"; break;
-    case 4: column = "Date"; break;
-    case 5: column = "Consultant"; break;
-    default: column = "Unknown"; break;
-    }
-
+    clientProxyModel->setSourceModel(sortedModel);
+    ui->clientTableView->setModel(clientProxyModel);
+    QString column = QStringList{"Name", "Sector", "Contact", "Email", "Date", "Consultant"}[logicalIndex];
     QString order = (currentOrder == Qt::AscendingOrder) ? "ascending" : "descending";
     ui->statusBar->showMessage(QString("Sorted by %1 (%2)").arg(column, order));
 }
@@ -437,7 +356,63 @@ void MainWindow::on_clientTableViewHeaderClicked(int logicalIndex)
 void MainWindow::on_clientConsultationCalendar_selectionChanged()
 {
     QDate selectedDate = ui->clientConsultationCalendar->selectedDate();
-    updateSelectedDateInfo(selectedDate);
+    ui->clientSelectedDateLabel->setText("Selected date: " + selectedDate.toString("yyyy-MM-dd"));
+
+    if (!m_dbConnected) {
+        ui->clientConsultationCountLabel->setText("Consultations: Error");
+        return;
+    }
+
+    // Ensure database connection
+    QSqlDatabase db = QSqlDatabase::database();
+    if (!db.isOpen()) {
+        db.close();
+        if (!db.open()) {
+            qDebug() << "Database error:" << db.lastError().text();
+            ui->clientConsultationCountLabel->setText("Consultations: Error");
+            return;
+        }
+    }
+
+    // Start a transaction
+    if (!db.transaction()) {
+        qDebug() << "Failed to start transaction:" << db.lastError().text();
+        ui->clientConsultationCountLabel->setText("Consultations: Error");
+        return;
+    }
+
+    // Query to count consultations on the selected date
+    QSqlQuery query(db);
+    query.prepare("SELECT COUNT(*) FROM AHMED.CLIENTS WHERE TRUNC(CONSULTATION_DATE) = TO_DATE(:selectedDate, 'YYYY-MM-DD')");
+    query.bindValue(":selectedDate", selectedDate.toString("yyyy-MM-dd"));
+    if (!query.exec()) {
+        qDebug() << "Consultation Count Query Error:" << query.lastError().text();
+        db.rollback();
+        ui->clientConsultationCountLabel->setText("Consultations: Error");
+        return;
+    }
+
+    int count = 0;
+    if (query.next()) {
+        count = query.value(0).toInt();
+    }
+    ui->clientConsultationCountLabel->setText(QString("Consultations: %1").arg(count));
+
+    // Update the table with consultations for the selected date
+    if (consultationTableModel) {
+        consultationTableModel->setFilter(QString("TRUNC(CONSULTATION_DATE) = TO_DATE('%1', 'YYYY-MM-DD')")
+                                              .arg(selectedDate.toString("yyyy-MM-dd")));
+        consultationTableModel->select();
+        ui->clientDateConsultationsView->resizeColumnsToContents();
+    }
+
+    // Commit the transaction
+    if (!db.commit()) {
+        qDebug() << "Failed to commit transaction:" << db.lastError().text();
+        db.rollback();
+        ui->clientConsultationCountLabel->setText("Consultations: Error");
+        return;
+    }
 }
 
 void MainWindow::on_clientConsultationCalendar_activated(const QDate &date)
@@ -456,16 +431,14 @@ void MainWindow::on_clientExportPdfButton_clicked()
         QMessageBox::warning(this, "Database Error", "Cannot export PDF: Database is not connected.");
         return;
     }
-
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Export PDF"), "", tr("PDF Files (*.pdf)"));
-    if (fileName.isEmpty())
+    QString fileName = QFileDialog::getSaveFileName(this, "Export PDF", "", "PDF Files (*.pdf)");
+    if (fileName.isEmpty()) {
         return;
-
+    }
     QPdfWriter pdfWriter(fileName);
     pdfWriter.setPageSize(QPageSize::A4);
     pdfWriter.setPageMargins(QMarginsF(20, 20, 20, 20));
     pdfWriter.setResolution(300);
-
     QPainter painter(&pdfWriter);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -484,11 +457,9 @@ void MainWindow::on_clientExportPdfButton_clicked()
     painter.setPen(Qt::darkBlue);
     QString title = "Client Management System Report";
     QString date = QDate::currentDate().toString("MMMM d, yyyy");
-    QString headerText = QString("%1\nGenerated on: %2").arg(title, date);
-    painter.drawText(QRectF(margin, margin, pageWidth, 50 * scaleFactor), Qt::AlignCenter, headerText);
+    painter.drawText(QRectF(margin, margin, pageWidth, 50 * scaleFactor), Qt::AlignCenter, title + "\nGenerated on: " + date);
 
     qreal yPos = margin + 60 * scaleFactor;
-
     QStringList headers = {"Name", "Sector", "Contact", "Email", "Date & Time", "Consultant"};
     qreal columnWidths[] = {1.5, 1.2, 1.2, 2.0, 1.5, 0.6};
     qreal totalWidthUnits = 0;
@@ -507,8 +478,7 @@ void MainWindow::on_clientExportPdfButton_clicked()
     painter.setPen(Qt::black);
     painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
     for (int i = 0; i < headers.size(); ++i) {
-        painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
-                         Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+        painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight), Qt::AlignCenter, headers[i]);
         accumulatedWidth += actualWidths[i];
     }
     yPos += rowHeight;
@@ -522,99 +492,35 @@ void MainWindow::on_clientExportPdfButton_clicked()
     painter.setBrush(Qt::NoBrush);
     for (int row = 0; row < rowCount; ++row) {
         if (yPos + rowHeight > pageHeight - margin) {
-            painter.setFont(bodyFont);
             painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
                              Qt::AlignRight, QString("Page %1").arg(pageNumber++));
-
             pdfWriter.newPage();
             yPos = margin;
-
             painter.setFont(headerFont);
             painter.setBrush(QBrush(QColor(200, 220, 255)));
             accumulatedWidth = margin;
             painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
             for (int i = 0; i < headers.size(); ++i) {
-                painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
-                                 Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+                painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight), Qt::AlignCenter, headers[i]);
                 accumulatedWidth += actualWidths[i];
             }
             yPos += rowHeight;
         }
-
         accumulatedWidth = margin;
         painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
         for (int col = 0; col < colCount; ++col) {
             QString text = model->data(model->index(row, col)).toString();
-            QRectF textRect(accumulatedWidth + 2 * scaleFactor, yPos, actualWidths[col] - 4 * scaleFactor, rowHeight);
-            painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
+            painter.drawText(QRectF(accumulatedWidth + 2 * scaleFactor, yPos, actualWidths[col] - 4 * scaleFactor, rowHeight),
+                             Qt::AlignCenter, text);
             accumulatedWidth += actualWidths[col];
         }
         yPos += rowHeight;
     }
 
-    painter.setFont(bodyFont);
     painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
                      Qt::AlignRight, QString("Page %1").arg(pageNumber));
-
-    yPos += 20 * scaleFactor;
-    if (yPos + 60 * scaleFactor < pageHeight - margin) {
-        painter.setFont(summaryFont);
-        painter.setPen(Qt::darkGreen);
-        QDateTime start = QDateTime::currentDateTime().addDays(-30);
-        QDateTime end = QDateTime::currentDateTime();
-        int totalConsultations = client.getTotalConsultations(start, end);
-        int uniqueClients = client.getUniqueClients(start, end);
-        QString summary = QString("Summary (Last 30 Days):\n"
-                                  "Total Consultations: %1\n"
-                                  "Unique Clients: %2")
-                              .arg(totalConsultations)
-                              .arg(uniqueClients);
-        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
-    } else {
-        pdfWriter.newPage();
-        yPos = margin;
-        painter.setFont(summaryFont);
-        painter.setPen(Qt::darkGreen);
-        QDateTime start = QDateTime::currentDateTime().addDays(-30);
-        QDateTime end = QDateTime::currentDateTime();
-        int totalConsultations = client.getTotalConsultations(start, end);
-        int uniqueClients = client.getUniqueClients(start, end);
-        QString summary = QString("Summary (Last 30 Days):\n"
-                                  "Total Consultations: %1\n"
-                                  "Unique Clients: %2")
-                              .arg(totalConsultations)
-                              .arg(uniqueClients);
-        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
-        painter.setFont(bodyFont);
-        painter.setPen(Qt::black);
-        painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
-                         Qt::AlignRight, QString("Page %1").arg(pageNumber + 1));
-    }
-
     painter.end();
     QMessageBox::information(this, "Success", "PDF exported successfully to " + fileName);
-}
-
-void MainWindow::on_clientOpenChartButton_clicked()
-{
-    ChartWindow *chartWindow = new ChartWindow(this);
-    chartWindow->show();
-}
-
-void MainWindow::on_clientRefreshStatsButton_clicked()
-{
-    if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot refresh statistics: Database is not connected.");
-        return;
-    }
-
-    static QElapsedTimer lastRefresh;
-    if (!lastRefresh.isValid() || lastRefresh.elapsed() > 1000) {
-        lastRefresh.start();
-        updateClientStatisticsDisplay();
-    } else {
-        qDebug() << "Throttling refresh, too frequent";
-    }
 }
 
 void MainWindow::on_trainingAddButtonClicked()
@@ -623,7 +529,6 @@ void MainWindow::on_trainingAddButtonClicked()
         QMessageBox::warning(this, "Database Error", "Cannot add formation: Database is not connected.");
         return;
     }
-
     QString formationName = ui->trainingNameInput->text().trimmed();
     QString description = ui->trainingDescriptionInput->text().trimmed();
     QString trainer = ui->trainingTrainerInput->text().trimmed();
@@ -636,34 +541,25 @@ void MainWindow::on_trainingAddButtonClicked()
         QMessageBox::warning(this, "Input Error", "Please fill in all fields.");
         return;
     }
-
     if (!date.isValid() || date < QDate::currentDate()) {
         QMessageBox::warning(this, "Input Error", "Please select a valid future date.");
         return;
     }
-
-    QRegularExpression phoneRx("\\+\\d{10,15}");
-    if (!phoneRx.match(phoneNumber).hasMatch()) {
+    if (!QRegularExpression("\\+\\d{10,15}").match(phoneNumber).hasMatch()) {
         QMessageBox::warning(this, "Input Error", "Phone number must start with '+' followed by 10-15 digits.");
         return;
     }
-
-    // Set the member variables of the formation object before calling ajoutforma()
     formation.setFormation(formationName);
     formation.setDescription(description);
     formation.setTrainer(trainer);
     formation.setDatef(date);
     formation.setTime(time);
     formation.setPrix(prix);
-
-    bool success = formation.ajoutforma();
-    if (success) {
+    if (formation.ajoutforma()) {
         QMessageBox::information(this, "Success", "Formation added successfully!");
         sendSmsNotification(phoneNumber, formationName, date);
         refreshTrainingTableView();
-        updateTrainingStatistics();
-        addChangeToHistory("Added", formationName);
-
+        addNotification("Added", QString("Training: %1").arg(formationName)); // Use addNotification instead
         ui->trainingNameInput->clear();
         ui->trainingDescriptionInput->clear();
         ui->trainingTrainerInput->clear();
@@ -682,21 +578,18 @@ void MainWindow::on_trainingDeleteButtonClicked()
         QMessageBox::warning(this, "Database Error", "Cannot delete formation: Database is not connected.");
         return;
     }
-
     QModelIndexList selectedIndexes = ui->trainingTableView->selectionModel()->selectedRows();
     if (selectedIndexes.isEmpty()) {
         QMessageBox::warning(this, "Selection Error", "Please select a formation to delete.");
         return;
     }
-
     QModelIndex index = trainingProxyModel->mapToSource(selectedIndexes.first());
-    int idForm = trainingTableModel->data(trainingTableModel->index(index.row(), 0)).toInt(); // IDFORM is in column 0
-
+    int idForm = trainingTableModel->data(trainingTableModel->index(index.row(), 0)).toInt();
+    QString formationName = trainingTableModel->data(trainingTableModel->index(index.row(), 1)).toString();
     if (formations::deleteFormation(idForm)) {
         QMessageBox::information(this, "Success", "Formation deleted successfully!");
         refreshTrainingTableView();
-        updateTrainingStatistics();
-        addChangeToHistory("Deleted", trainingTableModel->data(trainingTableModel->index(index.row(), 1)).toString());
+        addNotification("Deleted", QString("Training: %1").arg(formationName)); // Use addNotification instead
     } else {
         QMessageBox::critical(this, "Error", "Failed to delete formation.");
     }
@@ -708,15 +601,12 @@ void MainWindow::on_trainingUpdateButtonClicked()
         QMessageBox::warning(this, "Database Error", "Cannot update formation: Database is not connected.");
         return;
     }
-
     QModelIndexList selectedIndexes = ui->trainingTableView->selectionModel()->selectedRows();
     if (selectedIndexes.isEmpty()) {
         QMessageBox::warning(this, "Selection Error", "Please select a formation to update.");
         return;
     }
-
     QModelIndex index = trainingProxyModel->mapToSource(selectedIndexes.first());
-
     int idForm = trainingTableModel->data(trainingTableModel->index(index.row(), 0)).toInt();
     QString formationName = trainingTableModel->data(trainingTableModel->index(index.row(), 1)).toString();
     QString description = trainingTableModel->data(trainingTableModel->index(index.row(), 2)).toString();
@@ -726,10 +616,8 @@ void MainWindow::on_trainingUpdateButtonClicked()
     double prix = trainingTableModel->data(trainingTableModel->index(index.row(), 6)).toDouble();
 
     formations form(idForm, formationName, description, trainer, date, time, prix);
-
-    UpdateTrainingDialog dialog(this); // Use UpdateTrainingDialog
+    UpdateTrainingDialog dialog(this);
     dialog.setTrainingData(idForm, form);
-
     if (dialog.exec() == QDialog::Accepted) {
         QString newFormationName = dialog.getFormation();
         QString newDescription = dialog.getDescription();
@@ -737,23 +625,18 @@ void MainWindow::on_trainingUpdateButtonClicked()
         QDate newDate = dialog.getDate();
         int newTime = dialog.getTime();
         double newPrix = dialog.getPrix();
-
-        bool success = formations::updateFormation(idForm, newFormationName, newDescription, newTrainer, newDate, newTime, newPrix);
-        if (success) {
+        if (formations::updateFormation(idForm, newFormationName, newDescription, newTrainer, newDate, newTime, newPrix)) {
             QMessageBox::information(this, "Success", "Formation updated successfully!");
             refreshTrainingTableView();
-            updateTrainingStatistics();
-            addChangeToHistory("Updated", newFormationName);
+            addNotification("Updated", QString("Training: %1").arg(newFormationName)); // Use addNotification instead
         } else {
             QMessageBox::critical(this, "Error", "Failed to update formation.");
         }
     }
 }
-
 void MainWindow::on_trainingSearchInput_textChanged(const QString &text)
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot search: Database is not connected.");
         return;
     }
     trainingProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -763,10 +646,6 @@ void MainWindow::on_trainingSearchInput_textChanged(const QString &text)
 
 void MainWindow::on_trainingResetSearchButton_clicked()
 {
-    if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot reset search: Database is not connected.");
-        return;
-    }
     ui->trainingSearchInput->clear();
     trainingProxyModel->setFilterWildcard("");
 }
@@ -777,15 +656,14 @@ void MainWindow::on_trainingExportButtonClicked()
         QMessageBox::warning(this, "Database Error", "Cannot export to PDF: Database is not connected.");
         return;
     }
-
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Export PDF"), "", tr("PDF Files (*.pdf)"));
-    if (fileName.isEmpty()) return;
-
+    QString fileName = QFileDialog::getSaveFileName(this, "Export PDF", "", "PDF Files (*.pdf)");
+    if (fileName.isEmpty()) {
+        return;
+    }
     QPdfWriter pdfWriter(fileName);
     pdfWriter.setPageSize(QPageSize::A4);
     pdfWriter.setPageMargins(QMarginsF(20, 20, 20, 20));
     pdfWriter.setResolution(300);
-
     QPainter painter(&pdfWriter);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -798,7 +676,6 @@ void MainWindow::on_trainingExportButtonClicked()
     QFont titleFont("Arial", 14, QFont::Bold);
     QFont headerFont("Arial", 10, QFont::Bold);
     QFont bodyFont("Arial", 9);
-    QFont summaryFont("Arial", 11, QFont::Bold);
 
     painter.setFont(titleFont);
     painter.setPen(Qt::darkBlue);
@@ -807,7 +684,6 @@ void MainWindow::on_trainingExportButtonClicked()
     painter.drawText(QRectF(margin, margin, pageWidth, 50 * scaleFactor), Qt::AlignCenter, title + "\nGenerated on: " + date);
 
     qreal yPos = margin + 60 * scaleFactor;
-
     QStringList headers = {"ID", "Formation", "Description", "Trainer", "Date", "Time", "Price"};
     qreal columnWidths[] = {0.5, 1.0, 1.5, 1.0, 1.0, 0.5, 0.5};
     qreal totalWidthUnits = 0;
@@ -826,8 +702,7 @@ void MainWindow::on_trainingExportButtonClicked()
     painter.setPen(Qt::black);
     painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
     for (int i = 0; i < headers.size(); ++i) {
-        painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
-                         Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+        painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight), Qt::AlignCenter, headers[i]);
         accumulatedWidth += actualWidths[i];
     }
     yPos += rowHeight;
@@ -840,7 +715,6 @@ void MainWindow::on_trainingExportButtonClicked()
     painter.setBrush(Qt::NoBrush);
     for (int row = 0; row < rowCount; ++row) {
         if (yPos + rowHeight > pageHeight - margin) {
-            painter.setFont(bodyFont);
             painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
                              Qt::AlignRight, QString("Page %1").arg(pageNumber++));
             pdfWriter.newPage();
@@ -850,93 +724,47 @@ void MainWindow::on_trainingExportButtonClicked()
             accumulatedWidth = margin;
             painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
             for (int i = 0; i < headers.size(); ++i) {
-                painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
-                                 Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+                painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight), Qt::AlignCenter, headers[i]);
                 accumulatedWidth += actualWidths[i];
             }
             yPos += rowHeight;
         }
-
         accumulatedWidth = margin;
         painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
         for (int col = 0; col < colCount; ++col) {
             QString text = trainingTableModel->data(trainingTableModel->index(row, col)).toString();
-            QRectF textRect(accumulatedWidth + 2 * scaleFactor, yPos, actualWidths[col] - 4 * scaleFactor, rowHeight);
-            painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
+            painter.drawText(QRectF(accumulatedWidth + 2 * scaleFactor, yPos, actualWidths[col] - 4 * scaleFactor, rowHeight),
+                             Qt::AlignCenter, text);
             accumulatedWidth += actualWidths[col];
         }
         yPos += rowHeight;
     }
 
-    painter.setFont(bodyFont);
     painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
                      Qt::AlignRight, QString("Page %1").arg(pageNumber));
-
-    yPos += 20 * scaleFactor;
-    if (yPos + 60 * scaleFactor < pageHeight - margin) {
-        painter.setFont(summaryFont);
-        painter.setPen(Qt::darkGreen);
-        QString summary = QString("Summary:\nTotal Formations: %1\nTotal Cost: $%2\nAverage Cost: $%3")
-                              .arg(totalFormations)
-                              .arg(totalCost, 0, 'f', 2)
-                              .arg(avgCost, 0, 'f', 2);
-        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
-    } else {
-        pdfWriter.newPage();
-        yPos = margin;
-        painter.setFont(summaryFont);
-        painter.setPen(Qt::darkGreen);
-        QString summary = QString("Summary:\nTotal Formations: %1\nTotal Cost: $%2\nAverage Cost: $%3")
-                              .arg(totalFormations)
-                              .arg(totalCost, 0, 'f', 2)
-                              .arg(avgCost, 0, 'f', 2);
-        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
-        painter.setFont(bodyFont);
-        painter.setPen(Qt::black);
-        painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
-                         Qt::AlignRight, QString("Page %1").arg(pageNumber + 1));
-    }
-
     painter.end();
     QMessageBox::information(this, "Success", "PDF exported successfully to " + fileName);
-}
-
-void MainWindow::on_trainingRefreshStatsButton_clicked()
-{
-    if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot refresh statistics: Database is not connected.");
-        return;
-    }
-    updateTrainingStatistics();
 }
 
 void MainWindow::on_trainingSmsRequestFinished(QNetworkReply *reply)
 {
     if (reply->error() == QNetworkReply::NoError) {
-        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        QJsonObject obj = doc.object();
-        QString status = obj["status"].toString();
-        if (status == "queued" || status == "sent") {
-            QMessageBox::information(this, "SMS Success", "SMS notification sent successfully!");
-            notificationCount++;
-            ui->trainingNotificationLabel->setText(QString("Notifications: %1").arg(notificationCount));
-        } else {
-            QMessageBox::warning(this, "SMS Error", "Failed to send SMS: " + obj["message"].toString());
-        }
+        addNotification("SMS Sent", "Training reminder sent successfully"); // Use addNotification
     } else {
-        QMessageBox::warning(this, "SMS Error", "Failed to send SMS: " + reply->errorString());
+        qDebug() << "SMS Request Error:" << reply->errorString();
+        QMessageBox::warning(this, "SMS Error", "Failed to send notification: " + reply->errorString());
+        addNotification("SMS Failed", "Failed to send training reminder: " + reply->errorString());
     }
     reply->deleteLater();
 }
-
 void MainWindow::toggleSidebar()
 {
-    bool isVisible = ui->sideMenu->isVisible();
-    ui->sideMenu->setVisible(!isVisible);
+    ui->sideMenu->setVisible(!ui->sideMenu->isVisible());
 }
 
 void MainWindow::toggleTheme()
 {
+    static bool isDarkTheme = false;
     isDarkTheme = !isDarkTheme;
     if (isDarkTheme) {
         applyDarkTheme();
@@ -951,16 +779,14 @@ void MainWindow::sendConsultationReminders()
         QMessageBox::warning(this, "Database Error", "Cannot send reminders: Database is not connected.");
         return;
     }
-
     checkAndSendReminders();
 }
 
 void MainWindow::applyLightTheme()
 {
-    QString styleSheet = R"(
+    qApp->setStyleSheet(R"(
         QWidget {
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                        stop:0 #FFFFFF, stop:1 #A1B8E6);
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #FFFFFF, stop:1 #A1B8E6);
             color: #333333;
             font-family: 'Segoe UI', Arial, sans-serif;
         }
@@ -1000,7 +826,6 @@ void MainWindow::applyLightTheme()
             color: white;
             padding: 5px;
             border: none;
-            border-radius: 2px;
         }
         QCalendarWidget {
             background-color: #F5F7FA;
@@ -1010,12 +835,6 @@ void MainWindow::applyLightTheme()
         QCalendarWidget QToolButton {
             background-color: #3A5DAE;
             color: white;
-            border-radius: 3px;
-        }
-        QToolTip {
-            color: #333333;
-            background-color: #E6ECF5;
-            border: 1px solid #3A5DAE;
             border-radius: 3px;
         }
         QTabWidget::pane {
@@ -1057,29 +876,18 @@ void MainWindow::applyLightTheme()
             font-weight: bold;
             color: #3A5DAE;
         }
-        QFrame#header {
+        QFrame#header, QFrame#sideMenu, QFrame#frame_2, QFrame#frame_4 {
             border: 2px solid #3A5DAE;
             border-radius: 5px;
         }
-        QFrame#sideMenu {
-            border: 2px solid #3A5DAE;
-            border-radius: 5px;
-            background-color: #E6ECF5;
-        }
-        QFrame#frame_2, QFrame#frame_4 {
-            border: 1px solid #D3DCE6;
-            border-radius: 5px;
-        }
-    )";
-    qApp->setStyleSheet(styleSheet);
+    )");
 }
 
 void MainWindow::applyDarkTheme()
 {
-    QString styleSheet = R"(
+    qApp->setStyleSheet(R"(
         QWidget {
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                        stop:0 #F28C6F, stop:1 #5C5C5C);
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F28C6F, stop:1 #5C5C5C);
             color: #F0F0F0;
             font-family: 'Segoe UI', Arial, sans-serif;
         }
@@ -1090,11 +898,9 @@ void MainWindow::applyDarkTheme()
             border-radius: 5px;
             padding: 6px;
             font-weight: bold;
-            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
         QPushButton:hover {
             background-color: #F5A38A;
-            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
         }
         QPushButton:pressed {
             background-color: #D96C53;
@@ -1121,7 +927,6 @@ void MainWindow::applyDarkTheme()
             color: white;
             padding: 5px;
             border: none;
-            border-radius: 2px;
         }
         QCalendarWidget {
             background-color: #6A6A6A;
@@ -1131,12 +936,6 @@ void MainWindow::applyDarkTheme()
         QCalendarWidget QToolButton {
             background-color: #F28C6F;
             color: white;
-            border-radius: 3px;
-        }
-        QToolTip {
-            color: #F0F0F0;
-            background-color: #F28C6F;
-            border: 1px solid #D96C53;
             border-radius: 3px;
         }
         QTabWidget::pane {
@@ -1171,7 +970,6 @@ void MainWindow::applyDarkTheme()
             font-size: 18pt;
             font-weight: bold;
             color: #F28C6F;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
             qproperty-alignment: AlignCenter;
         }
         #trainingNotificationLabel {
@@ -1179,24 +977,11 @@ void MainWindow::applyDarkTheme()
             font-weight: bold;
             color: #F28C6F;
         }
-        QFrame#header {
+        QFrame#header, QFrame#sideMenu, QFrame#frame_2, QFrame#frame_4 {
             border: 2px solid #F28C6F;
             border-radius: 5px;
-            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
         }
-        QFrame#sideMenu {
-            border: 2px solid #F28C6F;
-            border-radius: 5px;
-            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
-            background-color: #7A7A7A;
-        }
-        QFrame#frame_2, QFrame#frame_4 {
-            border: 1px solid #4A4A4A;
-            border-radius: 5px;
-            box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
-        }
-    )";
-    qApp->setStyleSheet(styleSheet);
+    )");
 }
 
 bool MainWindow::validateClientInputs()
@@ -1207,62 +992,54 @@ bool MainWindow::validateClientInputs()
         ui->clientNameInput->setFocus();
         return false;
     }
-
     QString sector = ui->clientSectorInput->text().trimmed();
     if (sector.isEmpty()) {
         QMessageBox::warning(this, "Input Error", "Sector cannot be empty.");
         ui->clientSectorInput->setFocus();
         return false;
     }
-
     QString contact = ui->clientContactInfoInput->text().trimmed();
     if (contact.isEmpty()) {
         QMessageBox::warning(this, "Input Error", "Contact information cannot be empty.");
         ui->clientContactInfoInput->setFocus();
         return false;
     }
-
     QDateTimeEdit *dateTimeEdit = findChild<QDateTimeEdit*>("consultation_datetime");
     if (!dateTimeEdit) {
         QMessageBox::critical(this, "Error", "DateTime widget not found.");
         return false;
     }
-
     QDateTime dateTime = dateTimeEdit->dateTime();
     if (!isValidDateTime(dateTime)) {
         QMessageBox::warning(this, "Input Error", "Date and time must be current or in the future.");
         dateTimeEdit->setFocus();
         return false;
     }
-
     QString email = ui->clientEmailInput->text().trimmed();
     if (email.isEmpty() || !email.contains('@') || !email.contains('.')) {
         QMessageBox::warning(this, "Input Error", "Please enter a valid email address.");
         ui->clientEmailInput->setFocus();
         return false;
     }
-
     if (ui->clientConsultantComboBox->currentIndex() == 0) {
         QMessageBox::warning(this, "Input Error", "Please select a consultant.");
         ui->clientConsultantComboBox->setFocus();
         return false;
     }
-
     return true;
 }
 
 bool MainWindow::isValidName(const QString &name)
 {
-    if (name.isEmpty()) return false;
+    if (name.isEmpty()) {
+        return false;
+    }
     for (const QChar &ch : name) {
-        if (ch.isDigit()) return false;
+        if (ch.isDigit()) {
+            return false;
+        }
     }
     return true;
-}
-
-bool MainWindow::isValidDate(const QDate &date)
-{
-    return date >= QDate::currentDate();
 }
 
 bool MainWindow::isValidDateTime(const QDateTime &dateTime)
@@ -1270,23 +1047,13 @@ bool MainWindow::isValidDateTime(const QDateTime &dateTime)
     return dateTime >= QDateTime::currentDateTime();
 }
 
-bool MainWindow::isValidConsultant(const QString &consultant)
-{
-    if (consultant.isEmpty()) return false;
-    bool ok;
-    consultant.toInt(&ok);
-    return ok;
-}
-
 void MainWindow::setupCalendarView()
 {
+    ui->clientConsultationCalendar->setFirstDayOfWeek(Qt::Monday);
     connect(ui->clientConsultationCalendar, &QCalendarWidget::selectionChanged,
             this, &MainWindow::on_clientConsultationCalendar_selectionChanged);
     connect(ui->clientConsultationCalendar, &QCalendarWidget::activated,
             this, &MainWindow::on_clientConsultationCalendar_activated);
-
-    ui->clientConsultationCalendar->installEventFilter(this);
-    ui->clientConsultationCalendar->setFirstDayOfWeek(Qt::Monday);
     updateCalendarConsultations();
     updateSelectedDateInfo(ui->clientConsultationCalendar->selectedDate());
 }
@@ -1294,22 +1061,18 @@ void MainWindow::setupCalendarView()
 void MainWindow::highlightDatesWithConsultations()
 {
     ui->clientConsultationCalendar->setDateTextFormat(QDate(), QTextCharFormat());
-
     QTextCharFormat consultationFormat;
     consultationFormat.setBackground(QColor(100, 150, 255, 100));
-
-    QMapIterator<QDate, int> i(consultationCountMap);
-    while (i.hasNext()) {
-        i.next();
-        ui->clientConsultationCalendar->setDateTextFormat(i.key(), consultationFormat);
+    QSqlQuery query("SELECT CONSULTATION_DATE FROM AHMED.CLIENTS");
+    while (query.next()) {
+        QDate date = query.value(0).toDateTime().date();
+        ui->clientConsultationCalendar->setDateTextFormat(date, consultationFormat);
     }
 }
 
 void MainWindow::updateSelectedDateInfo(const QDate &date)
 {
     ui->clientSelectedDateLabel->setText(QString("Selected date: %1").arg(date.toString("yyyy-MM-dd")));
-    int count = consultationCountMap.value(date, 0);
-    ui->clientConsultationCountLabel->setText(QString("Consultations: %1").arg(count));
     if (m_dbConnected) {
         QSqlQueryModel *model = client.getConsultationsForDate(date);
         ui->clientDateConsultationsView->setModel(model);
@@ -1320,10 +1083,8 @@ void MainWindow::updateSelectedDateInfo(const QDate &date)
 void MainWindow::performClientSearch()
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot perform search: Database is not connected.");
         return;
     }
-
     QString searchType = ui->clientSearchCriteriaComboBox->currentText();
     QString searchText = ui->clientSearchInput->text().trimmed();
     QSqlQueryModel *model = nullptr;
@@ -1354,9 +1115,9 @@ void MainWindow::performClientSearch()
             return;
         }
     }
-
     if (model) {
-        ui->clientTableView->setModel(model);
+        clientProxyModel->setSourceModel(model);
+        ui->clientTableView->setModel(clientProxyModel);
     }
 }
 
@@ -1368,355 +1129,100 @@ void MainWindow::checkAndSendReminders()
     QDateTime currentDateTime = QDateTime::currentDateTime();
     query.bindValue(":currentDateTime", currentDateTime);
     query.bindValue(":endDateTime", currentDateTime.addDays(1));
-
     if (!query.exec()) {
-        qDebug() << "Query failed:" << query.lastError().text();
-        QMessageBox::critical(this, "Error", "Failed to fetch clients for reminders.");
+        QMessageBox::critical(this, "Error", "Failed to fetch clients for reminders: " + query.lastError().text());
         return;
     }
-
     while (query.next()) {
         QString clientName = query.value("NAME").toString();
         QString email = query.value("EMAIL").toString();
         QDateTime consultationDateTime = query.value("CONSULTATION_DATE").toDateTime();
-
         QString subject = "Consultation Reminder";
         QString body = QString("Dear %1,\n\nThis is a reminder for your consultation scheduled on %2.\n\nBest regards,\nYour Team")
                            .arg(clientName, consultationDateTime.toString("yyyy-MM-dd hh:mm"));
-
         if (emailSender->sendEmail(email, subject, body)) {
             emailSuccesses++;
-        } else {
-            qDebug() << "Failed to send email to" << email;
         }
         emailAttempts++;
     }
-
     QMessageBox::information(this, "Reminders Sent", QString("Sent %1 reminders successfully out of %2 attempts.")
                                                          .arg(emailSuccesses).arg(emailAttempts));
 }
 
-bool MainWindow::calendarHoverEventFilter(QObject* watched, QEvent* event)
+bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 {
     if (watched == ui->clientConsultationCalendar && event->type() == QEvent::HoverMove) {
         QHoverEvent* hoverEvent = static_cast<QHoverEvent*>(event);
         QPoint pos = hoverEvent->position().toPoint();
-
         QTableView* tableView = ui->clientConsultationCalendar->findChild<QTableView*>();
-        QDate hoverDate;
-
         if (tableView) {
             QModelIndex index = tableView->indexAt(pos);
             if (index.isValid()) {
                 int row = index.row();
                 int col = index.column();
-
                 QDate firstDayOfMonth = ui->clientConsultationCalendar->selectedDate().addDays(-ui->clientConsultationCalendar->selectedDate().day() + 1);
                 int offset = firstDayOfMonth.dayOfWeek() - 1;
-
                 int day = (row * 7) + col - offset + 1;
                 if (day > 0 && day <= firstDayOfMonth.daysInMonth()) {
-                    hoverDate = QDate(firstDayOfMonth.year(), firstDayOfMonth.month(), day);
-                } else {
-                    hoverDate = ui->clientConsultationCalendar->selectedDate();
+                    QDate hoverDate = QDate(firstDayOfMonth.year(), firstDayOfMonth.month(), day);
+                    QSqlQuery query;
+                    query.prepare("SELECT COUNT(*) FROM AHMED.CLIENTS WHERE DATE(CONSULTATION_DATE) = :date");
+                    query.bindValue(":date", hoverDate);
+                    if (query.exec() && query.next()) {
+                        int count = query.value(0).toInt();
+                        if (count > 0) {
+                            QToolTip::showText(hoverEvent->position().toPoint(),
+                                               QString("%1: %2 consultation(s)").arg(hoverDate.toString("yyyy-MM-dd")).arg(count),
+                                               ui->clientConsultationCalendar);
+                            return true;
+                        }
+                    }
                 }
             }
-        } else {
-            hoverDate = ui->clientConsultationCalendar->selectedDate();
         }
-
-        if (hoverDate.isValid()) {
-            int count = consultationCountMap.value(hoverDate, 0);
-            if (count > 0) {
-                QString tooltipText = QString("%1: %2 consultation(s)")
-                .arg(hoverDate.toString("yyyy-MM-dd"))
-                    .arg(count);
-                QToolTip::showText(ui->clientConsultationCalendar->mapToGlobal(hoverEvent->position().toPoint()), tooltipText, ui->clientConsultationCalendar);
-            } else {
-                QToolTip::hideText();
-            }
-        }
-    }
-    return false;
-}
-
-bool MainWindow::eventFilter(QObject* watched, QEvent* event)
-{
-    if (calendarHoverEventFilter(watched, event)) {
-        return true;
+        QToolTip::hideText();
     }
     return QMainWindow::eventFilter(watched, event);
-}
-
-void MainWindow::updateClientStatisticsDisplay()
-{
-    QDate startDate = QDate::currentDate().addDays(-30);
-    QDate endDate = QDate::currentDate();
-    QDateTime start = QDateTime(startDate, QTime(0, 0, 0));
-    QDateTime end = QDateTime(endDate, QTime(23, 59, 59));
-
-    qDebug() << "Updating statistics for range:" << start.toString() << "to" << end.toString();
-
-    int total = client.getTotalConsultations(start, end);
-    int upcoming = client.getUpcomingConsultationsCount(start, end.addDays(1));
-    int uniqueClients = client.getUniqueClients(start, end);
-    double successRate = (emailAttempts > 0) ? (double)emailSuccesses / emailAttempts * 100 : 0;
-
-    QMap<QDate, int> consultationsPerDay = client.getConsultationsPerDay(start, end);
-    qDebug() << "Consultations per day size:" << consultationsPerDay.size();
-
-    QString dayStats;
-    for (QMap<QDate, int>::const_iterator it = consultationsPerDay.constBegin(); it != consultationsPerDay.constEnd(); ++it) {
-        dayStats += QString("%1: %2 consultations<br>").arg(it.key().toString("yyyy-MM-dd"), QString::number(it.value()));
-    }
-
-    QString statsText = QString(
-                            "<h3>Statistics (as of %1):</h3>"
-                            "<p><b>Total Consultations:</b> %2</p>"
-                            "<p><b>Upcoming Consultations (Next 24h):</b> %3</p>"
-                            "<p><b>Unique Clients:</b> %4</p>"
-                            "<p><b>Email Reminder Success Rate:</b> %5%</p>"
-                            "<p><b>Consultations Per Day:</b><br>%6</p>"
-                            ).arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss"))
-                            .arg(total)
-                            .arg(upcoming)
-                            .arg(uniqueClients)
-                            .arg(successRate, 0, 'f', 2)
-                            .arg(dayStats);
-
-    if (ui->clientStatsDisplay) {
-        ui->clientStatsDisplay->setHtml(statsText);
-    } else {
-        qDebug() << "statsDisplay is nullptr";
-        QMessageBox::warning(this, "Error", "Statistics display text edit is not initialized.");
-    }
 }
 
 void MainWindow::loadEmployees()
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot load employees: Database is not connected.");
         return;
     }
-
-    QSqlQuery query;
-    query.prepare("SELECT ID, FIRST_NAME, LAST_NAME FROM AHMED.EMPLOYEE");
+    QSqlQuery query("SELECT ID, FIRST_NAME, LAST_NAME FROM AHMED.EMPLOYEE");
     if (!query.exec()) {
-        qDebug() << "Error loading employees:" << query.lastError().text();
+        QMessageBox::warning(this, "Error", "Failed to load employees: " + query.lastError().text());
         return;
     }
-
     ui->clientConsultantComboBox->clear();
     employeeMap.clear();
     ui->clientConsultantComboBox->addItem("Select Consultant...");
-
     while (query.next()) {
         QString id = query.value("ID").toString();
-        QString firstName = query.value("FIRST_NAME").toString();
-        QString lastName = query.value("LAST_NAME").toString();
-        QString fullName = QString("%1 %2").arg(firstName, lastName).trimmed();
+        QString fullName = QString("%1 %2").arg(query.value("FIRST_NAME").toString(), query.value("LAST_NAME").toString()).trimmed();
         employeeMap[fullName] = id;
         ui->clientConsultantComboBox->addItem(fullName);
-        qDebug() << "Added employee:" << fullName << "with ID:" << id;
     }
-
     if (employeeMap.isEmpty()) {
         ui->clientConsultantComboBox->addItem("No employees found");
         ui->clientConsultantComboBox->setEnabled(false);
-        qDebug() << "No employees found in the database.";
-    } else {
-        ui->clientConsultantComboBox->setEnabled(true);
     }
 }
 
 void MainWindow::refreshClientTable()
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot refresh table: Database is not connected.");
         return;
     }
-
-    if (clientTableModel) {
-        QSqlQuery query;
-        bool querySuccess = query.exec("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
-                                       "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
-                                       "FROM AHMED.CLIENTS c LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID");
-        if (!querySuccess) {
-            qDebug() << "Refresh client query failed:" << query.lastError().text();
-            QMessageBox::critical(this, "Database Error", "Failed to refresh client data: " + query.lastError().text());
-        } else {
-            clientTableModel->setQuery(std::move(query));
-            ui->clientTableView->resizeColumnsToContents();
-            qDebug() << "Refreshed client table rows:" << clientTableModel->rowCount();
-        }
+    clientTableModel->setQuery("SELECT c.NAME, c.SECTOR, c.CONTACT_INFO, c.EMAIL, c.CONSULTATION_DATE, "
+                               "e.FIRST_NAME || ' ' || e.LAST_NAME AS CONSULTANT_NAME "
+                               "FROM AHMED.CLIENTS c LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID");
+    if (clientTableModel->lastError().isValid()) {
+        QMessageBox::critical(this, "Error", "Failed to refresh client data: " + clientTableModel->lastError().text());
     } else {
-        qDebug() << "Error: clientTableModel is not initialized";
-        QMessageBox::critical(this, "Error", "Client table model is not initialized.");
+        ui->clientTableView->resizeColumnsToContents();
     }
-}
-
-void MainWindow::updateCalendarConsultations()
-{
-    if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot update calendar: Database is not connected.");
-        return;
-    }
-
-    QMap<QDateTime, int> dtMap = client.getConsultationCountsByDateTime();
-    consultationCountMap.clear();
-
-    for (auto it = dtMap.begin(); it != dtMap.end(); ++it) {
-        QDate date = it.key().date();
-        consultationCountMap[date] += it.value();
-    }
-
-    highlightDatesWithConsultations();
-}
-
-void MainWindow::refreshTrainingTableView()
-{
-    if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot load formation data: Database is not connected.");
-        return;
-    }
-
-    if (trainingTableModel) {
-        delete trainingTableModel;
-        trainingTableModel = nullptr;
-    }
-    trainingTableModel = new QSqlQueryModel(this);
-    QSqlQuery query;
-    query.exec("SELECT IDFORM, FORMATION, DESCRIPTION, TRAINER, DATEF, TIME, PRIX FROM AHMED.FORMATIONS");
-    trainingTableModel->setQuery(std::move(query));
-    if (trainingTableModel->lastError().isValid()) {
-        qDebug() << "SQL Error:" << trainingTableModel->lastError().text();
-        QMessageBox::warning(this, "Error", "Failed to load formation data: " + trainingTableModel->lastError().text());
-        return;
-    }
-    qDebug() << "RefreshTrainingTableView - Row count:" << trainingTableModel->rowCount()
-             << "Column count:" << trainingTableModel->columnCount();
-    if (!trainingProxyModel) {
-        qDebug() << "Error: trainingProxyModel is not initialized";
-        QMessageBox::critical(this, "Error", "Table view proxy model is not initialized.");
-        return;
-    }
-    trainingProxyModel->setSourceModel(trainingTableModel);
-    ui->trainingTableView->setModel(trainingProxyModel);
-    ui->trainingTableView->resizeColumnsToContents();
-}
-
-void MainWindow::updateTrainingStatistics()
-{
-    qDebug() << "Starting updateTrainingStatistics";
-
-    if (!m_dbConnected) {
-        QMessageBox::warning(this, "Database Error", "Cannot update statistics: Database is not connected.");
-        totalFormations = 0;
-        totalCost = 0.0;
-        avgCost = 0.0;
-        return;
-    }
-
-    QSqlQuery query;
-    query.prepare("SELECT COUNT(*) AS total_count, SUM(PRIX) AS total_cost FROM AHMED.FORMATIONS");
-
-    if (!query.exec()) {
-        qDebug() << "Statistics query failed:" << query.lastError().text();
-        QMessageBox::critical(this, "Error", "Failed to retrieve statistics: " + query.lastError().text());
-        totalFormations = 0;
-        totalCost = 0.0;
-        avgCost = 0.0;
-        return;
-    }
-
-    if (query.next()) {
-        totalFormations = query.value("total_count").toInt();
-        totalCost = query.value("total_cost").toDouble();
-        avgCost = (totalFormations > 0) ? totalCost / totalFormations : 0.0;
-    } else {
-        qDebug() << "No statistics data retrieved";
-        totalFormations = 0;
-        totalCost = 0.0;
-        avgCost = 0.0;
-    }
-
-    qDebug() << "Updated statistics - Total Formations:" << totalFormations
-             << "Total Cost:" << totalCost
-             << "Average Cost:" << avgCost;
-
-    QString statsText = QString(
-                            "<h3>Training Statistics (as of %1):</h3>"
-                            "<p><b>Total Formations:</b> %2</p>"
-                            "<p><b>Total Cost:</b> $%3</p>"
-                            "<p><b>Average Cost:</b> $%4</p>"
-                            ).arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss"))
-                            .arg(totalFormations)
-                            .arg(totalCost, 0, 'f', 2)
-                            .arg(avgCost, 0, 'f', 2);
-
-    // Comment out until trainingStatsDisplay is added to the UI
-    /*
-    if (ui->trainingStatsDisplay) {
-        ui->trainingStatsDisplay->setHtml(statsText);
-    } else {
-        qDebug() << "trainingStatsDisplay is nullptr";
-        QMessageBox::warning(this, "Error", "Training statistics display text edit is not initialized.");
-    }
-    */
-}
-
-void MainWindow::sendSmsNotification(const QString &phoneNumber, const QString &formationName, const QDate &date)
-{
-    QSettings settings("MyApp", "FormationApp");
-    QString apiKey = settings.value("twilioApiKey", "").toString();
-    QString senderNumber = settings.value("twilioSenderNumber", "").toString();
-
-    if (apiKey.isEmpty() || senderNumber.isEmpty()) {
-        QMessageBox::warning(this, "SMS Error", "Twilio API key or sender number not configured.");
-        return;
-    }
-
-    QString message = QString("Reminder: You have a formation '%1' scheduled on %2.").arg(formationName, date.toString("yyyy-MM-dd"));
-
-    QUrl url("https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json");
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-
-    QString auth = QString("Basic %1").arg(QString(QByteArray(QString("YOUR_ACCOUNT_SID:%1").arg(apiKey).toUtf8()).toBase64()));
-    request.setRawHeader("Authorization", auth.toUtf8());
-
-    QUrlQuery params;
-    params.addQueryItem("From", senderNumber);
-    params.addQueryItem("To", phoneNumber);
-    params.addQueryItem("Body", message);
-
-    QByteArray postData = params.toString(QUrl::FullyEncoded).toUtf8();
-    networkManager->post(request, postData);
-}
-
-void MainWindow::addChangeToHistory(const QString &action, const QString &formationName)
-{
-    QString change = QString("%1: %2 - %3").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss"), action, formationName);
-    changeHistory.prepend(change);
-
-    if (changeHistory.size() > 10) {
-        changeHistory.removeLast();
-    }
-
-    QString historyText;
-    for (const QString &entry : changeHistory) {
-        historyText += entry + "<br>";
-    }
-
-    // Comment out until trainingChangeHistoryDisplay is added to the UI
-    /*
-    if (ui->trainingChangeHistoryDisplay) {
-        ui->trainingChangeHistoryDisplay->setHtml(historyText);
-    } else {
-        qDebug() << "changeHistoryDisplay is nullptr";
-        QMessageBox::warning(this, "Error", "Change history display text edit is not initialized.");
-    }
-    */
 }
 
 bool MainWindow::updateClient(const QString &originalName, const QString &newName, const QString &sector,
@@ -1726,3 +1232,80 @@ bool MainWindow::updateClient(const QString &originalName, const QString &newNam
     return client.updateClient(originalName, newName, sector, contactInfo, email, consultationDateTime, consultant);
 }
 
+void MainWindow::updateCalendarConsultations()
+{
+    if (!m_dbConnected) {
+        return;
+    }
+    highlightDatesWithConsultations();
+}
+
+void MainWindow::refreshTrainingTableView()
+{
+    if (!m_dbConnected) {
+        return;
+    }
+    trainingTableModel->setQuery("SELECT IDFORM, FORMATION, DESCRIPTION, TRAINER, DATEF, TIME, PRIX FROM AHMED.FORMATIONS");
+    if (trainingTableModel->lastError().isValid()) {
+        QMessageBox::warning(this, "Error", "Failed to load formation data: " + trainingTableModel->lastError().text());
+        return;
+    }
+    trainingProxyModel->setSourceModel(trainingTableModel);
+    ui->trainingTableView->setModel(trainingProxyModel);
+    ui->trainingTableView->resizeColumnsToContents();
+}
+
+void MainWindow::sendSmsNotification(const QString &phoneNumber, const QString &formationName, const QDate &date)
+{
+    QSettings settings("MyApp", "FormationApp");
+    QString apiKey = settings.value("twilioApiKey", "").toString();
+    QString senderNumber = settings.value("twilioSenderNumber", "").toString();
+    if (apiKey.isEmpty() || senderNumber.isEmpty()) {
+        QMessageBox::warning(this, "SMS Error", "Twilio API key or sender number not configured.");
+        return;
+    }
+    QString message = QString("Reminder: You have a formation '%1' scheduled on %2.").arg(formationName, date.toString("yyyy-MM-dd"));
+    QUrl url("https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    QString auth = QString("Basic %1").arg(QString(QByteArray(QString("YOUR_ACCOUNT_SID:%1").arg(apiKey).toUtf8()).toBase64()));
+    request.setRawHeader("Authorization", auth.toUtf8());
+    QUrlQuery params;
+    params.addQueryItem("From", senderNumber);
+    params.addQueryItem("To", phoneNumber);
+    params.addQueryItem("Body", message);
+    networkManager->post(request, params.toString(QUrl::FullyEncoded).toUtf8());
+}
+
+void MainWindow::addNotification(const QString &action, const QString &details)
+{
+    Notification notification;
+    notification.action = action;
+    notification.details = details;
+    notification.timestamp = QDateTime::currentDateTime();
+    notifications.append(notification);
+    updateNotificationLabel();
+}
+
+void MainWindow::updateNotificationLabel()
+{
+    ui->trainingNotificationLabel->setText(QString("<a href='notifications'>Activity Notifications: %1</a>").arg(notifications.count()));
+}
+
+void MainWindow::handleTrainingNotificationLabelClick()
+{
+    if (notifications.isEmpty()) {
+        QMessageBox::information(this, "Notifications", "No notifications available.");
+        return;
+    }
+
+    QString notificationDetails;
+    for (const Notification &notification : notifications) {
+        notificationDetails += QString("[%1] %2: %3\n")
+        .arg(notification.timestamp.toString("yyyy-MM-dd HH:mm:ss"))
+            .arg(notification.action)
+            .arg(notification.details);
+    }
+
+    QMessageBox::information(this, "Notification Details", notificationDetails);
+}

@@ -18,6 +18,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -31,18 +32,18 @@ public:
     QVBoxLayout *verticalLayout;
     QGroupBox *chartGroupBox;
     QVBoxLayout *chartLayout;
-    QHBoxLayout *filterLayout;
-    QLabel *dataTypeLabel;
-    QComboBox *dataTypeComboBox;
+    QHBoxLayout *controlLayout;
+    QLabel *statsTypeLabel;
+    QComboBox *statsTypeComboBox;
     QLabel *filterLabel;
-    QComboBox *statsFilterComboBox;
-    QComboBox *filterValueComboBox;
+    QComboBox *filterComboBox;
     QLabel *chartTypeLabel;
     QComboBox *chartTypeComboBox;
     QPushButton *refreshChartButton;
     QPushButton *resetChartButton;
+    QSpacerItem *controlSpacer;
     QChartView *statsChartView;
-    QLabel *chartDetailsLabel;
+    QLabel *hoverDescriptionLabel;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *ChartWindow)
@@ -58,63 +59,58 @@ public:
         chartGroupBox->setObjectName("chartGroupBox");
         chartLayout = new QVBoxLayout(chartGroupBox);
         chartLayout->setObjectName("chartLayout");
-        filterLayout = new QHBoxLayout();
-        filterLayout->setObjectName("filterLayout");
-        dataTypeLabel = new QLabel(chartGroupBox);
-        dataTypeLabel->setObjectName("dataTypeLabel");
+        controlLayout = new QHBoxLayout();
+        controlLayout->setObjectName("controlLayout");
+        statsTypeLabel = new QLabel(chartGroupBox);
+        statsTypeLabel->setObjectName("statsTypeLabel");
 
-        filterLayout->addWidget(dataTypeLabel);
+        controlLayout->addWidget(statsTypeLabel);
 
-        dataTypeComboBox = new QComboBox(chartGroupBox);
-        dataTypeComboBox->addItem(QString());
-        dataTypeComboBox->addItem(QString());
-        dataTypeComboBox->setObjectName("dataTypeComboBox");
+        statsTypeComboBox = new QComboBox(chartGroupBox);
+        statsTypeComboBox->addItem(QString());
+        statsTypeComboBox->addItem(QString());
+        statsTypeComboBox->setObjectName("statsTypeComboBox");
 
-        filterLayout->addWidget(dataTypeComboBox);
+        controlLayout->addWidget(statsTypeComboBox);
 
         filterLabel = new QLabel(chartGroupBox);
         filterLabel->setObjectName("filterLabel");
 
-        filterLayout->addWidget(filterLabel);
+        controlLayout->addWidget(filterLabel);
 
-        statsFilterComboBox = new QComboBox(chartGroupBox);
-        statsFilterComboBox->addItem(QString());
-        statsFilterComboBox->addItem(QString());
-        statsFilterComboBox->addItem(QString());
-        statsFilterComboBox->setObjectName("statsFilterComboBox");
+        filterComboBox = new QComboBox(chartGroupBox);
+        filterComboBox->setObjectName("filterComboBox");
 
-        filterLayout->addWidget(statsFilterComboBox);
-
-        filterValueComboBox = new QComboBox(chartGroupBox);
-        filterValueComboBox->setObjectName("filterValueComboBox");
-
-        filterLayout->addWidget(filterValueComboBox);
+        controlLayout->addWidget(filterComboBox);
 
         chartTypeLabel = new QLabel(chartGroupBox);
         chartTypeLabel->setObjectName("chartTypeLabel");
 
-        filterLayout->addWidget(chartTypeLabel);
+        controlLayout->addWidget(chartTypeLabel);
 
         chartTypeComboBox = new QComboBox(chartGroupBox);
         chartTypeComboBox->addItem(QString());
         chartTypeComboBox->addItem(QString());
-        chartTypeComboBox->addItem(QString());
         chartTypeComboBox->setObjectName("chartTypeComboBox");
 
-        filterLayout->addWidget(chartTypeComboBox);
+        controlLayout->addWidget(chartTypeComboBox);
 
         refreshChartButton = new QPushButton(chartGroupBox);
         refreshChartButton->setObjectName("refreshChartButton");
 
-        filterLayout->addWidget(refreshChartButton);
+        controlLayout->addWidget(refreshChartButton);
 
         resetChartButton = new QPushButton(chartGroupBox);
         resetChartButton->setObjectName("resetChartButton");
 
-        filterLayout->addWidget(resetChartButton);
+        controlLayout->addWidget(resetChartButton);
+
+        controlSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        controlLayout->addItem(controlSpacer);
 
 
-        chartLayout->addLayout(filterLayout);
+        chartLayout->addLayout(controlLayout);
 
         statsChartView = new QChartView(chartGroupBox);
         statsChartView->setObjectName("statsChartView");
@@ -122,11 +118,11 @@ public:
 
         chartLayout->addWidget(statsChartView);
 
-        chartDetailsLabel = new QLabel(chartGroupBox);
-        chartDetailsLabel->setObjectName("chartDetailsLabel");
-        chartDetailsLabel->setAlignment(Qt::AlignCenter);
+        hoverDescriptionLabel = new QLabel(chartGroupBox);
+        hoverDescriptionLabel->setObjectName("hoverDescriptionLabel");
+        hoverDescriptionLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        chartLayout->addWidget(chartDetailsLabel);
+        chartLayout->addWidget(hoverDescriptionLabel);
 
 
         verticalLayout->addWidget(chartGroupBox);
@@ -143,26 +139,21 @@ public:
 
     void retranslateUi(QMainWindow *ChartWindow)
     {
-        ChartWindow->setWindowTitle(QCoreApplication::translate("ChartWindow", "Consultation Statistics Chart", nullptr));
+        ChartWindow->setWindowTitle(QCoreApplication::translate("ChartWindow", "Statistics Chart", nullptr));
+        centralwidget->setStyleSheet(QCoreApplication::translate("ChartWindow", "background-image: url(:/imgs/background.jpg);", nullptr));
         chartGroupBox->setTitle(QCoreApplication::translate("ChartWindow", "Statistics", nullptr));
-        dataTypeLabel->setText(QCoreApplication::translate("ChartWindow", "Data Type:", nullptr));
-        dataTypeComboBox->setItemText(0, QCoreApplication::translate("ChartWindow", "Clients", nullptr));
-        dataTypeComboBox->setItemText(1, QCoreApplication::translate("ChartWindow", "Trainings", nullptr));
+        statsTypeLabel->setText(QCoreApplication::translate("ChartWindow", "Statistics Type:", nullptr));
+        statsTypeComboBox->setItemText(0, QCoreApplication::translate("ChartWindow", "Client Statistics", nullptr));
+        statsTypeComboBox->setItemText(1, QCoreApplication::translate("ChartWindow", "Training Statistics", nullptr));
 
-        filterLabel->setText(QCoreApplication::translate("ChartWindow", "Filter by:", nullptr));
-        statsFilterComboBox->setItemText(0, QCoreApplication::translate("ChartWindow", "By Sector", nullptr));
-        statsFilterComboBox->setItemText(1, QCoreApplication::translate("ChartWindow", "By Date", nullptr));
-        statsFilterComboBox->setItemText(2, QCoreApplication::translate("ChartWindow", "By Consultant", nullptr));
-
-        filterValueComboBox->setPlaceholderText(QCoreApplication::translate("ChartWindow", "Select filter value...", nullptr));
+        filterLabel->setText(QCoreApplication::translate("ChartWindow", "Filter:", nullptr));
         chartTypeLabel->setText(QCoreApplication::translate("ChartWindow", "Chart Type:", nullptr));
         chartTypeComboBox->setItemText(0, QCoreApplication::translate("ChartWindow", "Bar Chart", nullptr));
         chartTypeComboBox->setItemText(1, QCoreApplication::translate("ChartWindow", "Pie Chart", nullptr));
-        chartTypeComboBox->setItemText(2, QCoreApplication::translate("ChartWindow", "Line Chart", nullptr));
 
-        refreshChartButton->setText(QCoreApplication::translate("ChartWindow", "Refresh Chart", nullptr));
+        refreshChartButton->setText(QCoreApplication::translate("ChartWindow", "Refresh", nullptr));
         resetChartButton->setText(QCoreApplication::translate("ChartWindow", "Reset", nullptr));
-        chartDetailsLabel->setText(QCoreApplication::translate("ChartWindow", "Hover over a chart element for details", nullptr));
+        hoverDescriptionLabel->setText(QCoreApplication::translate("ChartWindow", "Hover over a chart element to see details", nullptr));
     } // retranslateUi
 
 };

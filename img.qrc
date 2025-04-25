@@ -2,5 +2,6 @@
     <qresource prefix="/imgs">
         <file>file.ico</file>
         <file>delete.ico</file>
+        <file>background.jpg</file>
     </qresource>
 </RCC>

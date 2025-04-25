@@ -1,18 +1,12 @@
 #ifndef CHARTWINDOW_H
 #define CHARTWINDOW_H
 
-#include "client.h"
-#include "formations.h" // Changed from training.h to formations.h
 #include <QMainWindow>
-#include <QtCharts/QChartView>
-#include <QtCharts/QBarSeries>
-#include <QtCharts/QBarSet>
-#include <QtCharts/QBarCategoryAxis>
-#include <QtCharts/QValueAxis>
-#include <QtCharts/QPieSeries>
-#include <QtCharts/QLineSeries>
-#include <QtCharts/QDateTimeAxis>
-#include <QSqlQuery>
+#include <QChart>
+#include <QChartView>
+#include <QSqlQueryModel>
+#include <QtCharts>
+#include <QLabel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ChartWindow; }
@@ -27,28 +21,21 @@ public:
     ~ChartWindow();
 
 private slots:
-    void on_dataTypeComboBox_currentIndexChanged(int index);
+    void populateStatsViews();
+    void updateFilterComboBox();
+    void updateChart();
     void on_refreshChartButton_clicked();
-    void on_statsFilterComboBox_currentIndexChanged(int index);
-    void on_chartTypeComboBox_currentIndexChanged(int index);
     void on_resetChartButton_clicked();
-    void on_pieSliceHovered(QPieSlice *slice, bool state);
-    void on_barHovered(bool status, int index);
-    void on_lineHovered(QPointF point, bool state);
+    void handlePieSliceHovered(QPieSlice *slice, bool state);
+    void handleBarHovered(bool status, int index);
 
 private:
     Ui::ChartWindow *ui;
-    Client Etmp;
-    formations Ttmp; // Changed from Training to formations
-    QString currentChartType;
-    QMap<QString, int> currentDataMap;
+    QChart *currentChart;
+    QSqlQueryModel *chartModel;
+    QLabel *tooltipLabel;
     QBarSet *currentBarSet;
-    int hoveredBarIndex;
-    QMap<QDate, int> lineDataMap;
-
-    void updateChart();
-    void populateFilterValues();
-    void updateChartOptions();
+    QList<QGraphicsTextItem*> percentageLabels; // Track percentage labels
 };
 
 #endif // CHARTWINDOW_H

@@ -9,7 +9,6 @@
 #ifndef UI_MAINWINDOW_H
 #define UI_MAINWINDOW_H
 
-#include <QtCharts/QChartView>
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QCalendarWidget>
@@ -32,7 +31,6 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
-#include <QtWidgets/QTextEdit>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -57,12 +55,12 @@ public:
     QVBoxLayout *verticalLayout_2;
     QFrame *frame_6;
     QVBoxLayout *verticalLayout_3;
-    QPushButton *dashboardButton;
+    QLabel *trainingNotificationLabel;
     QPushButton *clientSectionButton;
     QPushButton *trainingSectionButton;
     QPushButton *reportsButton;
     QPushButton *settingsButton;
-    QPushButton *calendarButton;
+    QPushButton *statisticsButton;
     QPushButton *themeButton;
     QFrame *frame_4;
     QVBoxLayout *verticalLayout_5;
@@ -107,15 +105,6 @@ public:
     QLabel *clientSelectedDateLabel;
     QLabel *clientConsultationCountLabel;
     QTableView *clientDateConsultationsView;
-    QWidget *clientStatsTab;
-    QVBoxLayout *clientStatsLayout;
-    QGroupBox *clientStatsTextGroup;
-    QVBoxLayout *clientStatsTextLayout;
-    QTextEdit *clientStatsDisplay;
-    QHBoxLayout *clientStatsButtonLayout;
-    QSpacerItem *clientStatsHorizontalSpacer;
-    QPushButton *clientOpenChartButton;
-    QPushButton *clientRefreshStatsButton;
     QWidget *trainingPage;
     QVBoxLayout *trainingPageLayout;
     QTabWidget *trainingTabWidget;
@@ -132,7 +121,6 @@ public:
     QLabel *trainingTrainerLabel;
     QLabel *trainingDateLabel;
     QSpinBox *trainingTimeSpinBox;
-    QLabel *trainingNotificationLabel;
     QLineEdit *trainingNameInput;
     QSpacerItem *trainingAddHorizontalSpacer;
     QLabel *trainingNameLabel;
@@ -151,10 +139,6 @@ public:
     QPushButton *trainingDeleteButton;
     QPushButton *trainingUpdateButton;
     QPushButton *trainingExportButton;
-    QWidget *trainingStatsTab;
-    QVBoxLayout *trainingStatsLayout;
-    QChartView *trainingStatsChartView;
-    QPushButton *trainingRefreshStatsButton;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -168,15 +152,12 @@ public:
         sizePolicy.setHeightForWidth(MainWindow->sizePolicy().hasHeightForWidth());
         MainWindow->setSizePolicy(sizePolicy);
         MainWindow->setMinimumSize(QSize(0, 600));
-        MainWindow->setStyleSheet(QString::fromUtf8(""));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName("centralwidget");
         verticalLayout = new QVBoxLayout(centralwidget);
         verticalLayout->setObjectName("verticalLayout");
         header = new QFrame(centralwidget);
         header->setObjectName("header");
-        sizePolicy.setHeightForWidth(header->sizePolicy().hasHeightForWidth());
-        header->setSizePolicy(sizePolicy);
         header->setMinimumSize(QSize(0, 75));
         header->setMaximumSize(QSize(16777215, 75));
         header->setFrameShape(QFrame::Shape::StyledPanel);
@@ -187,8 +168,8 @@ public:
         horizontalLayout_2->setContentsMargins(0, 0, 0, 0);
         frame_3 = new QFrame(header);
         frame_3->setObjectName("frame_3");
-        frame_3->setMinimumSize(QSize(50, 0));
-        frame_3->setMaximumSize(QSize(151, 16777215));
+        frame_3->setMinimumSize(QSize(114, 0));
+        frame_3->setMaximumSize(QSize(167, 16777215));
         frame_3->setFrameShape(QFrame::Shape::StyledPanel);
         frame_3->setFrameShadow(QFrame::Shadow::Raised);
         horizontalLayout_3 = new QHBoxLayout(frame_3);
@@ -197,11 +178,6 @@ public:
         horizontalLayout_3->setContentsMargins(0, 0, 0, 0);
         menuButton = new QPushButton(frame_3);
         menuButton->setObjectName("menuButton");
-        QSizePolicy sizePolicy1(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Fixed);
-        sizePolicy1.setHorizontalStretch(0);
-        sizePolicy1.setVerticalStretch(0);
-        sizePolicy1.setHeightForWidth(menuButton->sizePolicy().hasHeightForWidth());
-        menuButton->setSizePolicy(sizePolicy1);
         menuButton->setMinimumSize(QSize(0, 30));
         menuButton->setMaximumSize(QSize(16777215, 30));
         menuButton->setIconSize(QSize(24, 24));
@@ -213,6 +189,7 @@ public:
 
         frame_5 = new QFrame(header);
         frame_5->setObjectName("frame_5");
+        frame_5->setMinimumSize(QSize(0, 0));
         frame_5->setFrameShape(QFrame::Shape::StyledPanel);
         frame_5->setFrameShadow(QFrame::Shadow::Raised);
         verticalLayout_4 = new QVBoxLayout(frame_5);
@@ -244,7 +221,7 @@ public:
         sideMenu = new QFrame(frame_2);
         sideMenu->setObjectName("sideMenu");
         sideMenu->setMinimumSize(QSize(150, 0));
-        sideMenu->setMaximumSize(QSize(150, 16777215));
+        sideMenu->setMaximumSize(QSize(201, 16777215));
         sideMenu->setFrameShape(QFrame::Shape::StyledPanel);
         sideMenu->setFrameShadow(QFrame::Shadow::Raised);
         verticalLayout_2 = new QVBoxLayout(sideMenu);
@@ -253,25 +230,21 @@ public:
         verticalLayout_2->setContentsMargins(0, 0, 0, 0);
         frame_6 = new QFrame(sideMenu);
         frame_6->setObjectName("frame_6");
-        frame_6->setMinimumSize(QSize(125, 600));
-        frame_6->setMaximumSize(QSize(150, 16777215));
+        frame_6->setMinimumSize(QSize(147, 600));
+        frame_6->setMaximumSize(QSize(185, 16777215));
         frame_6->setFrameShape(QFrame::Shape::StyledPanel);
         frame_6->setFrameShadow(QFrame::Shadow::Raised);
         verticalLayout_3 = new QVBoxLayout(frame_6);
         verticalLayout_3->setSpacing(0);
         verticalLayout_3->setObjectName("verticalLayout_3");
         verticalLayout_3->setContentsMargins(0, 0, 0, 0);
-        dashboardButton = new QPushButton(frame_6);
-        dashboardButton->setObjectName("dashboardButton");
-        dashboardButton->setStyleSheet(QString::fromUtf8("#label {\n"
-"    color: white;\n"
-"    padding: 5px;\n"
-"    font-size: 15pt;\n"
-"    font-weight: bold;\n"
-"    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);\n"
-"}"));
+        trainingNotificationLabel = new QLabel(frame_6);
+        trainingNotificationLabel->setObjectName("trainingNotificationLabel");
+        trainingNotificationLabel->setMaximumSize(QSize(1000, 60));
+        trainingNotificationLabel->setStyleSheet(QString::fromUtf8("font-weight: bold; color: #3A5DAE;"));
+        trainingNotificationLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        verticalLayout_3->addWidget(dashboardButton);
+        verticalLayout_3->addWidget(trainingNotificationLabel);
 
         clientSectionButton = new QPushButton(frame_6);
         clientSectionButton->setObjectName("clientSectionButton");
@@ -293,10 +266,10 @@ public:
 
         verticalLayout_3->addWidget(settingsButton);
 
-        calendarButton = new QPushButton(frame_6);
-        calendarButton->setObjectName("calendarButton");
+        statisticsButton = new QPushButton(frame_6);
+        statisticsButton->setObjectName("statisticsButton");
 
-        verticalLayout_3->addWidget(calendarButton);
+        verticalLayout_3->addWidget(statisticsButton);
 
         themeButton = new QPushButton(frame_6);
         themeButton->setObjectName("themeButton");
@@ -311,11 +284,12 @@ public:
 
         frame_4 = new QFrame(frame_2);
         frame_4->setObjectName("frame_4");
-        QSizePolicy sizePolicy2(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
-        sizePolicy2.setHorizontalStretch(0);
-        sizePolicy2.setVerticalStretch(0);
-        sizePolicy2.setHeightForWidth(frame_4->sizePolicy().hasHeightForWidth());
-        frame_4->setSizePolicy(sizePolicy2);
+        QSizePolicy sizePolicy1(QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Preferred);
+        sizePolicy1.setHorizontalStretch(0);
+        sizePolicy1.setVerticalStretch(0);
+        sizePolicy1.setHeightForWidth(frame_4->sizePolicy().hasHeightForWidth());
+        frame_4->setSizePolicy(sizePolicy1);
+        frame_4->setMaximumSize(QSize(1200, 16777215));
         frame_4->setFrameShape(QFrame::Shape::StyledPanel);
         frame_4->setFrameShadow(QFrame::Shadow::Raised);
         verticalLayout_5 = new QVBoxLayout(frame_4);
@@ -506,43 +480,6 @@ public:
         clientCalendarLayout->addWidget(clientCalendarDetailsBox);
 
         clientTabWidget->addTab(clientCalendarTab, QString());
-        clientStatsTab = new QWidget();
-        clientStatsTab->setObjectName("clientStatsTab");
-        clientStatsLayout = new QVBoxLayout(clientStatsTab);
-        clientStatsLayout->setObjectName("clientStatsLayout");
-        clientStatsTextGroup = new QGroupBox(clientStatsTab);
-        clientStatsTextGroup->setObjectName("clientStatsTextGroup");
-        clientStatsTextLayout = new QVBoxLayout(clientStatsTextGroup);
-        clientStatsTextLayout->setObjectName("clientStatsTextLayout");
-        clientStatsDisplay = new QTextEdit(clientStatsTextGroup);
-        clientStatsDisplay->setObjectName("clientStatsDisplay");
-        clientStatsDisplay->setReadOnly(true);
-
-        clientStatsTextLayout->addWidget(clientStatsDisplay);
-
-
-        clientStatsLayout->addWidget(clientStatsTextGroup);
-
-        clientStatsButtonLayout = new QHBoxLayout();
-        clientStatsButtonLayout->setObjectName("clientStatsButtonLayout");
-        clientStatsHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
-
-        clientStatsButtonLayout->addItem(clientStatsHorizontalSpacer);
-
-        clientOpenChartButton = new QPushButton(clientStatsTab);
-        clientOpenChartButton->setObjectName("clientOpenChartButton");
-
-        clientStatsButtonLayout->addWidget(clientOpenChartButton);
-
-        clientRefreshStatsButton = new QPushButton(clientStatsTab);
-        clientRefreshStatsButton->setObjectName("clientRefreshStatsButton");
-
-        clientStatsButtonLayout->addWidget(clientRefreshStatsButton);
-
-
-        clientStatsLayout->addLayout(clientStatsButtonLayout);
-
-        clientTabWidget->addTab(clientStatsTab, QString());
 
         clientPageLayout->addWidget(clientTabWidget);
 
@@ -613,14 +550,6 @@ public:
 
         trainingAddGridLayout->addWidget(trainingTimeSpinBox, 3, 2, 1, 1);
 
-        trainingNotificationLabel = new QLabel(trainingAddTab);
-        trainingNotificationLabel->setObjectName("trainingNotificationLabel");
-        trainingNotificationLabel->setPixmap(QPixmap(QString::fromUtf8("../../../../Mega Pc/Downloads/Ra.png")));
-        trainingNotificationLabel->setScaledContents(false);
-        trainingNotificationLabel->setWordWrap(false);
-
-        trainingAddGridLayout->addWidget(trainingNotificationLabel, 1, 6, 1, 1);
-
         trainingNameInput = new QLineEdit(trainingAddTab);
         trainingNameInput->setObjectName("trainingNameInput");
 
@@ -655,7 +584,6 @@ public:
         trainingSearchLayout = new QHBoxLayout(trainingSearchGroupBox);
         trainingSearchLayout->setObjectName("trainingSearchLayout");
         trainingSearchCriteriaComboBox = new QComboBox(trainingSearchGroupBox);
-        trainingSearchCriteriaComboBox->addItem(QString());
         trainingSearchCriteriaComboBox->addItem(QString());
         trainingSearchCriteriaComboBox->addItem(QString());
         trainingSearchCriteriaComboBox->addItem(QString());
@@ -709,22 +637,6 @@ public:
         trainingManageLayout->addLayout(trainingManageButtonLayout);
 
         trainingTabWidget->addTab(trainingManageTab, QString());
-        trainingStatsTab = new QWidget();
-        trainingStatsTab->setObjectName("trainingStatsTab");
-        trainingStatsLayout = new QVBoxLayout(trainingStatsTab);
-        trainingStatsLayout->setObjectName("trainingStatsLayout");
-        trainingStatsChartView = new QChartView(trainingStatsTab);
-        trainingStatsChartView->setObjectName("trainingStatsChartView");
-        trainingStatsChartView->setMinimumSize(QSize(0, 400));
-
-        trainingStatsLayout->addWidget(trainingStatsChartView);
-
-        trainingRefreshStatsButton = new QPushButton(trainingStatsTab);
-        trainingRefreshStatsButton->setObjectName("trainingRefreshStatsButton");
-
-        trainingStatsLayout->addWidget(trainingRefreshStatsButton);
-
-        trainingTabWidget->addTab(trainingStatsTab, QString());
 
         trainingPageLayout->addWidget(trainingTabWidget);
 
@@ -745,9 +657,9 @@ public:
 
         retranslateUi(MainWindow);
 
-        mainStackedWidget->setCurrentIndex(0);
+        mainStackedWidget->setCurrentIndex(1);
         clientTabWidget->setCurrentIndex(1);
-        trainingTabWidget->setCurrentIndex(1);
+        trainingTabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -758,12 +670,12 @@ public:
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Client and Training Management System", nullptr));
         menuButton->setText(QCoreApplication::translate("MainWindow", "Menu", nullptr));
         headerLabel->setText(QCoreApplication::translate("MainWindow", "Client and Training Management System", nullptr));
-        dashboardButton->setText(QCoreApplication::translate("MainWindow", "Dashboard", nullptr));
+        trainingNotificationLabel->setText(QCoreApplication::translate("MainWindow", "Notifications: 0", nullptr));
         clientSectionButton->setText(QCoreApplication::translate("MainWindow", "Clients", nullptr));
         trainingSectionButton->setText(QCoreApplication::translate("MainWindow", "Training", nullptr));
         reportsButton->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
         settingsButton->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
-        calendarButton->setText(QCoreApplication::translate("MainWindow", "Calendar", nullptr));
+        statisticsButton->setText(QCoreApplication::translate("MainWindow", "Statistics", nullptr));
         themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
         clientConsultantComboBox->setPlaceholderText(QCoreApplication::translate("MainWindow", "Select Consultant...", nullptr));
         clientContactLabel->setText(QCoreApplication::translate("MainWindow", "Contact Info:", nullptr));
@@ -779,7 +691,7 @@ public:
         clientSearchCriteriaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Sector", nullptr));
         clientSearchCriteriaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Email", nullptr));
         clientSearchCriteriaComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Contact", nullptr));
-        clientSearchCriteriaComboBox->setItemText(4, QCoreApplication::translate("MainWindow", "Date  Time", nullptr));
+        clientSearchCriteriaComboBox->setItemText(4, QCoreApplication::translate("MainWindow", "Date Time", nullptr));
         clientSearchCriteriaComboBox->setItemText(5, QCoreApplication::translate("MainWindow", "Consultant", nullptr));
 
         clientSearchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
@@ -792,16 +704,11 @@ public:
         clientSelectedDateLabel->setText(QCoreApplication::translate("MainWindow", "Selected date: ", nullptr));
         clientConsultationCountLabel->setText(QCoreApplication::translate("MainWindow", "Consultations: 0", nullptr));
         clientTabWidget->setTabText(clientTabWidget->indexOf(clientCalendarTab), QCoreApplication::translate("MainWindow", "Consultation Calendar", nullptr));
-        clientStatsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
-        clientOpenChartButton->setText(QCoreApplication::translate("MainWindow", "View Chart", nullptr));
-        clientRefreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
-        clientTabWidget->setTabText(clientTabWidget->indexOf(clientStatsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
         trainingPriceLabel->setText(QCoreApplication::translate("MainWindow", "Price", nullptr));
         trainingDescriptionLabel->setText(QCoreApplication::translate("MainWindow", "Description", nullptr));
         trainingTimeLabel->setText(QCoreApplication::translate("MainWindow", "Time", nullptr));
         trainingTrainerLabel->setText(QCoreApplication::translate("MainWindow", "Trainer", nullptr));
         trainingDateLabel->setText(QCoreApplication::translate("MainWindow", "Date:", nullptr));
-        trainingNotificationLabel->setText(QString());
         trainingNameLabel->setText(QCoreApplication::translate("MainWindow", "Training", nullptr));
         trainingAddButton->setText(QCoreApplication::translate("MainWindow", "Add Training", nullptr));
         trainingPhoneLabel->setText(QCoreApplication::translate("MainWindow", "Phone", nullptr));
@@ -811,7 +718,6 @@ public:
         trainingSearchCriteriaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Trainer", nullptr));
         trainingSearchCriteriaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Price", nullptr));
         trainingSearchCriteriaComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Time", nullptr));
-        trainingSearchCriteriaComboBox->setItemText(4, QString());
 
         trainingSearchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
         trainingResetSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
@@ -819,8 +725,6 @@ public:
         trainingUpdateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
         trainingExportButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
         trainingTabWidget->setTabText(trainingTabWidget->indexOf(trainingManageTab), QCoreApplication::translate("MainWindow", "Manage Training", nullptr));
-        trainingRefreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
-        trainingTabWidget->setTabText(trainingTabWidget->indexOf(trainingStatsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi
 
 };

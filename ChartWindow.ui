@@ -11,9 +11,12 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Consultation Statistics Chart</string>
+   <string>Statistics Chart</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string>background-image: url(:/imgs/background.jpg);</string>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QGroupBox" name="chartGroupBox">
@@ -22,24 +25,24 @@
       </property>
       <layout class="QVBoxLayout" name="chartLayout">
        <item>
-        <layout class="QHBoxLayout" name="filterLayout">
+        <layout class="QHBoxLayout" name="controlLayout">
          <item>
-          <widget class="QLabel" name="dataTypeLabel">
+          <widget class="QLabel" name="statsTypeLabel">
            <property name="text">
-            <string>Data Type:</string>
+            <string>Statistics Type:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="dataTypeComboBox">
+          <widget class="QComboBox" name="statsTypeComboBox">
            <item>
             <property name="text">
-             <string>Clients</string>
+             <string>Client Statistics</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>Trainings</string>
+             <string>Training Statistics</string>
             </property>
            </item>
           </widget>
@@ -47,35 +50,12 @@
          <item>
           <widget class="QLabel" name="filterLabel">
            <property name="text">
-            <string>Filter by:</string>
+            <string>Filter:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="statsFilterComboBox">
-           <item>
-            <property name="text">
-             <string>By Sector</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>By Date</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>By Consultant</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="filterValueComboBox">
-           <property name="placeholderText">
-            <string>Select filter value...</string>
-           </property>
-          </widget>
+          <widget class="QComboBox" name="filterComboBox"/>
          </item>
          <item>
           <widget class="QLabel" name="chartTypeLabel">
@@ -96,17 +76,12 @@
              <string>Pie Chart</string>
             </property>
            </item>
-           <item>
-            <property name="text">
-             <string>Line Chart</string>
-            </property>
-           </item>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="refreshChartButton">
            <property name="text">
-            <string>Refresh Chart</string>
+            <string>Refresh</string>
            </property>
           </widget>
          </item>
@@ -117,10 +92,23 @@
            </property>
           </widget>
          </item>
+         <item>
+          <spacer name="controlSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
         </layout>
        </item>
        <item>
-        <widget class="QChartView" name="statsChartView">
+        <widget class="QChartView" name="statsChartView" native="true">
          <property name="minimumSize">
           <size>
            <width>0</width>
@@ -130,12 +118,12 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="chartDetailsLabel">
+        <widget class="QLabel" name="hoverDescriptionLabel">
          <property name="text">
-          <string>Hover over a chart element for details</string>
+          <string>Hover over a chart element to see details</string>
          </property>
          <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -146,6 +134,13 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QChartView</class>
+   <extends>QWidget</extends>
+   <header>qchartview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
