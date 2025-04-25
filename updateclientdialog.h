@@ -2,7 +2,7 @@
 #define UPDATECLIENTDIALOG_H
 
 #include <QDialog>
-#include <QDate>
+#include <QDateTime>
 
 namespace Ui {
 class UpdateClientDialog;
@@ -16,7 +16,8 @@ public:
     explicit UpdateClientDialog(QWidget *parent = nullptr);
     ~UpdateClientDialog();
 
-    void setClientData(const QString &name, const QString &sector, const QString &contactInfo, const QString &email, const QDateTime &consultationDateTime, const QString &consultant);
+    void setClientData(const QString &name, const QString &sector, const QString &contactInfo,
+                       const QString &email, const QDateTime &consultationDateTime, const QString &consultantId);
 
     QString getName() const;
     QString getSector() const;

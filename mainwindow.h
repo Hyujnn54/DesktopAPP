@@ -6,7 +6,6 @@
 #include "qcalendarwidget.h"
 #include "qdatetimeedit.h"
 #include "updateclientdialog.h"
-#include "updatetrainingdialog.h"
 #include "emailsender.h"
 #include "ChartWindow.h"
 #include <QPrinter>
@@ -85,13 +84,15 @@ private:
     bool m_dbConnected;
 
     // Client Management Members
+    EmailSender *emailSender;
+    int emailAttempts;
+    int emailSuccesses;
+    QSqlQueryModel *clientTableModel;
+    QSortFilterProxyModel *clientProxyModel;
     QMap<QDate, int> consultationCountMap;
     QMap<QDateTime, int> consultationDateTimeMap;
     QDate lastHoveredDate;
     QMap<QString, QString> employeeMap;
-    EmailSender *emailSender;
-    int emailAttempts;
-    int emailSuccesses;
 
     // Training Management Members
     QSqlQueryModel *trainingTableModel;
@@ -123,6 +124,9 @@ private:
     void updateClientStatisticsDisplay();
     void loadEmployees();
     void refreshClientTable();
+    bool updateClient(const QString &originalName, const QString &newName, const QString &sector,
+                      const QString &contactInfo, const QString &email, const QDateTime &consultationDateTime,
+                      const QString &consultant);
     void updateCalendarConsultations();
 
     // Training Management Methods

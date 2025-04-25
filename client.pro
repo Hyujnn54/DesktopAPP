@@ -38,6 +38,7 @@ FORMS += \
     ChartWindow.ui \
     mainwindow.ui \
     updateclientdialog.ui \
+    updatetrainingdialog.ui
 
 RESOURCES += \
     img.qrc

@@ -358,7 +358,7 @@
               <item>
                <widget class="QTabWidget" name="clientTabWidget">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="clientAddTab">
                  <property name="contextMenuPolicy">
@@ -695,7 +695,7 @@
               <item>
                <widget class="QTabWidget" name="trainingTabWidget">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="trainingAddTab">
                  <property name="contextMenuPolicy">
