@@ -6,13 +6,11 @@ debug/emailsender.o
 debug/formations.o
 debug/main.o
 debug/mainwindow.o
-debug/formationwindow.o
 debug/updateclientdialog.o
 debug/updatetrainingdialog.o
 debug/qrc_img.o
 debug/moc_chartwindow.o
 debug/moc_emailsender.o
 debug/moc_mainwindow.o
-debug/moc_formationwindow.o
 debug/moc_updateclientdialog.o
 debug/moc_updatetrainingdialog.o

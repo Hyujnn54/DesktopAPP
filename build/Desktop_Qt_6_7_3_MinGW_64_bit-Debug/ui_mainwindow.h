@@ -9,11 +9,14 @@
 #ifndef UI_MAINWINDOW_H
 #define UI_MAINWINDOW_H
 
+#include <QtCharts/QChartView>
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QCalendarWidget>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QDateEdit>
 #include <QtWidgets/QDateTimeEdit>
+#include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QFrame>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QGroupBox>
@@ -24,6 +27,8 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTableView>
@@ -45,68 +50,111 @@ public:
     QPushButton *menuButton;
     QFrame *frame_5;
     QVBoxLayout *verticalLayout_4;
-    QLabel *label;
+    QLabel *headerLabel;
     QFrame *frame_2;
     QHBoxLayout *horizontalLayout;
     QFrame *sideMenu;
     QVBoxLayout *verticalLayout_2;
     QFrame *frame_6;
     QVBoxLayout *verticalLayout_3;
-    QPushButton *pushButton_formations;
-    QPushButton *pushButton_2;
-    QPushButton *pushButton_3;
-    QPushButton *pushButton_4;
-    QPushButton *pushButton_5;
+    QPushButton *dashboardButton;
+    QPushButton *clientSectionButton;
+    QPushButton *trainingSectionButton;
+    QPushButton *reportsButton;
+    QPushButton *settingsButton;
+    QPushButton *calendarButton;
     QPushButton *themeButton;
     QFrame *frame_4;
     QVBoxLayout *verticalLayout_5;
-    QTabWidget *tabWidget;
-    QWidget *ClientForm;
-    QGridLayout *gridLayout_2;
-    QComboBox *ConsultantComboBox;
-    QDateTimeEdit *searchDateButton_2;
-    QLabel *label_contact;
-    QLabel *label_sector;
-    QLineEdit *Contact_info;
-    QLabel *label_consultant;
-    QPushButton *add;
-    QLineEdit *Sector;
-    QSpacerItem *horizontalSpacer;
-    QLabel *label_name;
-    QLineEdit *Name;
-    QLabel *label_date;
-    QLineEdit *Email;
-    QLabel *label_email;
-    QWidget *listClient;
-    QVBoxLayout *verticalLayout_6;
-    QGroupBox *searchGroupBox;
-    QHBoxLayout *searchLayout;
-    QComboBox *searchCriteriaComboBox;
-    QLineEdit *searchInput;
-    QPushButton *resetSearchButton;
-    QTableView *tableView;
-    QHBoxLayout *horizontalLayout_4;
-    QSpacerItem *horizontalSpacer_2;
-    QPushButton *Delet;
-    QPushButton *update;
-    QPushButton *exportPdfButton;
-    QWidget *calendarTab;
-    QVBoxLayout *verticalLayout_7;
-    QCalendarWidget *consultationCalendar;
-    QGroupBox *calendarDetailsBox;
-    QVBoxLayout *verticalLayout_8;
-    QLabel *selectedDateLabel;
-    QLabel *consultationCountLabel;
-    QTableView *dateConsultationsView;
-    QWidget *tab;
-    QVBoxLayout *verticalLayoutStats;
-    QGroupBox *statsTextGroup;
-    QVBoxLayout *verticalLayoutText;
-    QTextEdit *statsDisplay;
-    QHBoxLayout *buttonLayout;
-    QSpacerItem *horizontalSpacer2;
-    QPushButton *openChartButton;
-    QPushButton *refreshStatsButton;
+    QStackedWidget *mainStackedWidget;
+    QWidget *clientPage;
+    QVBoxLayout *clientPageLayout;
+    QTabWidget *clientTabWidget;
+    QWidget *clientAddTab;
+    QGridLayout *clientAddGridLayout;
+    QComboBox *clientConsultantComboBox;
+    QDateTimeEdit *clientConsultationDateEdit;
+    QLabel *clientContactLabel;
+    QLabel *clientSectorLabel;
+    QLineEdit *clientContactInfoInput;
+    QLabel *clientConsultantLabel;
+    QPushButton *clientAddButton;
+    QLineEdit *clientSectorInput;
+    QSpacerItem *clientAddHorizontalSpacer;
+    QLabel *clientNameLabel;
+    QLineEdit *clientNameInput;
+    QLabel *clientConsultationDateLabel;
+    QLineEdit *clientEmailInput;
+    QLabel *clientEmailLabel;
+    QWidget *clientManageTab;
+    QVBoxLayout *clientManageLayout;
+    QGroupBox *clientSearchGroupBox;
+    QHBoxLayout *clientSearchLayout;
+    QComboBox *clientSearchCriteriaComboBox;
+    QLineEdit *clientSearchInput;
+    QPushButton *clientResetSearchButton;
+    QTableView *clientTableView;
+    QHBoxLayout *clientManageButtonLayout;
+    QSpacerItem *clientManageHorizontalSpacer;
+    QPushButton *clientDeleteButton;
+    QPushButton *clientUpdateButton;
+    QPushButton *clientExportPdfButton;
+    QWidget *clientCalendarTab;
+    QVBoxLayout *clientCalendarLayout;
+    QCalendarWidget *clientConsultationCalendar;
+    QGroupBox *clientCalendarDetailsBox;
+    QVBoxLayout *clientCalendarDetailsLayout;
+    QLabel *clientSelectedDateLabel;
+    QLabel *clientConsultationCountLabel;
+    QTableView *clientDateConsultationsView;
+    QWidget *clientStatsTab;
+    QVBoxLayout *clientStatsLayout;
+    QGroupBox *clientStatsTextGroup;
+    QVBoxLayout *clientStatsTextLayout;
+    QTextEdit *clientStatsDisplay;
+    QHBoxLayout *clientStatsButtonLayout;
+    QSpacerItem *clientStatsHorizontalSpacer;
+    QPushButton *clientOpenChartButton;
+    QPushButton *clientRefreshStatsButton;
+    QWidget *trainingPage;
+    QVBoxLayout *trainingPageLayout;
+    QTabWidget *trainingTabWidget;
+    QWidget *trainingAddTab;
+    QGridLayout *trainingAddGridLayout;
+    QLineEdit *trainingDescriptionInput;
+    QLabel *trainingPriceLabel;
+    QLabel *trainingDescriptionLabel;
+    QDateEdit *trainingDateEdit;
+    QLabel *trainingTimeLabel;
+    QLineEdit *trainingPhoneNumberInput;
+    QLineEdit *trainingTrainerInput;
+    QDoubleSpinBox *trainingPriceSpinBox;
+    QLabel *trainingTrainerLabel;
+    QLabel *trainingDateLabel;
+    QSpinBox *trainingTimeSpinBox;
+    QLabel *trainingNotificationLabel;
+    QLineEdit *trainingNameInput;
+    QSpacerItem *trainingAddHorizontalSpacer;
+    QLabel *trainingNameLabel;
+    QPushButton *trainingAddButton;
+    QLabel *trainingPhoneLabel;
+    QWidget *trainingManageTab;
+    QVBoxLayout *trainingManageLayout;
+    QGroupBox *trainingSearchGroupBox;
+    QHBoxLayout *trainingSearchLayout;
+    QComboBox *trainingSearchCriteriaComboBox;
+    QLineEdit *trainingSearchInput;
+    QPushButton *trainingResetSearchButton;
+    QTableView *trainingTableView;
+    QHBoxLayout *trainingManageButtonLayout;
+    QSpacerItem *trainingManageHorizontalSpacer;
+    QPushButton *trainingDeleteButton;
+    QPushButton *trainingUpdateButton;
+    QPushButton *trainingExportButton;
+    QWidget *trainingStatsTab;
+    QVBoxLayout *trainingStatsLayout;
+    QChartView *trainingStatsChartView;
+    QPushButton *trainingRefreshStatsButton;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -169,15 +217,15 @@ public:
         frame_5->setFrameShadow(QFrame::Shadow::Raised);
         verticalLayout_4 = new QVBoxLayout(frame_5);
         verticalLayout_4->setObjectName("verticalLayout_4");
-        label = new QLabel(frame_5);
-        label->setObjectName("label");
+        headerLabel = new QLabel(frame_5);
+        headerLabel->setObjectName("headerLabel");
         QFont font;
         font.setPointSize(15);
         font.setBold(true);
-        label->setFont(font);
-        label->setAlignment(Qt::AlignmentFlag::AlignCenter);
+        headerLabel->setFont(font);
+        headerLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        verticalLayout_4->addWidget(label);
+        verticalLayout_4->addWidget(headerLabel);
 
 
         horizontalLayout_2->addWidget(frame_5);
@@ -213,9 +261,9 @@ public:
         verticalLayout_3->setSpacing(0);
         verticalLayout_3->setObjectName("verticalLayout_3");
         verticalLayout_3->setContentsMargins(0, 0, 0, 0);
-        pushButton_formations = new QPushButton(frame_6);
-        pushButton_formations->setObjectName("pushButton_formations");
-        pushButton_formations->setStyleSheet(QString::fromUtf8("#label {\n"
+        dashboardButton = new QPushButton(frame_6);
+        dashboardButton->setObjectName("dashboardButton");
+        dashboardButton->setStyleSheet(QString::fromUtf8("#label {\n"
 "    color: white;\n"
 "    padding: 5px;\n"
 "    font-size: 15pt;\n"
@@ -223,27 +271,32 @@ public:
 "    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);\n"
 "}"));
 
-        verticalLayout_3->addWidget(pushButton_formations);
+        verticalLayout_3->addWidget(dashboardButton);
 
-        pushButton_2 = new QPushButton(frame_6);
-        pushButton_2->setObjectName("pushButton_2");
+        clientSectionButton = new QPushButton(frame_6);
+        clientSectionButton->setObjectName("clientSectionButton");
 
-        verticalLayout_3->addWidget(pushButton_2);
+        verticalLayout_3->addWidget(clientSectionButton);
 
-        pushButton_3 = new QPushButton(frame_6);
-        pushButton_3->setObjectName("pushButton_3");
+        trainingSectionButton = new QPushButton(frame_6);
+        trainingSectionButton->setObjectName("trainingSectionButton");
 
-        verticalLayout_3->addWidget(pushButton_3);
+        verticalLayout_3->addWidget(trainingSectionButton);
 
-        pushButton_4 = new QPushButton(frame_6);
-        pushButton_4->setObjectName("pushButton_4");
+        reportsButton = new QPushButton(frame_6);
+        reportsButton->setObjectName("reportsButton");
 
-        verticalLayout_3->addWidget(pushButton_4);
+        verticalLayout_3->addWidget(reportsButton);
 
-        pushButton_5 = new QPushButton(frame_6);
-        pushButton_5->setObjectName("pushButton_5");
+        settingsButton = new QPushButton(frame_6);
+        settingsButton->setObjectName("settingsButton");
 
-        verticalLayout_3->addWidget(pushButton_5);
+        verticalLayout_3->addWidget(settingsButton);
+
+        calendarButton = new QPushButton(frame_6);
+        calendarButton->setObjectName("calendarButton");
+
+        verticalLayout_3->addWidget(calendarButton);
 
         themeButton = new QPushButton(frame_6);
         themeButton->setObjectName("themeButton");
@@ -267,225 +320,417 @@ public:
         frame_4->setFrameShadow(QFrame::Shadow::Raised);
         verticalLayout_5 = new QVBoxLayout(frame_4);
         verticalLayout_5->setObjectName("verticalLayout_5");
-        tabWidget = new QTabWidget(frame_4);
-        tabWidget->setObjectName("tabWidget");
-        ClientForm = new QWidget();
-        ClientForm->setObjectName("ClientForm");
-        ClientForm->setContextMenuPolicy(Qt::ContextMenuPolicy::PreventContextMenu);
-        gridLayout_2 = new QGridLayout(ClientForm);
-        gridLayout_2->setObjectName("gridLayout_2");
-        ConsultantComboBox = new QComboBox(ClientForm);
-        ConsultantComboBox->setObjectName("ConsultantComboBox");
+        mainStackedWidget = new QStackedWidget(frame_4);
+        mainStackedWidget->setObjectName("mainStackedWidget");
+        clientPage = new QWidget();
+        clientPage->setObjectName("clientPage");
+        clientPageLayout = new QVBoxLayout(clientPage);
+        clientPageLayout->setObjectName("clientPageLayout");
+        clientTabWidget = new QTabWidget(clientPage);
+        clientTabWidget->setObjectName("clientTabWidget");
+        clientAddTab = new QWidget();
+        clientAddTab->setObjectName("clientAddTab");
+        clientAddTab->setContextMenuPolicy(Qt::ContextMenuPolicy::PreventContextMenu);
+        clientAddGridLayout = new QGridLayout(clientAddTab);
+        clientAddGridLayout->setObjectName("clientAddGridLayout");
+        clientConsultantComboBox = new QComboBox(clientAddTab);
+        clientConsultantComboBox->setObjectName("clientConsultantComboBox");
 
-        gridLayout_2->addWidget(ConsultantComboBox, 5, 1, 1, 1);
+        clientAddGridLayout->addWidget(clientConsultantComboBox, 5, 1, 1, 1);
 
-        searchDateButton_2 = new QDateTimeEdit(ClientForm);
-        searchDateButton_2->setObjectName("searchDateButton_2");
-        searchDateButton_2->setMinimumSize(QSize(125, 0));
+        clientConsultationDateEdit = new QDateTimeEdit(clientAddTab);
+        clientConsultationDateEdit->setObjectName("clientConsultationDateEdit");
+        clientConsultationDateEdit->setMinimumSize(QSize(125, 0));
 
-        gridLayout_2->addWidget(searchDateButton_2, 4, 1, 1, 1);
+        clientAddGridLayout->addWidget(clientConsultationDateEdit, 4, 1, 1, 1);
 
-        label_contact = new QLabel(ClientForm);
-        label_contact->setObjectName("label_contact");
+        clientContactLabel = new QLabel(clientAddTab);
+        clientContactLabel->setObjectName("clientContactLabel");
 
-        gridLayout_2->addWidget(label_contact, 2, 0, 1, 1);
+        clientAddGridLayout->addWidget(clientContactLabel, 2, 0, 1, 1);
 
-        label_sector = new QLabel(ClientForm);
-        label_sector->setObjectName("label_sector");
+        clientSectorLabel = new QLabel(clientAddTab);
+        clientSectorLabel->setObjectName("clientSectorLabel");
 
-        gridLayout_2->addWidget(label_sector, 1, 0, 1, 1);
+        clientAddGridLayout->addWidget(clientSectorLabel, 1, 0, 1, 1);
 
-        Contact_info = new QLineEdit(ClientForm);
-        Contact_info->setObjectName("Contact_info");
+        clientContactInfoInput = new QLineEdit(clientAddTab);
+        clientContactInfoInput->setObjectName("clientContactInfoInput");
 
-        gridLayout_2->addWidget(Contact_info, 2, 1, 1, 1);
+        clientAddGridLayout->addWidget(clientContactInfoInput, 2, 1, 1, 1);
 
-        label_consultant = new QLabel(ClientForm);
-        label_consultant->setObjectName("label_consultant");
+        clientConsultantLabel = new QLabel(clientAddTab);
+        clientConsultantLabel->setObjectName("clientConsultantLabel");
 
-        gridLayout_2->addWidget(label_consultant, 5, 0, 1, 1);
+        clientAddGridLayout->addWidget(clientConsultantLabel, 5, 0, 1, 1);
 
-        add = new QPushButton(ClientForm);
-        add->setObjectName("add");
+        clientAddButton = new QPushButton(clientAddTab);
+        clientAddButton->setObjectName("clientAddButton");
 
-        gridLayout_2->addWidget(add, 6, 1, 1, 1);
+        clientAddGridLayout->addWidget(clientAddButton, 6, 1, 1, 1);
 
-        Sector = new QLineEdit(ClientForm);
-        Sector->setObjectName("Sector");
+        clientSectorInput = new QLineEdit(clientAddTab);
+        clientSectorInput->setObjectName("clientSectorInput");
 
-        gridLayout_2->addWidget(Sector, 1, 1, 1, 1);
+        clientAddGridLayout->addWidget(clientSectorInput, 1, 1, 1, 1);
 
-        horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        clientAddHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
-        gridLayout_2->addItem(horizontalSpacer, 0, 2, 7, 1);
+        clientAddGridLayout->addItem(clientAddHorizontalSpacer, 0, 2, 7, 1);
 
-        label_name = new QLabel(ClientForm);
-        label_name->setObjectName("label_name");
+        clientNameLabel = new QLabel(clientAddTab);
+        clientNameLabel->setObjectName("clientNameLabel");
 
-        gridLayout_2->addWidget(label_name, 0, 0, 1, 1);
+        clientAddGridLayout->addWidget(clientNameLabel, 0, 0, 1, 1);
 
-        Name = new QLineEdit(ClientForm);
-        Name->setObjectName("Name");
+        clientNameInput = new QLineEdit(clientAddTab);
+        clientNameInput->setObjectName("clientNameInput");
 
-        gridLayout_2->addWidget(Name, 0, 1, 1, 1);
+        clientAddGridLayout->addWidget(clientNameInput, 0, 1, 1, 1);
 
-        label_date = new QLabel(ClientForm);
-        label_date->setObjectName("label_date");
+        clientConsultationDateLabel = new QLabel(clientAddTab);
+        clientConsultationDateLabel->setObjectName("clientConsultationDateLabel");
 
-        gridLayout_2->addWidget(label_date, 4, 0, 1, 1);
+        clientAddGridLayout->addWidget(clientConsultationDateLabel, 4, 0, 1, 1);
 
-        Email = new QLineEdit(ClientForm);
-        Email->setObjectName("Email");
+        clientEmailInput = new QLineEdit(clientAddTab);
+        clientEmailInput->setObjectName("clientEmailInput");
 
-        gridLayout_2->addWidget(Email, 3, 1, 1, 1);
+        clientAddGridLayout->addWidget(clientEmailInput, 3, 1, 1, 1);
 
-        label_email = new QLabel(ClientForm);
-        label_email->setObjectName("label_email");
+        clientEmailLabel = new QLabel(clientAddTab);
+        clientEmailLabel->setObjectName("clientEmailLabel");
 
-        gridLayout_2->addWidget(label_email, 3, 0, 1, 1);
+        clientAddGridLayout->addWidget(clientEmailLabel, 3, 0, 1, 1);
 
-        tabWidget->addTab(ClientForm, QString());
-        listClient = new QWidget();
-        listClient->setObjectName("listClient");
-        verticalLayout_6 = new QVBoxLayout(listClient);
-        verticalLayout_6->setObjectName("verticalLayout_6");
-        searchGroupBox = new QGroupBox(listClient);
-        searchGroupBox->setObjectName("searchGroupBox");
-        searchLayout = new QHBoxLayout(searchGroupBox);
-        searchLayout->setObjectName("searchLayout");
-        searchCriteriaComboBox = new QComboBox(searchGroupBox);
-        searchCriteriaComboBox->addItem(QString());
-        searchCriteriaComboBox->addItem(QString());
-        searchCriteriaComboBox->addItem(QString());
-        searchCriteriaComboBox->addItem(QString());
-        searchCriteriaComboBox->addItem(QString());
-        searchCriteriaComboBox->addItem(QString());
-        searchCriteriaComboBox->setObjectName("searchCriteriaComboBox");
+        clientTabWidget->addTab(clientAddTab, QString());
+        clientManageTab = new QWidget();
+        clientManageTab->setObjectName("clientManageTab");
+        clientManageLayout = new QVBoxLayout(clientManageTab);
+        clientManageLayout->setObjectName("clientManageLayout");
+        clientSearchGroupBox = new QGroupBox(clientManageTab);
+        clientSearchGroupBox->setObjectName("clientSearchGroupBox");
+        clientSearchLayout = new QHBoxLayout(clientSearchGroupBox);
+        clientSearchLayout->setObjectName("clientSearchLayout");
+        clientSearchCriteriaComboBox = new QComboBox(clientSearchGroupBox);
+        clientSearchCriteriaComboBox->addItem(QString());
+        clientSearchCriteriaComboBox->addItem(QString());
+        clientSearchCriteriaComboBox->addItem(QString());
+        clientSearchCriteriaComboBox->addItem(QString());
+        clientSearchCriteriaComboBox->addItem(QString());
+        clientSearchCriteriaComboBox->addItem(QString());
+        clientSearchCriteriaComboBox->setObjectName("clientSearchCriteriaComboBox");
 
-        searchLayout->addWidget(searchCriteriaComboBox);
+        clientSearchLayout->addWidget(clientSearchCriteriaComboBox);
 
-        searchInput = new QLineEdit(searchGroupBox);
-        searchInput->setObjectName("searchInput");
+        clientSearchInput = new QLineEdit(clientSearchGroupBox);
+        clientSearchInput->setObjectName("clientSearchInput");
 
-        searchLayout->addWidget(searchInput);
+        clientSearchLayout->addWidget(clientSearchInput);
 
-        resetSearchButton = new QPushButton(searchGroupBox);
-        resetSearchButton->setObjectName("resetSearchButton");
+        clientResetSearchButton = new QPushButton(clientSearchGroupBox);
+        clientResetSearchButton->setObjectName("clientResetSearchButton");
 
-        searchLayout->addWidget(resetSearchButton);
+        clientSearchLayout->addWidget(clientResetSearchButton);
 
 
-        verticalLayout_6->addWidget(searchGroupBox);
+        clientManageLayout->addWidget(clientSearchGroupBox);
 
-        tableView = new QTableView(listClient);
-        tableView->setObjectName("tableView");
-        tableView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
-        tableView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+        clientTableView = new QTableView(clientManageTab);
+        clientTableView->setObjectName("clientTableView");
+        clientTableView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        clientTableView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
 
-        verticalLayout_6->addWidget(tableView);
+        clientManageLayout->addWidget(clientTableView);
 
-        horizontalLayout_4 = new QHBoxLayout();
-        horizontalLayout_4->setObjectName("horizontalLayout_4");
-        horizontalSpacer_2 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        clientManageButtonLayout = new QHBoxLayout();
+        clientManageButtonLayout->setObjectName("clientManageButtonLayout");
+        clientManageHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
-        horizontalLayout_4->addItem(horizontalSpacer_2);
+        clientManageButtonLayout->addItem(clientManageHorizontalSpacer);
 
-        Delet = new QPushButton(listClient);
-        Delet->setObjectName("Delet");
+        clientDeleteButton = new QPushButton(clientManageTab);
+        clientDeleteButton->setObjectName("clientDeleteButton");
 
-        horizontalLayout_4->addWidget(Delet);
+        clientManageButtonLayout->addWidget(clientDeleteButton);
 
-        update = new QPushButton(listClient);
-        update->setObjectName("update");
+        clientUpdateButton = new QPushButton(clientManageTab);
+        clientUpdateButton->setObjectName("clientUpdateButton");
 
-        horizontalLayout_4->addWidget(update);
+        clientManageButtonLayout->addWidget(clientUpdateButton);
 
-        exportPdfButton = new QPushButton(listClient);
-        exportPdfButton->setObjectName("exportPdfButton");
+        clientExportPdfButton = new QPushButton(clientManageTab);
+        clientExportPdfButton->setObjectName("clientExportPdfButton");
 
-        horizontalLayout_4->addWidget(exportPdfButton);
+        clientManageButtonLayout->addWidget(clientExportPdfButton);
 
 
-        verticalLayout_6->addLayout(horizontalLayout_4);
+        clientManageLayout->addLayout(clientManageButtonLayout);
 
-        tabWidget->addTab(listClient, QString());
-        calendarTab = new QWidget();
-        calendarTab->setObjectName("calendarTab");
-        verticalLayout_7 = new QVBoxLayout(calendarTab);
-        verticalLayout_7->setObjectName("verticalLayout_7");
-        consultationCalendar = new QCalendarWidget(calendarTab);
-        consultationCalendar->setObjectName("consultationCalendar");
-        consultationCalendar->setMinimumSize(QSize(0, 400));
-        consultationCalendar->setGridVisible(true);
+        clientTabWidget->addTab(clientManageTab, QString());
+        clientCalendarTab = new QWidget();
+        clientCalendarTab->setObjectName("clientCalendarTab");
+        clientCalendarLayout = new QVBoxLayout(clientCalendarTab);
+        clientCalendarLayout->setObjectName("clientCalendarLayout");
+        clientConsultationCalendar = new QCalendarWidget(clientCalendarTab);
+        clientConsultationCalendar->setObjectName("clientConsultationCalendar");
+        clientConsultationCalendar->setMinimumSize(QSize(0, 400));
+        clientConsultationCalendar->setGridVisible(true);
 
-        verticalLayout_7->addWidget(consultationCalendar);
+        clientCalendarLayout->addWidget(clientConsultationCalendar);
 
-        calendarDetailsBox = new QGroupBox(calendarTab);
-        calendarDetailsBox->setObjectName("calendarDetailsBox");
-        verticalLayout_8 = new QVBoxLayout(calendarDetailsBox);
-        verticalLayout_8->setObjectName("verticalLayout_8");
-        selectedDateLabel = new QLabel(calendarDetailsBox);
-        selectedDateLabel->setObjectName("selectedDateLabel");
-        selectedDateLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+        clientCalendarDetailsBox = new QGroupBox(clientCalendarTab);
+        clientCalendarDetailsBox->setObjectName("clientCalendarDetailsBox");
+        clientCalendarDetailsLayout = new QVBoxLayout(clientCalendarDetailsBox);
+        clientCalendarDetailsLayout->setObjectName("clientCalendarDetailsLayout");
+        clientSelectedDateLabel = new QLabel(clientCalendarDetailsBox);
+        clientSelectedDateLabel->setObjectName("clientSelectedDateLabel");
+        clientSelectedDateLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        verticalLayout_8->addWidget(selectedDateLabel);
+        clientCalendarDetailsLayout->addWidget(clientSelectedDateLabel);
 
-        consultationCountLabel = new QLabel(calendarDetailsBox);
-        consultationCountLabel->setObjectName("consultationCountLabel");
-        consultationCountLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+        clientConsultationCountLabel = new QLabel(clientCalendarDetailsBox);
+        clientConsultationCountLabel->setObjectName("clientConsultationCountLabel");
+        clientConsultationCountLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-        verticalLayout_8->addWidget(consultationCountLabel);
+        clientCalendarDetailsLayout->addWidget(clientConsultationCountLabel);
 
-        dateConsultationsView = new QTableView(calendarDetailsBox);
-        dateConsultationsView->setObjectName("dateConsultationsView");
-        dateConsultationsView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
-        dateConsultationsView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+        clientDateConsultationsView = new QTableView(clientCalendarDetailsBox);
+        clientDateConsultationsView->setObjectName("clientDateConsultationsView");
+        clientDateConsultationsView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        clientDateConsultationsView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
 
-        verticalLayout_8->addWidget(dateConsultationsView);
+        clientCalendarDetailsLayout->addWidget(clientDateConsultationsView);
 
 
-        verticalLayout_7->addWidget(calendarDetailsBox);
+        clientCalendarLayout->addWidget(clientCalendarDetailsBox);
 
-        tabWidget->addTab(calendarTab, QString());
-        tab = new QWidget();
-        tab->setObjectName("tab");
-        verticalLayoutStats = new QVBoxLayout(tab);
-        verticalLayoutStats->setObjectName("verticalLayoutStats");
-        statsTextGroup = new QGroupBox(tab);
-        statsTextGroup->setObjectName("statsTextGroup");
-        verticalLayoutText = new QVBoxLayout(statsTextGroup);
-        verticalLayoutText->setObjectName("verticalLayoutText");
-        statsDisplay = new QTextEdit(statsTextGroup);
-        statsDisplay->setObjectName("statsDisplay");
-        statsDisplay->setReadOnly(true);
+        clientTabWidget->addTab(clientCalendarTab, QString());
+        clientStatsTab = new QWidget();
+        clientStatsTab->setObjectName("clientStatsTab");
+        clientStatsLayout = new QVBoxLayout(clientStatsTab);
+        clientStatsLayout->setObjectName("clientStatsLayout");
+        clientStatsTextGroup = new QGroupBox(clientStatsTab);
+        clientStatsTextGroup->setObjectName("clientStatsTextGroup");
+        clientStatsTextLayout = new QVBoxLayout(clientStatsTextGroup);
+        clientStatsTextLayout->setObjectName("clientStatsTextLayout");
+        clientStatsDisplay = new QTextEdit(clientStatsTextGroup);
+        clientStatsDisplay->setObjectName("clientStatsDisplay");
+        clientStatsDisplay->setReadOnly(true);
 
-        verticalLayoutText->addWidget(statsDisplay);
+        clientStatsTextLayout->addWidget(clientStatsDisplay);
 
 
-        verticalLayoutStats->addWidget(statsTextGroup);
+        clientStatsLayout->addWidget(clientStatsTextGroup);
 
-        buttonLayout = new QHBoxLayout();
-        buttonLayout->setObjectName("buttonLayout");
-        horizontalSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        clientStatsButtonLayout = new QHBoxLayout();
+        clientStatsButtonLayout->setObjectName("clientStatsButtonLayout");
+        clientStatsHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
 
-        buttonLayout->addItem(horizontalSpacer2);
+        clientStatsButtonLayout->addItem(clientStatsHorizontalSpacer);
 
-        openChartButton = new QPushButton(tab);
-        openChartButton->setObjectName("openChartButton");
+        clientOpenChartButton = new QPushButton(clientStatsTab);
+        clientOpenChartButton->setObjectName("clientOpenChartButton");
 
-        buttonLayout->addWidget(openChartButton);
+        clientStatsButtonLayout->addWidget(clientOpenChartButton);
 
-        refreshStatsButton = new QPushButton(tab);
-        refreshStatsButton->setObjectName("refreshStatsButton");
+        clientRefreshStatsButton = new QPushButton(clientStatsTab);
+        clientRefreshStatsButton->setObjectName("clientRefreshStatsButton");
 
-        buttonLayout->addWidget(refreshStatsButton);
+        clientStatsButtonLayout->addWidget(clientRefreshStatsButton);
 
 
-        verticalLayoutStats->addLayout(buttonLayout);
+        clientStatsLayout->addLayout(clientStatsButtonLayout);
 
-        tabWidget->addTab(tab, QString());
+        clientTabWidget->addTab(clientStatsTab, QString());
 
-        verticalLayout_5->addWidget(tabWidget);
+        clientPageLayout->addWidget(clientTabWidget);
+
+        mainStackedWidget->addWidget(clientPage);
+        trainingPage = new QWidget();
+        trainingPage->setObjectName("trainingPage");
+        trainingPageLayout = new QVBoxLayout(trainingPage);
+        trainingPageLayout->setObjectName("trainingPageLayout");
+        trainingTabWidget = new QTabWidget(trainingPage);
+        trainingTabWidget->setObjectName("trainingTabWidget");
+        trainingAddTab = new QWidget();
+        trainingAddTab->setObjectName("trainingAddTab");
+        trainingAddTab->setContextMenuPolicy(Qt::ContextMenuPolicy::PreventContextMenu);
+        trainingAddGridLayout = new QGridLayout(trainingAddTab);
+        trainingAddGridLayout->setObjectName("trainingAddGridLayout");
+        trainingDescriptionInput = new QLineEdit(trainingAddTab);
+        trainingDescriptionInput->setObjectName("trainingDescriptionInput");
+
+        trainingAddGridLayout->addWidget(trainingDescriptionInput, 1, 2, 1, 1);
+
+        trainingPriceLabel = new QLabel(trainingAddTab);
+        trainingPriceLabel->setObjectName("trainingPriceLabel");
+
+        trainingAddGridLayout->addWidget(trainingPriceLabel, 5, 0, 1, 1);
+
+        trainingDescriptionLabel = new QLabel(trainingAddTab);
+        trainingDescriptionLabel->setObjectName("trainingDescriptionLabel");
+
+        trainingAddGridLayout->addWidget(trainingDescriptionLabel, 1, 0, 1, 1);
+
+        trainingDateEdit = new QDateEdit(trainingAddTab);
+        trainingDateEdit->setObjectName("trainingDateEdit");
+
+        trainingAddGridLayout->addWidget(trainingDateEdit, 4, 2, 1, 1);
+
+        trainingTimeLabel = new QLabel(trainingAddTab);
+        trainingTimeLabel->setObjectName("trainingTimeLabel");
+
+        trainingAddGridLayout->addWidget(trainingTimeLabel, 3, 0, 1, 1);
+
+        trainingPhoneNumberInput = new QLineEdit(trainingAddTab);
+        trainingPhoneNumberInput->setObjectName("trainingPhoneNumberInput");
+
+        trainingAddGridLayout->addWidget(trainingPhoneNumberInput, 6, 2, 1, 1);
+
+        trainingTrainerInput = new QLineEdit(trainingAddTab);
+        trainingTrainerInput->setObjectName("trainingTrainerInput");
+
+        trainingAddGridLayout->addWidget(trainingTrainerInput, 2, 2, 1, 1);
+
+        trainingPriceSpinBox = new QDoubleSpinBox(trainingAddTab);
+        trainingPriceSpinBox->setObjectName("trainingPriceSpinBox");
+
+        trainingAddGridLayout->addWidget(trainingPriceSpinBox, 5, 2, 1, 1);
+
+        trainingTrainerLabel = new QLabel(trainingAddTab);
+        trainingTrainerLabel->setObjectName("trainingTrainerLabel");
+
+        trainingAddGridLayout->addWidget(trainingTrainerLabel, 2, 0, 1, 1);
+
+        trainingDateLabel = new QLabel(trainingAddTab);
+        trainingDateLabel->setObjectName("trainingDateLabel");
+
+        trainingAddGridLayout->addWidget(trainingDateLabel, 4, 0, 1, 1);
+
+        trainingTimeSpinBox = new QSpinBox(trainingAddTab);
+        trainingTimeSpinBox->setObjectName("trainingTimeSpinBox");
+
+        trainingAddGridLayout->addWidget(trainingTimeSpinBox, 3, 2, 1, 1);
+
+        trainingNotificationLabel = new QLabel(trainingAddTab);
+        trainingNotificationLabel->setObjectName("trainingNotificationLabel");
+        trainingNotificationLabel->setPixmap(QPixmap(QString::fromUtf8("../../../../Mega Pc/Downloads/Ra.png")));
+        trainingNotificationLabel->setScaledContents(false);
+        trainingNotificationLabel->setWordWrap(false);
+
+        trainingAddGridLayout->addWidget(trainingNotificationLabel, 1, 6, 1, 1);
+
+        trainingNameInput = new QLineEdit(trainingAddTab);
+        trainingNameInput->setObjectName("trainingNameInput");
+
+        trainingAddGridLayout->addWidget(trainingNameInput, 0, 2, 1, 1);
+
+        trainingAddHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        trainingAddGridLayout->addItem(trainingAddHorizontalSpacer, 0, 5, 7, 1);
+
+        trainingNameLabel = new QLabel(trainingAddTab);
+        trainingNameLabel->setObjectName("trainingNameLabel");
+
+        trainingAddGridLayout->addWidget(trainingNameLabel, 0, 0, 1, 1);
+
+        trainingAddButton = new QPushButton(trainingAddTab);
+        trainingAddButton->setObjectName("trainingAddButton");
+
+        trainingAddGridLayout->addWidget(trainingAddButton, 6, 3, 1, 1);
+
+        trainingPhoneLabel = new QLabel(trainingAddTab);
+        trainingPhoneLabel->setObjectName("trainingPhoneLabel");
+
+        trainingAddGridLayout->addWidget(trainingPhoneLabel, 6, 0, 1, 1);
+
+        trainingTabWidget->addTab(trainingAddTab, QString());
+        trainingManageTab = new QWidget();
+        trainingManageTab->setObjectName("trainingManageTab");
+        trainingManageLayout = new QVBoxLayout(trainingManageTab);
+        trainingManageLayout->setObjectName("trainingManageLayout");
+        trainingSearchGroupBox = new QGroupBox(trainingManageTab);
+        trainingSearchGroupBox->setObjectName("trainingSearchGroupBox");
+        trainingSearchLayout = new QHBoxLayout(trainingSearchGroupBox);
+        trainingSearchLayout->setObjectName("trainingSearchLayout");
+        trainingSearchCriteriaComboBox = new QComboBox(trainingSearchGroupBox);
+        trainingSearchCriteriaComboBox->addItem(QString());
+        trainingSearchCriteriaComboBox->addItem(QString());
+        trainingSearchCriteriaComboBox->addItem(QString());
+        trainingSearchCriteriaComboBox->addItem(QString());
+        trainingSearchCriteriaComboBox->addItem(QString());
+        trainingSearchCriteriaComboBox->setObjectName("trainingSearchCriteriaComboBox");
+
+        trainingSearchLayout->addWidget(trainingSearchCriteriaComboBox);
+
+        trainingSearchInput = new QLineEdit(trainingSearchGroupBox);
+        trainingSearchInput->setObjectName("trainingSearchInput");
+
+        trainingSearchLayout->addWidget(trainingSearchInput);
+
+        trainingResetSearchButton = new QPushButton(trainingSearchGroupBox);
+        trainingResetSearchButton->setObjectName("trainingResetSearchButton");
+
+        trainingSearchLayout->addWidget(trainingResetSearchButton);
+
+
+        trainingManageLayout->addWidget(trainingSearchGroupBox);
+
+        trainingTableView = new QTableView(trainingManageTab);
+        trainingTableView->setObjectName("trainingTableView");
+        trainingTableView->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        trainingTableView->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+
+        trainingManageLayout->addWidget(trainingTableView);
+
+        trainingManageButtonLayout = new QHBoxLayout();
+        trainingManageButtonLayout->setObjectName("trainingManageButtonLayout");
+        trainingManageHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        trainingManageButtonLayout->addItem(trainingManageHorizontalSpacer);
+
+        trainingDeleteButton = new QPushButton(trainingManageTab);
+        trainingDeleteButton->setObjectName("trainingDeleteButton");
+
+        trainingManageButtonLayout->addWidget(trainingDeleteButton);
+
+        trainingUpdateButton = new QPushButton(trainingManageTab);
+        trainingUpdateButton->setObjectName("trainingUpdateButton");
+
+        trainingManageButtonLayout->addWidget(trainingUpdateButton);
+
+        trainingExportButton = new QPushButton(trainingManageTab);
+        trainingExportButton->setObjectName("trainingExportButton");
+
+        trainingManageButtonLayout->addWidget(trainingExportButton);
+
+
+        trainingManageLayout->addLayout(trainingManageButtonLayout);
+
+        trainingTabWidget->addTab(trainingManageTab, QString());
+        trainingStatsTab = new QWidget();
+        trainingStatsTab->setObjectName("trainingStatsTab");
+        trainingStatsLayout = new QVBoxLayout(trainingStatsTab);
+        trainingStatsLayout->setObjectName("trainingStatsLayout");
+        trainingStatsChartView = new QChartView(trainingStatsTab);
+        trainingStatsChartView->setObjectName("trainingStatsChartView");
+        trainingStatsChartView->setMinimumSize(QSize(0, 400));
+
+        trainingStatsLayout->addWidget(trainingStatsChartView);
+
+        trainingRefreshStatsButton = new QPushButton(trainingStatsTab);
+        trainingRefreshStatsButton->setObjectName("trainingRefreshStatsButton");
+
+        trainingStatsLayout->addWidget(trainingRefreshStatsButton);
+
+        trainingTabWidget->addTab(trainingStatsTab, QString());
+
+        trainingPageLayout->addWidget(trainingTabWidget);
+
+        mainStackedWidget->addWidget(trainingPage);
+
+        verticalLayout_5->addWidget(mainStackedWidget);
 
 
         horizontalLayout->addWidget(frame_4);
@@ -500,7 +745,9 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(0);
+        mainStackedWidget->setCurrentIndex(0);
+        clientTabWidget->setCurrentIndex(0);
+        trainingTabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -508,46 +755,72 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Client Management System", nullptr));
+        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Client and Training Management System", nullptr));
         menuButton->setText(QCoreApplication::translate("MainWindow", "Menu", nullptr));
-        label->setText(QCoreApplication::translate("MainWindow", "Client Management System", nullptr));
-        pushButton_formations->setText(QCoreApplication::translate("MainWindow", "Training", nullptr));
-        pushButton_2->setText(QCoreApplication::translate("MainWindow", "Clients", nullptr));
-        pushButton_3->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
-        pushButton_4->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
-        pushButton_5->setText(QCoreApplication::translate("MainWindow", "Calendar", nullptr));
+        headerLabel->setText(QCoreApplication::translate("MainWindow", "Client and Training Management System", nullptr));
+        dashboardButton->setText(QCoreApplication::translate("MainWindow", "Dashboard", nullptr));
+        clientSectionButton->setText(QCoreApplication::translate("MainWindow", "Clients", nullptr));
+        trainingSectionButton->setText(QCoreApplication::translate("MainWindow", "Training", nullptr));
+        reportsButton->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
+        settingsButton->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
+        calendarButton->setText(QCoreApplication::translate("MainWindow", "Calendar", nullptr));
         themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
-        ConsultantComboBox->setPlaceholderText(QCoreApplication::translate("MainWindow", "Select Consultant...", nullptr));
-        label_contact->setText(QCoreApplication::translate("MainWindow", "Contact Info:", nullptr));
-        label_sector->setText(QCoreApplication::translate("MainWindow", "Sector:", nullptr));
-        label_consultant->setText(QCoreApplication::translate("MainWindow", "Consultant:", nullptr));
-        add->setText(QCoreApplication::translate("MainWindow", "Add Client", nullptr));
-        label_name->setText(QCoreApplication::translate("MainWindow", "Name:", nullptr));
-        label_date->setText(QCoreApplication::translate("MainWindow", "Consultation Date:", nullptr));
-        label_email->setText(QCoreApplication::translate("MainWindow", "Email:", nullptr));
-        tabWidget->setTabText(tabWidget->indexOf(ClientForm), QCoreApplication::translate("MainWindow", "Add Client", nullptr));
-        searchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
-        searchCriteriaComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Name", nullptr));
-        searchCriteriaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Sector", nullptr));
-        searchCriteriaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Email", nullptr));
-        searchCriteriaComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Contact", nullptr));
-        searchCriteriaComboBox->setItemText(4, QCoreApplication::translate("MainWindow", "Date  Time", nullptr));
-        searchCriteriaComboBox->setItemText(5, QCoreApplication::translate("MainWindow", "Consultant", nullptr));
+        clientConsultantComboBox->setPlaceholderText(QCoreApplication::translate("MainWindow", "Select Consultant...", nullptr));
+        clientContactLabel->setText(QCoreApplication::translate("MainWindow", "Contact Info:", nullptr));
+        clientSectorLabel->setText(QCoreApplication::translate("MainWindow", "Sector:", nullptr));
+        clientConsultantLabel->setText(QCoreApplication::translate("MainWindow", "Consultant:", nullptr));
+        clientAddButton->setText(QCoreApplication::translate("MainWindow", "Add Client", nullptr));
+        clientNameLabel->setText(QCoreApplication::translate("MainWindow", "Name:", nullptr));
+        clientConsultationDateLabel->setText(QCoreApplication::translate("MainWindow", "Consultation Date:", nullptr));
+        clientEmailLabel->setText(QCoreApplication::translate("MainWindow", "Email:", nullptr));
+        clientTabWidget->setTabText(clientTabWidget->indexOf(clientAddTab), QCoreApplication::translate("MainWindow", "Add Client", nullptr));
+        clientSearchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
+        clientSearchCriteriaComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Name", nullptr));
+        clientSearchCriteriaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Sector", nullptr));
+        clientSearchCriteriaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Email", nullptr));
+        clientSearchCriteriaComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Contact", nullptr));
+        clientSearchCriteriaComboBox->setItemText(4, QCoreApplication::translate("MainWindow", "Date  Time", nullptr));
+        clientSearchCriteriaComboBox->setItemText(5, QCoreApplication::translate("MainWindow", "Consultant", nullptr));
 
-        searchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
-        resetSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
-        Delet->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
-        update->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
-        exportPdfButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
-        tabWidget->setTabText(tabWidget->indexOf(listClient), QCoreApplication::translate("MainWindow", "Manage Clients", nullptr));
-        calendarDetailsBox->setTitle(QCoreApplication::translate("MainWindow", "Consultation Details", nullptr));
-        selectedDateLabel->setText(QCoreApplication::translate("MainWindow", "Selected date: ", nullptr));
-        consultationCountLabel->setText(QCoreApplication::translate("MainWindow", "Consultations: 0", nullptr));
-        tabWidget->setTabText(tabWidget->indexOf(calendarTab), QCoreApplication::translate("MainWindow", "Consultation Calendar", nullptr));
-        statsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
-        openChartButton->setText(QCoreApplication::translate("MainWindow", "View Chart", nullptr));
-        refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
-        tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
+        clientSearchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
+        clientResetSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
+        clientDeleteButton->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
+        clientUpdateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
+        clientExportPdfButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
+        clientTabWidget->setTabText(clientTabWidget->indexOf(clientManageTab), QCoreApplication::translate("MainWindow", "Manage Clients", nullptr));
+        clientCalendarDetailsBox->setTitle(QCoreApplication::translate("MainWindow", "Consultation Details", nullptr));
+        clientSelectedDateLabel->setText(QCoreApplication::translate("MainWindow", "Selected date: ", nullptr));
+        clientConsultationCountLabel->setText(QCoreApplication::translate("MainWindow", "Consultations: 0", nullptr));
+        clientTabWidget->setTabText(clientTabWidget->indexOf(clientCalendarTab), QCoreApplication::translate("MainWindow", "Consultation Calendar", nullptr));
+        clientStatsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
+        clientOpenChartButton->setText(QCoreApplication::translate("MainWindow", "View Chart", nullptr));
+        clientRefreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
+        clientTabWidget->setTabText(clientTabWidget->indexOf(clientStatsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
+        trainingPriceLabel->setText(QCoreApplication::translate("MainWindow", "Price", nullptr));
+        trainingDescriptionLabel->setText(QCoreApplication::translate("MainWindow", "Description", nullptr));
+        trainingTimeLabel->setText(QCoreApplication::translate("MainWindow", "Time", nullptr));
+        trainingTrainerLabel->setText(QCoreApplication::translate("MainWindow", "Trainer", nullptr));
+        trainingDateLabel->setText(QCoreApplication::translate("MainWindow", "Date:", nullptr));
+        trainingNotificationLabel->setText(QString());
+        trainingNameLabel->setText(QCoreApplication::translate("MainWindow", "Training", nullptr));
+        trainingAddButton->setText(QCoreApplication::translate("MainWindow", "Add Training", nullptr));
+        trainingPhoneLabel->setText(QCoreApplication::translate("MainWindow", "Phone", nullptr));
+        trainingTabWidget->setTabText(trainingTabWidget->indexOf(trainingAddTab), QCoreApplication::translate("MainWindow", "Add Training", nullptr));
+        trainingSearchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
+        trainingSearchCriteriaComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Formation", nullptr));
+        trainingSearchCriteriaComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Trainer", nullptr));
+        trainingSearchCriteriaComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Price", nullptr));
+        trainingSearchCriteriaComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Time", nullptr));
+        trainingSearchCriteriaComboBox->setItemText(4, QString());
+
+        trainingSearchInput->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
+        trainingResetSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
+        trainingDeleteButton->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
+        trainingUpdateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
+        trainingExportButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
+        trainingTabWidget->setTabText(trainingTabWidget->indexOf(trainingManageTab), QCoreApplication::translate("MainWindow", "Manage Training", nullptr));
+        trainingRefreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
+        trainingTabWidget->setTabText(trainingTabWidget->indexOf(trainingStatsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi
 
 };

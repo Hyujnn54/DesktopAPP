@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Client Management System</string>
+   <string>Client and Training Management System</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -152,7 +152,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="headerLabel">
             <property name="font">
              <font>
               <pointsize>15</pointsize>
@@ -160,7 +160,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Client Management System</string>
+             <string>Client and Training Management System</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -270,7 +270,7 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="pushButton_formations">
+              <widget class="QPushButton" name="dashboardButton">
                <property name="styleSheet">
                 <string notr="true">#label {
     color: white;
@@ -281,33 +281,40 @@
 }</string>
                </property>
                <property name="text">
-                <string>Training</string>
+                <string>Dashboard</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_2">
+              <widget class="QPushButton" name="clientSectionButton">
                <property name="text">
                 <string>Clients</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_3">
+              <widget class="QPushButton" name="trainingSectionButton">
+               <property name="text">
+                <string>Training</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="reportsButton">
                <property name="text">
                 <string>Reports</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_4">
+              <widget class="QPushButton" name="settingsButton">
                <property name="text">
                 <string>Settings</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_5">
+              <widget class="QPushButton" name="calendarButton">
                <property name="text">
                 <string>Calendar</string>
                </property>
@@ -342,333 +349,602 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
-           <widget class="QTabWidget" name="tabWidget">
+           <widget class="QStackedWidget" name="mainStackedWidget">
             <property name="currentIndex">
              <number>0</number>
             </property>
-            <widget class="QWidget" name="ClientForm">
-             <property name="contextMenuPolicy">
-              <enum>Qt::ContextMenuPolicy::PreventContextMenu</enum>
-             </property>
-             <attribute name="title">
-              <string>Add Client</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_2">
-              <item row="5" column="1">
-               <widget class="QComboBox" name="ConsultantComboBox">
-                <property name="placeholderText">
-                 <string>Select Consultant...</string>
+            <widget class="QWidget" name="clientPage">
+             <layout class="QVBoxLayout" name="clientPageLayout">
+              <item>
+               <widget class="QTabWidget" name="clientTabWidget">
+                <property name="currentIndex">
+                 <number>0</number>
                 </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QDateTimeEdit" name="searchDateButton_2">
-                <property name="minimumSize">
-                 <size>
-                  <width>125</width>
-                  <height>0</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_contact">
-                <property name="text">
-                 <string>Contact Info:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_sector">
-                <property name="text">
-                 <string>Sector:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLineEdit" name="Contact_info"/>
-              </item>
-              <item row="5" column="0">
-               <widget class="QLabel" name="label_consultant">
-                <property name="text">
-                 <string>Consultant:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="6" column="1">
-               <widget class="QPushButton" name="add">
-                <property name="text">
-                 <string>Add Client</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLineEdit" name="Sector"/>
-              </item>
-              <item row="0" column="2" rowspan="7">
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_name">
-                <property name="text">
-                 <string>Name:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="Name"/>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="label_date">
-                <property name="text">
-                 <string>Consultation Date:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QLineEdit" name="Email"/>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_email">
-                <property name="text">
-                 <string>Email:</string>
-                </property>
+                <widget class="QWidget" name="clientAddTab">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::ContextMenuPolicy::PreventContextMenu</enum>
+                 </property>
+                 <attribute name="title">
+                  <string>Add Client</string>
+                 </attribute>
+                 <layout class="QGridLayout" name="clientAddGridLayout">
+                  <item row="5" column="1">
+                   <widget class="QComboBox" name="clientConsultantComboBox">
+                    <property name="placeholderText">
+                     <string>Select Consultant...</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QDateTimeEdit" name="clientConsultationDateEdit">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="clientContactLabel">
+                    <property name="text">
+                     <string>Contact Info:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="clientSectorLabel">
+                    <property name="text">
+                     <string>Sector:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QLineEdit" name="clientContactInfoInput"/>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="clientConsultantLabel">
+                    <property name="text">
+                     <string>Consultant:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
+                   <widget class="QPushButton" name="clientAddButton">
+                    <property name="text">
+                     <string>Add Client</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLineEdit" name="clientSectorInput"/>
+                  </item>
+                  <item row="0" column="2" rowspan="7">
+                   <spacer name="clientAddHorizontalSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="clientNameLabel">
+                    <property name="text">
+                     <string>Name:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLineEdit" name="clientNameInput"/>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="clientConsultationDateLabel">
+                    <property name="text">
+                     <string>Consultation Date:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="QLineEdit" name="clientEmailInput"/>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="clientEmailLabel">
+                    <property name="text">
+                     <string>Email:</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="clientManageTab">
+                 <attribute name="title">
+                  <string>Manage Clients</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="clientManageLayout">
+                  <item>
+                   <widget class="QGroupBox" name="clientSearchGroupBox">
+                    <property name="title">
+                     <string>Search</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="clientSearchLayout">
+                     <item>
+                      <widget class="QComboBox" name="clientSearchCriteriaComboBox">
+                       <item>
+                        <property name="text">
+                         <string>Name</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Sector</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Email</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Contact</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Date  Time</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Consultant</string>
+                        </property>
+                       </item>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="clientSearchInput">
+                       <property name="placeholderText">
+                        <string>Type to search...</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="clientResetSearchButton">
+                       <property name="text">
+                        <string>Reset Search</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QTableView" name="clientTableView">
+                    <property name="selectionMode">
+                     <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+                    </property>
+                    <property name="selectionBehavior">
+                     <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="clientManageButtonLayout">
+                    <item>
+                     <spacer name="clientManageHorizontalSpacer">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="clientDeleteButton">
+                      <property name="text">
+                       <string>Delete</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="clientUpdateButton">
+                      <property name="text">
+                       <string>Update</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="clientExportPdfButton">
+                      <property name="text">
+                       <string>PDF</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="clientCalendarTab">
+                 <attribute name="title">
+                  <string>Consultation Calendar</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="clientCalendarLayout">
+                  <item>
+                   <widget class="QCalendarWidget" name="clientConsultationCalendar">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>400</height>
+                     </size>
+                    </property>
+                    <property name="gridVisible">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="clientCalendarDetailsBox">
+                    <property name="title">
+                     <string>Consultation Details</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="clientCalendarDetailsLayout">
+                     <item>
+                      <widget class="QLabel" name="clientSelectedDateLabel">
+                       <property name="text">
+                        <string>Selected date: </string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="clientConsultationCountLabel">
+                       <property name="text">
+                        <string>Consultations: 0</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QTableView" name="clientDateConsultationsView">
+                       <property name="selectionMode">
+                        <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+                       </property>
+                       <property name="selectionBehavior">
+                        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="clientStatsTab">
+                 <attribute name="title">
+                  <string>Statistics</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="clientStatsLayout">
+                  <item>
+                   <widget class="QGroupBox" name="clientStatsTextGroup">
+                    <property name="title">
+                     <string>Statistical Summary</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="clientStatsTextLayout">
+                     <item>
+                      <widget class="QTextEdit" name="clientStatsDisplay">
+                       <property name="readOnly">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="clientStatsButtonLayout">
+                    <item>
+                     <spacer name="clientStatsHorizontalSpacer">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="clientOpenChartButton">
+                      <property name="text">
+                       <string>View Chart</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="clientRefreshStatsButton">
+                      <property name="text">
+                       <string>Refresh Statistics</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
                </widget>
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="listClient">
-             <attribute name="title">
-              <string>Manage Clients</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_6">
+            <widget class="QWidget" name="trainingPage">
+             <layout class="QVBoxLayout" name="trainingPageLayout">
               <item>
-               <widget class="QGroupBox" name="searchGroupBox">
-                <property name="title">
-                 <string>Search</string>
+               <widget class="QTabWidget" name="trainingTabWidget">
+                <property name="currentIndex">
+                 <number>0</number>
                 </property>
-                <layout class="QHBoxLayout" name="searchLayout">
-                 <item>
-                  <widget class="QComboBox" name="searchCriteriaComboBox">
-                   <item>
+                <widget class="QWidget" name="trainingAddTab">
+                 <property name="contextMenuPolicy">
+                  <enum>Qt::ContextMenuPolicy::PreventContextMenu</enum>
+                 </property>
+                 <attribute name="title">
+                  <string>Add Training</string>
+                 </attribute>
+                 <layout class="QGridLayout" name="trainingAddGridLayout">
+                  <item row="1" column="2">
+                   <widget class="QLineEdit" name="trainingDescriptionInput"/>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QLabel" name="trainingPriceLabel">
                     <property name="text">
-                     <string>Name</string>
+                     <string>Price</string>
                     </property>
-                   </item>
-                   <item>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="trainingDescriptionLabel">
                     <property name="text">
-                     <string>Sector</string>
+                     <string>Description</string>
                     </property>
-                   </item>
-                   <item>
+                   </widget>
+                  </item>
+                  <item row="4" column="2">
+                   <widget class="QDateEdit" name="trainingDateEdit"/>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="trainingTimeLabel">
                     <property name="text">
-                     <string>Email</string>
+                     <string>Time</string>
                     </property>
-                   </item>
-                   <item>
+                   </widget>
+                  </item>
+                  <item row="6" column="2">
+                   <widget class="QLineEdit" name="trainingPhoneNumberInput"/>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QLineEdit" name="trainingTrainerInput"/>
+                  </item>
+                  <item row="5" column="2">
+                   <widget class="QDoubleSpinBox" name="trainingPriceSpinBox"/>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="trainingTrainerLabel">
                     <property name="text">
-                     <string>Contact</string>
+                     <string>Trainer</string>
                     </property>
-                   </item>
-                   <item>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="trainingDateLabel">
                     <property name="text">
-                     <string>Date  Time</string>
+                     <string>Date:</string>
                     </property>
-                   </item>
-                   <item>
+                   </widget>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QSpinBox" name="trainingTimeSpinBox"/>
+                  </item>
+                  <item row="1" column="6">
+                   <widget class="QLabel" name="trainingNotificationLabel">
                     <property name="text">
-                     <string>Consultant</string>
+                     <string/>
                     </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="searchInput">
-                   <property name="placeholderText">
-                    <string>Type to search...</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="resetSearchButton">
-                   <property name="text">
-                    <string>Reset Search</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                    <property name="pixmap">
+                     <pixmap>../../../../Mega Pc/Downloads/Ra.png</pixmap>
+                    </property>
+                    <property name="scaledContents">
+                     <bool>false</bool>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QLineEdit" name="trainingNameInput"/>
+                  </item>
+                  <item row="0" column="5" rowspan="7">
+                   <spacer name="trainingAddHorizontalSpacer">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="trainingNameLabel">
+                    <property name="text">
+                     <string>Training</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="3">
+                   <widget class="QPushButton" name="trainingAddButton">
+                    <property name="text">
+                     <string>Add Training</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="QLabel" name="trainingPhoneLabel">
+                    <property name="text">
+                     <string>Phone</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="trainingManageTab">
+                 <attribute name="title">
+                  <string>Manage Training</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="trainingManageLayout">
+                  <item>
+                   <widget class="QGroupBox" name="trainingSearchGroupBox">
+                    <property name="title">
+                     <string>Search</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="trainingSearchLayout">
+                     <item>
+                      <widget class="QComboBox" name="trainingSearchCriteriaComboBox">
+                       <item>
+                        <property name="text">
+                         <string>Formation</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Trainer</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Price</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string>Time</string>
+                        </property>
+                       </item>
+                       <item>
+                        <property name="text">
+                         <string/>
+                        </property>
+                       </item>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="trainingSearchInput">
+                       <property name="placeholderText">
+                        <string>Type to search...</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="trainingResetSearchButton">
+                       <property name="text">
+                        <string>Reset Search</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QTableView" name="trainingTableView">
+                    <property name="selectionMode">
+                     <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+                    </property>
+                    <property name="selectionBehavior">
+                     <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="trainingManageButtonLayout">
+                    <item>
+                     <spacer name="trainingManageHorizontalSpacer">
+                      <property name="orientation">
+                       <enum>Qt::Orientation::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="trainingDeleteButton">
+                      <property name="text">
+                       <string>Delete</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="trainingUpdateButton">
+                      <property name="text">
+                       <string>Update</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="trainingExportButton">
+                      <property name="text">
+                       <string>PDF</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="trainingStatsTab">
+                 <attribute name="title">
+                  <string>Statistics</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="trainingStatsLayout">
+                  <item>
+                   <widget class="QChartView" name="trainingStatsChartView">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>400</height>
+                     </size>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="trainingRefreshStatsButton">
+                    <property name="text">
+                     <string>Refresh Statistics</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
                </widget>
-              </item>
-              <item>
-               <widget class="QTableView" name="tableView">
-                <property name="selectionMode">
-                 <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-                </property>
-                <property name="selectionBehavior">
-                 <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_4">
-                <item>
-                 <spacer name="horizontalSpacer_2">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="Delet">
-                  <property name="text">
-                   <string>Delete</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="update">
-                  <property name="text">
-                   <string>Update</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="exportPdfButton">
-                  <property name="text">
-                   <string>PDF</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="calendarTab">
-             <attribute name="title">
-              <string>Consultation Calendar</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_7">
-              <item>
-               <widget class="QCalendarWidget" name="consultationCalendar">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>400</height>
-                 </size>
-                </property>
-                <property name="gridVisible">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="calendarDetailsBox">
-                <property name="title">
-                 <string>Consultation Details</string>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_8">
-                 <item>
-                  <widget class="QLabel" name="selectedDateLabel">
-                   <property name="text">
-                    <string>Selected date: </string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="consultationCountLabel">
-                   <property name="text">
-                    <string>Consultations: 0</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QTableView" name="dateConsultationsView">
-                   <property name="selectionMode">
-                    <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-                   </property>
-                   <property name="selectionBehavior">
-                    <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tab">
-             <attribute name="title">
-              <string>Statistics</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayoutStats">
-              <item>
-               <widget class="QGroupBox" name="statsTextGroup">
-                <property name="title">
-                 <string>Statistical Summary</string>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayoutText">
-                 <item>
-                  <widget class="QTextEdit" name="statsDisplay">
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="buttonLayout">
-                <item>
-                 <spacer name="horizontalSpacer2">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="openChartButton">
-                  <property name="text">
-                   <string>View Chart</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="refreshStatsButton">
-                  <property name="text">
-                   <string>Refresh Statistics</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </item>
              </layout>
             </widget>
@@ -684,6 +960,13 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QChartView</class>
+   <extends>QGraphicsView</extends>
+   <header>qchartview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

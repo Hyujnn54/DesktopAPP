@@ -20,7 +20,6 @@ SOURCES += \
     formations.cpp \
     main.cpp \
     mainwindow.cpp \
-    formationwindow.cpp \
     updateclientdialog.cpp \
     updatetrainingdialog.cpp
 
@@ -32,14 +31,12 @@ HEADERS += \
     emailsender.h \
     formations.h \
     mainwindow.h \
-    formationwindow.h \
     updateclientdialog.h \
     updatetrainingdialog.h
 
 FORMS += \
     ChartWindow.ui \
     mainwindow.ui \
-    formationwindow.ui \
     updateclientdialog.ui \
 
 RESOURCES += \
