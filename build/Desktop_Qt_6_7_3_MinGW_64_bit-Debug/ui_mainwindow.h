@@ -65,7 +65,6 @@ public:
     QPushButton *meetingSectionButton;
     QPushButton *reportsButton;
     QPushButton *settingsButton;
-    QPushButton *statisticsButton;
     QPushButton *themeButton;
     QFrame *frame_4;
     QVBoxLayout *verticalLayout_5;
@@ -199,8 +198,8 @@ public:
     QSpacerItem *meetingManageHorizontalSpacer;
     QPushButton *meetingDeleteButton;
     QPushButton *meetingUpdateButton;
-    QPushButton *meetingExportPdfButton;
     QPushButton *meetingGenerateQRCodeButton;
+    QPushButton *meetingExportPdfButton;
     QWidget *meetingChatTab;
     QVBoxLayout *meetingChatLayout;
     QTextEdit *meetingChatTextEdit;
@@ -350,11 +349,6 @@ public:
         settingsButton->setObjectName("settingsButton");
 
         verticalLayout_3->addWidget(settingsButton);
-
-        statisticsButton = new QPushButton(frame_6);
-        statisticsButton->setObjectName("statisticsButton");
-
-        verticalLayout_3->addWidget(statisticsButton);
 
         themeButton = new QPushButton(frame_6);
         themeButton->setObjectName("themeButton");
@@ -1011,15 +1005,15 @@ public:
 
         meetingManageButtonLayout->addWidget(meetingUpdateButton);
 
-        meetingExportPdfButton = new QPushButton(meetingManageTab);
-        meetingExportPdfButton->setObjectName("meetingExportPdfButton");
-
-        meetingManageButtonLayout->addWidget(meetingExportPdfButton);
-
         meetingGenerateQRCodeButton = new QPushButton(meetingManageTab);
         meetingGenerateQRCodeButton->setObjectName("meetingGenerateQRCodeButton");
 
         meetingManageButtonLayout->addWidget(meetingGenerateQRCodeButton);
+
+        meetingExportPdfButton = new QPushButton(meetingManageTab);
+        meetingExportPdfButton->setObjectName("meetingExportPdfButton");
+
+        meetingManageButtonLayout->addWidget(meetingExportPdfButton);
 
 
         meetingManageLayout->addLayout(meetingManageButtonLayout);
@@ -1138,8 +1132,8 @@ public:
 
         retranslateUi(MainWindow);
 
-        mainStackedWidget->setCurrentIndex(1);
-        clientTabWidget->setCurrentIndex(3);
+        mainStackedWidget->setCurrentIndex(2);
+        clientTabWidget->setCurrentIndex(2);
         trainingTabWidget->setCurrentIndex(2);
         meetingTabWidget->setCurrentIndex(3);
 
@@ -1158,7 +1152,6 @@ public:
         meetingSectionButton->setText(QCoreApplication::translate("MainWindow", "Meetings", nullptr));
         reportsButton->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
         settingsButton->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
-        statisticsButton->setText(QCoreApplication::translate("MainWindow", "Statistics", nullptr));
         themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
         clientConsultantComboBox->setPlaceholderText(QCoreApplication::translate("MainWindow", "Select Consultant...", nullptr));
         clientContactLabel->setText(QCoreApplication::translate("MainWindow", "Contact Info:", nullptr));
@@ -1273,8 +1266,8 @@ public:
         ___qtablewidgetitem6->setText(QCoreApplication::translate("MainWindow", "Date and Time", nullptr));
         meetingDeleteButton->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
         meetingUpdateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
+        meetingGenerateQRCodeButton->setText(QCoreApplication::translate("MainWindow", "QR Code", nullptr));
         meetingExportPdfButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
-        meetingGenerateQRCodeButton->setText(QCoreApplication::translate("MainWindow", "Generate QR Code", nullptr));
         meetingTabWidget->setTabText(meetingTabWidget->indexOf(meetingManageTab), QCoreApplication::translate("MainWindow", "Manage Meetings", nullptr));
         meetingChatInputLineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type your message here...", nullptr));
         meetingChatSendButton->setText(QCoreApplication::translate("MainWindow", "Send", nullptr));

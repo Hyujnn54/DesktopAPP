@@ -1058,7 +1058,7 @@ QPushButton:hover { color: darkblue; }</string>
               <item>
                <widget class="QTabWidget" name="meetingTabWidget">
                 <property name="currentIndex">
-                 <number>3</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="meetingAddTab">
                  <attribute name="title">

@@ -329,7 +329,11 @@ void ClientManager::on_clientTableViewHeader_clicked(int logicalIndex)
 
     // Use the Client::sortByColumn method for enhanced sorting
     QSqlQueryModel* sortedModel = client->sortByColumn(logicalIndex, order);
-    clientTableModel->setQuery(std::move(sortedModel->query())); // Use std::move to avoid deprecation warning
+    
+    // Fix for deprecation warning - use the setQuery method with a QString instead
+    QString queryString = sortedModel->query().lastQuery();
+    clientTableModel->setQuery(queryString);
+    
     delete sortedModel;
 
     // Make sure the proxy model reflects the changes

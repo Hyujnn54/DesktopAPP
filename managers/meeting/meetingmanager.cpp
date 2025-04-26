@@ -50,7 +50,6 @@ void MeetingManager::initialize(Ui::MainWindow *ui)
     connect(ui->meetingExportPdfButton, &QPushButton::clicked, this, &MeetingManager::handleExportPdfButtonClick);
     connect(ui->meetingTabWidget, &QTabWidget::currentChanged, this, &MeetingManager::handleTabChanged);
     connect(ui->meetingSearchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MeetingManager::handleSortCriteriaChanged);
-    connect(ui->statisticsButton, &QPushButton::clicked, this, &MeetingManager::handleStatisticsButtonClick);
 
     // Set up table properties
     ui->meetingTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -202,25 +201,31 @@ void MeetingManager::handleSearchButtonClick()
 
 void MeetingManager::handleSearchTextChanged(const QString &searchText)
 {
-    if (searchText.isEmpty()) {
-        refreshTableWidget();
+    if (!m_dbConnected) {
         return;
     }
 
-    meeting m;
-    QSqlQueryModel* model = m.searchByTitle(searchText);
-    ui->meetingTableWidget->setRowCount(0);
-    for (int row = 0; row < model->rowCount(); ++row) {
-        ui->meetingTableWidget->insertRow(row);
-        ui->meetingTableWidget->setItem(row, 0, new QTableWidgetItem(model->data(model->index(row, 0)).toString()));
-        ui->meetingTableWidget->setItem(row, 1, new QTableWidgetItem(model->data(model->index(row, 1)).toString()));
-        ui->meetingTableWidget->setItem(row, 2, new QTableWidgetItem(model->data(model->index(row, 2)).toString()));
-        ui->meetingTableWidget->setItem(row, 3, new QTableWidgetItem(model->data(model->index(row, 3)).toString()));
-        ui->meetingTableWidget->setItem(row, 4, new QTableWidgetItem(model->data(model->index(row, 4)).toString()));
-        ui->meetingTableWidget->setItem(row, 5, new QTableWidgetItem(model->data(model->index(row, 5)).toString() + " min"));
-        ui->meetingTableWidget->setItem(row, 6, new QTableWidgetItem(model->data(model->index(row, 6)).toDateTime().toString("yyyy-MM-dd hh:mm")));
+    int column = ui->meetingSearchCriteriaComboBox->currentIndex();
+    
+    // If search box is empty, show all data
+    if (searchText.isEmpty()) {
+        for (int i = 0; i < ui->meetingTableWidget->rowCount(); i++) {
+            ui->meetingTableWidget->setRowHidden(i, false);
+        }
+        return;
     }
-    delete model;
+    
+    // Hide rows that don't match the search criteria and column
+    for (int i = 0; i < ui->meetingTableWidget->rowCount(); i++) {
+        bool matchFound = false;
+        QTableWidgetItem* item = ui->meetingTableWidget->item(i, column);
+        
+        if (item && item->text().contains(searchText, Qt::CaseInsensitive)) {
+            matchFound = true;
+        }
+        
+        ui->meetingTableWidget->setRowHidden(i, !matchFound);
+    }
 }
 
 void MeetingManager::handleGenerateQRCodeButtonClick()
@@ -345,40 +350,37 @@ void MeetingManager::handleTabChanged(int index)
 
 void MeetingManager::handleSortCriteriaChanged(int index)
 {
-    if (!m_dbConnected) return;
-
-    QString column;
-    switch (index) {
-    case 0: column = "id"; break;
-    case 1: column = "title"; break;
-    case 2: column = "organiser"; break;
-    case 3: column = "participant"; break;
-    case 4: column = "agenda"; break;
-    case 5: column = "duration"; break;
-    case 6: column = "datem"; break;
-    default: return;
+    if (!m_dbConnected) {
+        QMessageBox::warning(nullptr, "Database Error", "Cannot sort meetings: Database is not connected.");
+        return;
     }
-
-    QString queryStr = QString("SELECT id, title, organiser, participant, agenda, duration, datem FROM AHMED.MEETING ORDER BY %1").arg(column);
-    QSqlQuery query(queryStr);
-
-    ui->meetingTableWidget->setRowCount(0);
-
-    int row = 0;
-    while (query.next()) {
-        ui->meetingTableWidget->insertRow(row);
-        ui->meetingTableWidget->setItem(row, 0, new QTableWidgetItem(query.value("id").toString()));
-        ui->meetingTableWidget->setItem(row, 1, new QTableWidgetItem(query.value("title").toString()));
-        ui->meetingTableWidget->setItem(row, 2, new QTableWidgetItem(query.value("organiser").toString()));
-        ui->meetingTableWidget->setItem(row, 3, new QTableWidgetItem(query.value("participant").toString()));
-        ui->meetingTableWidget->setItem(row, 4, new QTableWidgetItem(query.value("agenda").toString()));
-        ui->meetingTableWidget->setItem(row, 5, new QTableWidgetItem(query.value("duration").toString() + " min"));
-        ui->meetingTableWidget->setItem(row, 6, new QTableWidgetItem(query.value("datem").toDateTime().toString("yyyy-MM-dd hh:mm")));
-        row++;
+    
+    // Get the current search text and criteria
+    QString searchText = ui->meetingSearchInput->text().trimmed();
+    int column = ui->meetingSearchCriteriaComboBox->currentIndex();
+    
+    // First reset the table to show all data
+    refreshTableWidget();
+    
+    // If there's search text, filter the table
+    if (!searchText.isEmpty()) {
+        QList<QTableWidgetItem*> items = ui->meetingTableWidget->findItems(searchText, Qt::MatchContains);
+        
+        // Hide rows that don't match the search criteria and column
+        for (int i = 0; i < ui->meetingTableWidget->rowCount(); i++) {
+            bool matchFound = false;
+            QTableWidgetItem* item = ui->meetingTableWidget->item(i, column);
+            
+            if (item && item->text().contains(searchText, Qt::CaseInsensitive)) {
+                matchFound = true;
+            }
+            
+            ui->meetingTableWidget->setRowHidden(i, !matchFound);
+        }
     }
-
-    ui->meetingTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->meetingTableWidget->setColumnWidth(6, 150);
+    
+    // Sort the table based on the selected column
+    ui->meetingTableWidget->sortItems(index, Qt::AscendingOrder);
 }
 
 void MeetingManager::handleStatisticsButtonClick()
@@ -419,40 +421,54 @@ void MeetingManager::updateInputFields()
 
 void MeetingManager::refreshTableWidget()
 {
-    qDebug() << "Entering MeetingManager::refreshTableWidget";
-    if (!ui || !m_dbConnected || !notificationManager) {
-        qDebug() << "Error: ui, m_dbConnected, or notificationManager is null";
-        return;
-    }
-
-    QSqlQuery query;
-    query.prepare("SELECT ID, TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, DATEM, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID FROM AHMED.MEETING");
-    if (!query.exec()) {
-        qDebug() << "Error executing query in refreshTableWidget:" << query.lastError().text();
+    if (!m_dbConnected) {
         return;
     }
 
     ui->meetingTableWidget->clearContents();
     ui->meetingTableWidget->setRowCount(0);
-    ui->meetingTableWidget->setColumnCount(7);
-    ui->meetingTableWidget->setHorizontalHeaderLabels({"ID", "Title", "Organiser", "Participant", "Agenda", "Duration (min)", "Date"});
+
+    QSqlQuery query;
+    query.prepare("SELECT ID, TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, DATEM FROM AHMED.MEETING ORDER BY ID");
+    if (!query.exec()) {
+        QMessageBox::warning(nullptr, "Database Error", 
+            "Failed to load meetings: " + query.lastError().text());
+        return;
+    }
 
     int row = 0;
     while (query.next()) {
         ui->meetingTableWidget->insertRow(row);
-        ui->meetingTableWidget->setItem(row, 0, new QTableWidgetItem(query.value("ID").toString()));
-        ui->meetingTableWidget->setItem(row, 1, new QTableWidgetItem(query.value("TITLE").toString()));
-        ui->meetingTableWidget->setItem(row, 2, new QTableWidgetItem(query.value("ORGANISER").toString()));
-        ui->meetingTableWidget->setItem(row, 3, new QTableWidgetItem(query.value("PARTICIPANT").toString()));
-        ui->meetingTableWidget->setItem(row, 4, new QTableWidgetItem(query.value("AGENDA").toString()));
-        ui->meetingTableWidget->setItem(row, 5, new QTableWidgetItem(query.value("DURATION").toString() + " min"));
-        ui->meetingTableWidget->setItem(row, 6, new QTableWidgetItem(query.value("DATEM").toDateTime().toString("yyyy-MM-dd hh:mm")));
-
+        
+        QTableWidgetItem *idItem = new QTableWidgetItem(query.value("ID").toString());
+        QTableWidgetItem *titleItem = new QTableWidgetItem(query.value("TITLE").toString());
+        QTableWidgetItem *organiserItem = new QTableWidgetItem(query.value("ORGANISER").toString());
+        QTableWidgetItem *participantItem = new QTableWidgetItem(query.value("PARTICIPANT").toString());
+        QTableWidgetItem *agendaItem = new QTableWidgetItem(query.value("AGENDA").toString());
+        QTableWidgetItem *durationItem = new QTableWidgetItem(query.value("DURATION").toString());
+        QTableWidgetItem *dateItem = new QTableWidgetItem(query.value("DATEM").toDateTime().toString("yyyy-MM-dd HH:mm"));
+        
+        // Store the original data for sorting
+        idItem->setData(Qt::UserRole, query.value("ID").toInt());
+        durationItem->setData(Qt::UserRole, query.value("DURATION").toInt());
+        dateItem->setData(Qt::UserRole, query.value("DATEM").toDateTime());
+        
+        ui->meetingTableWidget->setItem(row, 0, idItem);
+        ui->meetingTableWidget->setItem(row, 1, titleItem);
+        ui->meetingTableWidget->setItem(row, 2, organiserItem);
+        ui->meetingTableWidget->setItem(row, 3, participantItem);
+        ui->meetingTableWidget->setItem(row, 4, agendaItem);
+        ui->meetingTableWidget->setItem(row, 5, durationItem);
+        ui->meetingTableWidget->setItem(row, 6, dateItem);
+        
         row++;
     }
-
-    ui->meetingTableWidget->resizeColumnsToContents();
-    qDebug() << "Exiting MeetingManager::refreshTableWidget, rows:" << row;
+    
+    // Enable sorting
+    ui->meetingTableWidget->setSortingEnabled(true);
+    
+    // Set custom sort role to handle different data types
+    ui->meetingTableWidget->horizontalHeader()->setSortIndicatorShown(true);
 }
 
 void MeetingManager::applyThemeStyles()

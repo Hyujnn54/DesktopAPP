@@ -47,6 +47,9 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     // Connect networkManager and AI chat signals after UI setup
     connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onAIResponseReceived);
     connect(ui->trainingNotificationLabel, &QPushButton::clicked, this, &MainWindow::handleNotificationLabelClicked);
+    
+    // Initialize notification label with 0 count
+    updateNotificationLabel(0);
 
     // Move appendChatMessage after all setup
     appendChatMessage("Hello! I'm your Meeting Assistant. How can I help you today?", true);
@@ -55,7 +58,6 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
         ui->clientSectionButton->setEnabled(false);
         ui->trainingSectionButton->setEnabled(false);
         ui->meetingSectionButton->setEnabled(false);
-        ui->statisticsButton->setEnabled(false);
         statusBar()->showMessage("Database not connected. Some features are disabled.");
     } else {
         clientManager->initialize(ui);
@@ -92,7 +94,6 @@ void MainWindow::setupUiConnections()
     connect(ui->clientSectionButton, &QPushButton::clicked, this, &MainWindow::on_clientSectionButton_clicked);
     connect(ui->trainingSectionButton, &QPushButton::clicked, this, &MainWindow::on_trainingSectionButton_clicked);
     connect(ui->meetingSectionButton, &QPushButton::clicked, this, &MainWindow::on_meetingSectionButton_clicked);
-    connect(ui->statisticsButton, &QPushButton::clicked, this, &MainWindow::on_statisticsButton_clicked);
     connect(ui->menuButton, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
     connect(ui->themeButton, &QPushButton::clicked, this, &MainWindow::toggleTheme);
     connect(ui->meetingChatSendButton, &QPushButton::clicked, this, &MainWindow::on_chatSendButton_clicked);
@@ -338,11 +339,11 @@ void MainWindow::handleNotificationLabelClicked()
 
 void MainWindow::updateNotificationLabel(int count)
 {
-    // Create an eye-catching notification label with a badge style
+    // Create a clear and visible notification label
     QString styleSheet;
     
     if (count > 0) {
-        // Make the notification count more visible when there are notifications
+        // Make notification count more visible when there are notifications
         styleSheet = QString(
             "QPushButton {"
             "  background-color: #3A5DAE;"
@@ -351,7 +352,7 @@ void MainWindow::updateNotificationLabel(int count)
             "  padding: 5px 10px;"
             "  font-weight: bold;"
             "  min-width: 140px;"
-            "  max-width: 140px;"
+            "  max-width: 180px;"
             "}"
             "QPushButton:hover {"
             "  background-color: #4A70C2;"
@@ -363,7 +364,7 @@ void MainWindow::updateNotificationLabel(int count)
         
         // Use a badge-like counter for the notification count
         ui->trainingNotificationLabel->setText(QString("Notifications: ") + 
-            QString("<span style='background-color: #FF4500; color: white; border-radius: 8px; padding: 1px 5px;'>%1</span>").arg(count));
+            QString("<span style='display: inline-block; background-color: #FF4500; color: white; border-radius: 8px; padding: 1px 5px;'>%1</span>").arg(count));
     } else {
         // Use more subtle styling when there are no notifications
         styleSheet = QString(
@@ -373,7 +374,7 @@ void MainWindow::updateNotificationLabel(int count)
             "  border-radius: 5px;"
             "  padding: 5px 10px;"
             "  min-width: 140px;"
-            "  max-width: 140px;"
+            "  max-width: 180px;"
             "}"
             "QPushButton:hover {"
             "  background-color: #9A9A9A;"
