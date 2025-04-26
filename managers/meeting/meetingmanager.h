@@ -22,6 +22,8 @@ public:
     void setNotificationManager(NotificationManager *manager);
     void initialize(Ui::MainWindow *ui);
     void refreshTableWidget();
+    // Add this declaration
+    QMap<QString, int> getStatisticsByCategory(const QString &category);
 
 public slots:
     void handleAddButtonClick();

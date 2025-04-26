@@ -31,6 +31,8 @@ public:
     void refresh();
     void showStatistics();
     void setNotificationManager(NotificationManager *manager);
+    // Add this declaration
+    QMap<QString, int> getStatisticsByCategory(const QString &category);
 
 private slots:
     void on_clientAddButton_clicked();

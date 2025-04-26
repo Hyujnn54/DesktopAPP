@@ -11,6 +11,7 @@
 #include <QPrinter>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QSqlQuery>
 
 MeetingManager::MeetingManager(bool dbConnected, QObject *parent)
     : QObject(parent), m_dbConnected(dbConnected), ui(nullptr), notificationManager(nullptr)
@@ -458,4 +459,53 @@ void MeetingManager::applyThemeStyles()
 {
     ui->meetingTableWidget->setStyleSheet("QTableView { background-color: #FFFFFF; border: 1px solid #D3DCE6; selection-background-color: #A1B8E6; }"
                                           "QHeaderView::section { background-color: #3A5DAE; color: white; }");
+}
+
+QMap<QString, int> MeetingManager::getStatisticsByCategory(const QString &category)
+{
+    QMap<QString, int> stats;
+    if (!m_dbConnected) {
+        qDebug() << "Database not connected in getStatisticsByCategory";
+        return stats;
+    }
+
+    QString column;
+    if (category == "Organiser") {
+        column = "ORGANISER";
+    } else if (category == "Agenda") {
+        column = "AGENDA";
+    } else if (category == "Date") {
+        column = "TRUNC(DATEM)";
+    } else {
+        qDebug() << "Unsupported filter category for meetings:" << category;
+        return stats;
+    }
+
+    QString queryString = QString(
+                              "SELECT %1, COUNT(*) AS count "
+                              "FROM AHMED.MEETING "
+                              "GROUP BY %1"
+                              ).arg(column);
+
+    QSqlQuery query;
+    query.prepare(queryString);
+
+    if (!query.exec()) {
+        qDebug() << "Query failed in getStatisticsByCategory:" << query.lastError().text();
+        return stats;
+    }
+
+    while (query.next()) {
+        QString key;
+        if (category == "Date") {
+            QDate date = query.value(0).toDate();
+            key = date.toString("yyyy-MM-dd");
+        } else {
+            key = query.value(0).toString();
+        }
+        int count = query.value(1).toInt();
+        stats[key] = count;
+    }
+
+    return stats;
 }

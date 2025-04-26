@@ -14,6 +14,7 @@
 #include <QSqlRecord>
 #include <QSqlError>
 #include <QFileDialog>
+#include <QSqlQuery>
 
 ClientManager::ClientManager(bool dbConnected, QObject *parent)
     : QObject(parent),
@@ -688,4 +689,66 @@ void ClientManager::exportClientsToPdf()
         }
     }
     painter.end();
+}
+
+QMap<QString, int> ClientManager::getStatisticsByCategory(const QString &category)
+{
+    QMap<QString, int> stats;
+    if (!m_dbConnected) {
+        qDebug() << "Database not connected in getStatisticsByCategory";
+        return stats;
+    }
+
+    QString column;
+    if (category == "Sector") {
+        column = "SECTOR";
+    } else if (category == "Consultant") {
+        column = "(e.FIRST_NAME || ' ' || e.LAST_NAME)";
+    } else if (category == "Date") {
+        column = "TRUNC(c.CONSULTATION_DATE)";
+    } else {
+        qDebug() << "Unsupported filter category for clients:" << category;
+        return stats;
+    }
+
+    QString queryString;
+    if (category == "Consultant") {
+        queryString = QString(
+            "SELECT (e.FIRST_NAME || ' ' || e.LAST_NAME) AS CONSULTANT_NAME, COUNT(*) AS count "
+            "FROM AHMED.CLIENTS c "
+            "LEFT JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
+            "GROUP BY (e.FIRST_NAME || ' ' || e.LAST_NAME)"
+            );
+    } else {
+        queryString = QString(
+                          "SELECT %1, COUNT(*) AS count "
+                          "FROM AHMED.CLIENTS c "
+                          "GROUP BY %1"
+                          ).arg(column);
+    }
+
+    QSqlQuery query;
+    query.prepare(queryString);
+
+    if (!query.exec()) {
+        qDebug() << "Query failed in getStatisticsByCategory:" << query.lastError().text();
+        return stats;
+    }
+
+    while (query.next()) {
+        QString key;
+        if (category == "Date") {
+            QDate date = query.value(0).toDate();
+            key = date.toString("yyyy-MM-dd");
+        } else {
+            key = query.value(0).toString();
+            if (key.isEmpty() && category == "Consultant") {
+                key = "Unknown Consultant";
+            }
+        }
+        int count = query.value(1).toInt();
+        stats[key] = count;
+    }
+
+    return stats;
 }

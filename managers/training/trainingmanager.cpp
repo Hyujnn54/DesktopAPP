@@ -1,4 +1,3 @@
-// managers/training/trainingmanager.cpp
 #include "trainingmanager.h"
 #include "ui_mainwindow.h"
 #include <QMessageBox>
@@ -9,6 +8,7 @@
 #include <QTextDocument>
 #include <QSqlRecord>
 #include <QSqlError>
+#include <QSqlQuery>
 
 TrainingManager::TrainingManager(bool dbConnected, QObject *parent)
     : QObject(parent),
@@ -392,4 +392,51 @@ void TrainingManager::exportTrainingsToPdf()
             y += 10;
         }
     }
+}
+
+QMap<QString, int> TrainingManager::getStatisticsByCategory(const QString &category)
+{
+    QMap<QString, int> stats;
+    if (!m_dbConnected) {
+        return stats; // Return empty map if database is not connected
+    }
+
+    QString column;
+    // Map the UI filter to the database column name
+    if (category == "Trainer") {
+        column = "TRAINER";
+    } else if (category == "Price") {
+        column = "PRIX";
+    } else if (category == "Date") {
+        column = "DATEF";
+    } else {
+        qDebug() << "Unsupported filter category:" << category;
+        return stats;
+    }
+
+    // Construct SQL query to group by the specified category and count occurrences
+    QString queryString = QString("SELECT %1, COUNT(*) as count FROM AHMED.FORMATIONS GROUP BY %1").arg(column);
+    QSqlQuery query(QSqlDatabase::database());
+    query.prepare(queryString);
+
+    if (!query.exec()) {
+        qDebug() << "Query failed:" << query.lastError().text();
+        return stats;
+    }
+
+    // Populate the QMap with the results
+    while (query.next()) {
+        QString key;
+        if (category == "Date") {
+            // Format date for better readability in charts
+            QDate date = query.value(0).toDate();
+            key = date.toString("yyyy-MM-dd");
+        } else {
+            key = query.value(0).toString();
+        }
+        int count = query.value(1).toInt();
+        stats[key] = count;
+    }
+
+    return stats;
 }
