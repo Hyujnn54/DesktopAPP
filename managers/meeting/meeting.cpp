@@ -2,7 +2,7 @@
 #include "meeting.h"
 #include <QSqlQuery>
 #include <QSqlQueryModel>
-#include <QSqlError> // Ensure this is included
+#include <QSqlError>
 #include "lib/qrcodegen/qrcodegen.hpp"
 #include <QPainter>
 #include <QDebug>
@@ -14,18 +14,22 @@ meeting::meeting()
     participant(""),
     agenda(""),
     duration(0),
-    datem(QDateTime::currentDateTime()),
-    employeeId(-1),
-    clientId(-1),
-    resourceId(-1)
+    m_dateTime(QDateTime::currentDateTime())
 {
 }
 
-// Parameterized constructor
-meeting::meeting(QString title, QString organiser, QString participant, QString agenda, int duration, QDateTime datem,
-                 int employeeId, int clientId, int resourceId)
-    : title(title), organiser(organiser), participant(participant), agenda(agenda), duration(duration), datem(datem),
-    employeeId(employeeId), clientId(clientId), resourceId(resourceId)
+meeting::meeting(QString title, QString organiser, QString participant, QString agenda, int duration, QDateTime dateTime,
+                 QVariant employeeId, QVariant clientId, QVariant resourceId)
+    : id(-1),
+    title(title),
+    organiser(organiser),
+    participant(participant),
+    agenda(agenda),
+    duration(duration),
+    m_dateTime(dateTime),
+    employeeId(employeeId),
+    clientId(clientId),
+    resourceId(resourceId)
 {
 }
 
@@ -36,10 +40,10 @@ QString meeting::getOrganiser() const { return organiser; }
 QString meeting::getParticipant() const { return participant; }
 QString meeting::getAgenda() const { return agenda; }
 int meeting::getDuration() const { return duration; }
-QDateTime meeting::getDatem() const { return datem; }
-int meeting::getEmployeeId() const { return employeeId; }
-int meeting::getClientId() const { return clientId; }
-int meeting::getResourceId() const { return resourceId; }
+QDateTime meeting::getDatem() const { return m_dateTime; }
+QVariant meeting::getEmployeeId() const { return employeeId; }
+QVariant meeting::getClientId() const { return clientId; }
+QVariant meeting::getResourceId() const { return resourceId; }
 
 // Setters
 void meeting::setId(const int &id) { this->id = id; }
@@ -48,29 +52,29 @@ void meeting::setOrganiser(const QString &organiser) { this->organiser = organis
 void meeting::setParticipant(const QString &participant) { this->participant = participant; }
 void meeting::setAgenda(const QString &agenda) { this->agenda = agenda; }
 void meeting::setDuration(int duration) { this->duration = duration; }
-void meeting::setDatem(const QDateTime &datem) { this->datem = datem; }
-void meeting::setEmployeeId(int employeeId) { this->employeeId = employeeId; }
-void meeting::setClientId(int clientId) { this->clientId = clientId; }
-void meeting::setResourceId(int resourceId) { this->resourceId = resourceId; }
+void meeting::setDatem(const QDateTime &dateTime) { this->m_dateTime = dateTime; }
+void meeting::setEmployeeId(const QVariant &employeeId) { this->employeeId = employeeId; }
+void meeting::setClientId(const QVariant &clientId) { this->clientId = clientId; }
+void meeting::setResourceId(const QVariant &resourceId) { this->resourceId = resourceId; }
 
 // Functionalities
 bool meeting::add()
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO MEETING (TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, DATEM, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID) "
-                  "VALUES (:title, :organiser, :participant, :agenda, :duration, :datem, :employeeId, :clientId, :resourceId)");
+    query.prepare("INSERT INTO AHMED.MEETING (TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID, DATEM) "
+                  "VALUES (:title, :organiser, :participant, :agenda, :duration, :employee_id, :client_id, :ressource_id, :datem)");
     query.bindValue(":title", title);
     query.bindValue(":organiser", organiser);
     query.bindValue(":participant", participant);
     query.bindValue(":agenda", agenda);
     query.bindValue(":duration", duration);
-    query.bindValue(":datem", datem);
-    query.bindValue(":employeeId", employeeId >= 0 ? QVariant(employeeId) : QVariant(QMetaType(QMetaType::Int)));
-    query.bindValue(":clientId", clientId >= 0 ? QVariant(clientId) : QVariant(QMetaType(QMetaType::Int)));
-    query.bindValue(":resourceId", resourceId >= 0 ? QVariant(resourceId) : QVariant(QMetaType(QMetaType::Int)));
+    query.bindValue(":employee_id", employeeId.isNull() ? QVariant() : employeeId);
+    query.bindValue(":client_id", clientId.isNull() ? QVariant() : clientId);
+    query.bindValue(":ressource_id", resourceId.isNull() ? QVariant() : resourceId);
+    query.bindValue(":datem", m_dateTime);
 
     if (!query.exec()) {
-        qDebug() << "Add meeting failed: " << query.lastError().text();
+        qDebug() << "Error executing query in meeting::add:" << query.lastError().text();
         return false;
     }
     return true;
@@ -87,7 +91,7 @@ QPixmap meeting::generateQRCode() const
                          .arg(participant)
                          .arg(agenda)
                          .arg(duration)
-                         .arg(datem.toString("yyyy-MM-dd hh:mm"));
+                         .arg(m_dateTime.toString("yyyy-MM-dd hh:mm"));
 
     try {
         QrCode qr = QrCode::encodeText(qrData.toUtf8().constData(), QrCode::Ecc::MEDIUM);
@@ -123,7 +127,7 @@ QPixmap meeting::generateQRCode() const
 QSqlQueryModel* meeting::afficher()
 {
     QSqlQueryModel* model = new QSqlQueryModel();
-    QSqlQuery query("SELECT ID, TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, DATEM FROM MEETING");
+    QSqlQuery query("SELECT ID, TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, DATEM FROM AHMED.MEETING");
     model->setQuery(std::move(query));
     if (model->lastError().isValid()) {
         qDebug() << "SQL Error in afficher:" << model->lastError().text();
@@ -145,7 +149,7 @@ QSqlQueryModel* meeting::afficher()
 bool meeting::deleteMeeting(int id)
 {
     QSqlQuery query;
-    query.prepare("DELETE FROM MEETING WHERE ID = :id");
+    query.prepare("DELETE FROM AHMED.MEETING WHERE ID = :id");
     query.bindValue(":id", id);
     if (!query.exec()) {
         qDebug() << "Delete meeting failed: " << query.lastError().text();
@@ -157,7 +161,7 @@ bool meeting::deleteMeeting(int id)
 bool meeting::update()
 {
     QSqlQuery query;
-    query.prepare("UPDATE MEETING SET TITLE = :title, ORGANISER = :organiser, PARTICIPANT = :participant, "
+    query.prepare("UPDATE AHMED.MEETING SET TITLE = :title, ORGANISER = :organiser, PARTICIPANT = :participant, "
                   "AGENDA = :agenda, DURATION = :duration, DATEM = :datem, EMPLOYEE_ID = :employeeId, "
                   "CLIENT_ID = :clientId, RESSOURCE_ID = :resourceId WHERE ID = :id");
     query.bindValue(":title", title);
@@ -165,10 +169,11 @@ bool meeting::update()
     query.bindValue(":participant", participant);
     query.bindValue(":agenda", agenda);
     query.bindValue(":duration", duration);
-    query.bindValue(":datem", datem);
-    query.bindValue(":employeeId", employeeId >= 0 ? QVariant(employeeId) : QVariant(QMetaType(QMetaType::Int)));
-    query.bindValue(":clientId", clientId >= 0 ? QVariant(clientId) : QVariant(QMetaType(QMetaType::Int)));
-    query.bindValue(":resourceId", resourceId >= 0 ? QVariant(resourceId) : QVariant(QMetaType(QMetaType::Int)));
+    query.bindValue(":datem", m_dateTime);
+    // Explicitly convert to int or NULL
+    query.bindValue(":employeeId", employeeId.isNull() ? QVariant(QVariant::Int) : employeeId.toInt());
+    query.bindValue(":clientId", clientId.isNull() ? QVariant(QVariant::Int) : clientId.toInt());
+    query.bindValue(":resourceId", resourceId.isNull() ? QVariant(QVariant::Int) : resourceId.toInt());
     query.bindValue(":id", id);
 
     if (!query.exec()) {
@@ -181,7 +186,7 @@ bool meeting::update()
 QSqlQueryModel* meeting::searchByTitle(const QString& title)
 {
     QSqlQueryModel* model = new QSqlQueryModel();
-    model->setQuery("SELECT * FROM MEETING WHERE TITLE LIKE '%" + title + "%'");
+    model->setQuery("SELECT * FROM AHMED.MEETING WHERE TITLE LIKE '%" + title + "%'");
     if (model->lastError().isValid()) {
         qDebug() << "Search meeting failed: " << model->lastError().text();
     }

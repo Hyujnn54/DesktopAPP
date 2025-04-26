@@ -8,6 +8,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QDebug>
 
 MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     : QMainWindow(parent),
@@ -20,6 +21,11 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     networkManager(new QNetworkAccessManager(this)),
     chartWindow(new ChartWindow(this))
 {
+    qDebug() << "Entering MainWindow constructor";
+
+    // Block signals during UI setup
+    this->blockSignals(true);
+
     ui->setupUi(this);
     applyLightTheme();
     setAttribute(Qt::WA_DeleteOnClose);
@@ -30,10 +36,11 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
 
     setupUiConnections();
 
-    connect(notificationManager, &NotificationManager::notificationAdded, this, &MainWindow::updateNotificationLabel);
+    // Connect networkManager and AI chat signals after UI setup
+    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onAIResponseReceived);
     connect(ui->trainingNotificationLabel, &QPushButton::clicked, this, &MainWindow::handleNotificationLabelClicked);
 
-    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onAIResponseReceived);
+    // Move appendChatMessage after all setup
     appendChatMessage("Hello! I'm your Meeting Assistant. How can I help you today?", true);
 
     if (!m_dbConnected) {
@@ -48,6 +55,11 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
         meetingManager->initialize(ui);
         on_meetingSectionButton_clicked();
     }
+
+    // Re-enable signals after all setup
+    this->blockSignals(false);
+
+    qDebug() << "Exiting MainWindow constructor";
 }
 
 MainWindow::~MainWindow()
@@ -63,6 +75,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupUiConnections()
 {
+    qDebug() << "Setting up UI connections";
     connect(ui->clientSectionButton, &QPushButton::clicked, this, &MainWindow::on_clientSectionButton_clicked);
     connect(ui->trainingSectionButton, &QPushButton::clicked, this, &MainWindow::on_trainingSectionButton_clicked);
     connect(ui->meetingSectionButton, &QPushButton::clicked, this, &MainWindow::on_meetingSectionButton_clicked);
@@ -180,21 +193,13 @@ void MainWindow::applyDarkTheme()
 
 void MainWindow::handleNotificationLabelClicked()
 {
-    auto notifications = notificationManager->getNotifications();
-    QStringList notificationStrings;
-    for (const auto& notification : notifications) {
-        QString line = QString("Action: %1\nLocation: %2\nDetails: %3\nTime: %4")
-        .arg(notification.action,
-             notification.location,
-             notification.details,
-             notification.timestamp.toString("yyyy-MM-dd hh:mm:ss"));
-        if (notification.lineNumber >= 0) {
-            line += QString("\nLine: %1").arg(notification.lineNumber);
-        }
-        notificationStrings << line;
+    // For now, show a simple message with the notification count
+    int count = notificationManager->getNotificationCount();
+    if (count == 0) {
+        QMessageBox::information(this, "Notifications", "No new notifications.");
+    } else {
+        QMessageBox::information(this, "Notifications", QString("You have %1 new notification(s).").arg(count));
     }
-    QString notificationText = notificationStrings.join("\n\n");
-    QMessageBox::information(this, "Notification History", notificationText.isEmpty() ? "No notifications." : notificationText);
 }
 
 void MainWindow::updateNotificationLabel(int count)
@@ -221,8 +226,50 @@ void MainWindow::on_chatClearButton_clicked()
 
 void MainWindow::appendChatMessage(const QString &message, bool isBot)
 {
-    QString prefix = isBot ? "<b>Bot:</b> " : "<b>You:</b> ";
-    ui->meetingChatTextEdit->append(prefix + message);
+    qDebug() << "Entering appendChatMessage, message:" << message << ", isBot:" << isBot;
+    if (!ui || !ui->meetingChatTextEdit) {
+        qDebug() << "Error: ui or meetingChatTextEdit is null";
+        return;
+    }
+
+    QString formattedMessage = QString("[%1] %2: %3\n")
+                                   .arg(QDateTime::currentDateTime().toString("hh:mm:ss"),
+                                        isBot ? "Assistant" : "User", message);
+    ui->meetingChatTextEdit->append(formattedMessage);
+
+    if (!isBot) {
+        qDebug() << "Network request disabled for testing";
+        ui->meetingChatTextEdit->append("[System] Network requests are disabled for testing.");
+        // Uncomment and configure when API is ready
+        /*
+        QUrl url("https://api.example.com/chat");
+        if (!url.isValid()) {
+            qDebug() << "Error: Invalid URL in appendChatMessage:" << url.toString();
+            ui->meetingChatTextEdit->append("[Error] Invalid API URL. Please check the configuration.");
+            return;
+        }
+
+        QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+        QJsonObject json;
+        json["message"] = message;
+        QJsonDocument doc(json);
+        QByteArray data = doc.toJson();
+
+        QNetworkReply *reply = networkManager->post(request, data);
+        if (!reply) {
+            qDebug() << "Error: Failed to create network reply";
+            ui->meetingChatTextEdit->append("[Error] Failed to send message to API.");
+        } else {
+            connect(reply, &QNetworkReply::errorOccurred, this, [this, reply](QNetworkReply::NetworkError code) {
+                qDebug() << "Network error in appendChatMessage:" << reply->errorString();
+                ui->meetingChatTextEdit->append("[Error] Network error: " + reply->errorString());
+            });
+        }
+        */
+    }
+    qDebug() << "Exiting appendChatMessage";
 }
 
 void MainWindow::processUserInput(const QString &input)
@@ -314,15 +361,39 @@ bool MainWindow::validateMeetingInput(const QStringList &parts, QString &errorMe
 
 void MainWindow::onAIResponseReceived(QNetworkReply *reply)
 {
-    if (reply->error() == QNetworkReply::NoError) {
-        QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
-        QJsonObject obj = doc.object();
-        QString response = obj["response"].toString();
-        appendChatMessage(response, true);
-    } else {
-        appendChatMessage("Error communicating with the chatbot API.", true);
+    qDebug() << "Entering onAIResponseReceived";
+    if (!reply) {
+        qDebug() << "Error: Network reply is null";
+        return;
     }
+
+    if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Network error:" << reply->errorString();
+        appendChatMessage("Error: " + reply->errorString(), true);
+        reply->deleteLater();
+        return;
+    }
+
+    QByteArray responseData = reply->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(responseData);
+    if (doc.isNull()) {
+        qDebug() << "Error: Failed to parse JSON response";
+        appendChatMessage("Error: Failed to parse API response.", true);
+        reply->deleteLater();
+        return;
+    }
+
+    QJsonObject json = doc.object();
+    QString botResponse = json.value("response").toString();
+    if (botResponse.isEmpty()) {
+        qDebug() << "Error: Empty response from API";
+        appendChatMessage("Error: Empty response from API.", true);
+    } else {
+        appendChatMessage(botResponse, true);
+    }
+
     reply->deleteLater();
+    qDebug() << "Exiting onAIResponseReceived";
 }
 
 ChartWindow* MainWindow::getChartWindow() const

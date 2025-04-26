@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QWidget>
 #include "meeting.h"
-#include "../../core/notificationmanager.h" // Add this include
+#include "../../core/notificationmanager.h"
 
 namespace Ui {
 class MainWindow;
@@ -21,8 +21,7 @@ public:
 
     void setNotificationManager(NotificationManager *manager);
     void initialize(Ui::MainWindow *ui);
-    void refreshTableWidget(); // Move to public for MainWindow access
-
+    void refreshTableWidget();
 
 public slots:
     void handleAddButtonClick();

@@ -6,7 +6,7 @@
 #include "managers/training/trainingmanager.h"
 #include "managers/meeting/meetingmanager.h"
 #include "core/notificationmanager.h"
-#include "ui/chartwindow/chartwindow.h" // Include ChartWindow
+#include "ui/chartwindow/chartwindow.h"
 #include <QMainWindow>
 #include <QNetworkAccessManager>
 
@@ -23,7 +23,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(bool dbConnected, QWidget *parent = nullptr);
     ~MainWindow();
-    ChartWindow* getChartWindow() const; // Accessor for ChartWindow
+    ChartWindow* getChartWindow() const;
 
 private slots:
     void on_clientSectionButton_clicked();
@@ -54,7 +54,7 @@ private:
     MeetingManager *meetingManager;
     NotificationManager *notificationManager;
     QNetworkAccessManager *networkManager;
-    ChartWindow *chartWindow; // Add ChartWindow member
+    ChartWindow *chartWindow;
 };
 
 #endif // MAINWINDOW_H

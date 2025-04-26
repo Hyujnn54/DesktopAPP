@@ -1,6 +1,7 @@
+// managers/meeting/meetingmanager.cpp
 #include "meetingmanager.h"
 #include "ui_mainwindow.h"
-#include "../../dialog/updatemeeting/updatemeeting.h" // Keep this
+#include "../../dialog/updatemeeting/updatemeeting.h"
 #include <QMessageBox>
 #include <QDebug>
 #include <QFileDialog>
@@ -73,14 +74,14 @@ void MeetingManager::handleAddButtonClick()
     QString participant = ui->meetingParticipantInput->text();
     QString agenda = ui->meetingAgendaComboBox->currentText();
     int duration = ui->meetingDurationInput->text().toInt();
-    QDateTime datem = ui->meetingDateTimeEdit->dateTime();
+    QDateTime dateTime = ui->meetingDateTimeEdit->dateTime();
 
     if (title.isEmpty() || organiser.isEmpty() || participant.isEmpty() || agenda.isEmpty() || duration <= 0) {
         QMessageBox::warning(nullptr, "Input Error", "Please fill in all fields correctly.");
         return;
     }
 
-    meeting m(title, organiser, participant, agenda, duration, datem);
+    meeting m(title, organiser, participant, agenda, duration, dateTime);
     if (m.add()) {
         QMessageBox::information(nullptr, "Success", "Meeting added successfully!");
         refreshTableWidget();
@@ -123,7 +124,6 @@ void MeetingManager::handleUpdateButtonClick()
         QMessageBox::warning(ui->centralwidget, "Database Error", "Cannot update meeting: Database is not connected.");
         return;
     }
-    // Get the selected row from the table widget
     QTableWidget *table = ui->meetingTableWidget;
     int row = table->currentRow();
     if (row < 0) {
@@ -131,7 +131,6 @@ void MeetingManager::handleUpdateButtonClick()
         return;
     }
 
-    // Assuming the meeting ID is stored in the first column
     bool ok;
     int meetingId = table->item(row, 0)->text().toInt(&ok);
     if (!ok) {
@@ -139,10 +138,9 @@ void MeetingManager::handleUpdateButtonClick()
         return;
     }
 
-    // Fetch the meeting from the database
     meeting m;
     QSqlQuery query;
-    query.prepare("SELECT * FROM MEETING WHERE ID = :id");
+    query.prepare("SELECT * FROM AHMED.MEETING WHERE ID = :id");
     query.bindValue(":id", meetingId);
     if (query.exec() && query.next()) {
         m.setId(query.value("ID").toInt());
@@ -152,15 +150,14 @@ void MeetingManager::handleUpdateButtonClick()
         m.setAgenda(query.value("AGENDA").toString());
         m.setDuration(query.value("DURATION").toInt());
         m.setDatem(query.value("DATEM").toDateTime());
-        m.setEmployeeId(query.value("EMPLOYEE_ID").toInt());
-        m.setClientId(query.value("CLIENT_ID").toInt());
-        m.setResourceId(query.value("RESOURCE_ID").toInt());
+        m.setEmployeeId(query.value("EMPLOYEE_ID").isNull() ? QVariant() : query.value("EMPLOYEE_ID"));
+        m.setClientId(query.value("CLIENT_ID").isNull() ? QVariant() : query.value("CLIENT_ID"));
+        m.setResourceId(query.value("RESSOURCE_ID").isNull() ? QVariant() : query.value("RESSOURCE_ID"));
     } else {
         QMessageBox::warning(ui->centralwidget, "Error", "Failed to load meeting data: " + query.lastError().text());
         return;
     }
 
-    // Show the update dialog with ui->centralwidget as parent
     UpdateMeeting dialog(ui->centralwidget, &m);
     if (dialog.exec() == QDialog::Accepted) {
         refreshTableWidget();
@@ -190,14 +187,13 @@ void MeetingManager::handleSearchButtonClick()
     ui->meetingTableWidget->setRowCount(0);
     for (int row = 0; row < model->rowCount(); ++row) {
         ui->meetingTableWidget->insertRow(row);
-        for (int col = 0; col < model->columnCount(); ++col) {
-            QString data = model->data(model->index(row, col)).toString();
-            if (col == 5) {
-                data += " min";
-            }
-            QTableWidgetItem* item = new QTableWidgetItem(data);
-            ui->meetingTableWidget->setItem(row, col, item);
-        }
+        ui->meetingTableWidget->setItem(row, 0, new QTableWidgetItem(model->data(model->index(row, 0)).toString()));
+        ui->meetingTableWidget->setItem(row, 1, new QTableWidgetItem(model->data(model->index(row, 1)).toString()));
+        ui->meetingTableWidget->setItem(row, 2, new QTableWidgetItem(model->data(model->index(row, 2)).toString()));
+        ui->meetingTableWidget->setItem(row, 3, new QTableWidgetItem(model->data(model->index(row, 3)).toString()));
+        ui->meetingTableWidget->setItem(row, 4, new QTableWidgetItem(model->data(model->index(row, 4)).toString()));
+        ui->meetingTableWidget->setItem(row, 5, new QTableWidgetItem(model->data(model->index(row, 5)).toString() + " min"));
+        ui->meetingTableWidget->setItem(row, 6, new QTableWidgetItem(model->data(model->index(row, 6)).toDateTime().toString("yyyy-MM-dd hh:mm")));
     }
     delete model;
 }
@@ -214,14 +210,13 @@ void MeetingManager::handleSearchTextChanged(const QString &searchText)
     ui->meetingTableWidget->setRowCount(0);
     for (int row = 0; row < model->rowCount(); ++row) {
         ui->meetingTableWidget->insertRow(row);
-        for (int col = 0; col < model->columnCount(); ++col) {
-            QString data = model->data(model->index(row, col)).toString();
-            if (col == 5) {
-                data += " min";
-            }
-            QTableWidgetItem* item = new QTableWidgetItem(data);
-            ui->meetingTableWidget->setItem(row, col, item);
-        }
+        ui->meetingTableWidget->setItem(row, 0, new QTableWidgetItem(model->data(model->index(row, 0)).toString()));
+        ui->meetingTableWidget->setItem(row, 1, new QTableWidgetItem(model->data(model->index(row, 1)).toString()));
+        ui->meetingTableWidget->setItem(row, 2, new QTableWidgetItem(model->data(model->index(row, 2)).toString()));
+        ui->meetingTableWidget->setItem(row, 3, new QTableWidgetItem(model->data(model->index(row, 3)).toString()));
+        ui->meetingTableWidget->setItem(row, 4, new QTableWidgetItem(model->data(model->index(row, 4)).toString()));
+        ui->meetingTableWidget->setItem(row, 5, new QTableWidgetItem(model->data(model->index(row, 5)).toString() + " min"));
+        ui->meetingTableWidget->setItem(row, 6, new QTableWidgetItem(model->data(model->index(row, 6)).toDateTime().toString("yyyy-MM-dd hh:mm")));
     }
     delete model;
 }
@@ -235,12 +230,14 @@ void MeetingManager::handleGenerateQRCodeButtonClick()
     }
 
     int id = ui->meetingTableWidget->item(row, 0)->text().toInt();
-    meeting m(ui->meetingTableWidget->item(row, 1)->text(),
-              ui->meetingTableWidget->item(row, 2)->text(),
-              ui->meetingTableWidget->item(row, 3)->text(),
-              ui->meetingTableWidget->item(row, 4)->text(),
-              ui->meetingTableWidget->item(row, 5)->text().replace(" min", "").toInt(),
-              QDateTime::fromString(ui->meetingTableWidget->item(row, 6)->text(), "yyyy-MM-dd hh:mm"));
+    meeting m(
+        ui->meetingTableWidget->item(row, 1)->text(),
+        ui->meetingTableWidget->item(row, 2)->text(),
+        ui->meetingTableWidget->item(row, 3)->text(),
+        ui->meetingTableWidget->item(row, 4)->text(),
+        ui->meetingTableWidget->item(row, 5)->text().replace(" min", "").toInt(),
+        QDateTime::fromString(ui->meetingTableWidget->item(row, 6)->text(), "yyyy-MM-dd hh:mm")
+        );
     m.setId(id);
 
     QPixmap qrCode = m.generateQRCode();
@@ -255,7 +252,6 @@ void MeetingManager::handleGenerateQRCodeButtonClick()
     qrDialog.setIconPixmap(qrCode.scaled(200, 200, Qt::KeepAspectRatio));
     qrDialog.exec();
 
-    // Optional: Save QR code to file
     QString filePath = QFileDialog::getSaveFileName(nullptr, "Save QR Code", "Meeting_" + QString::number(id) + ".png", "PNG Files (*.png)");
     if (!filePath.isEmpty()) {
         qrCode.save(filePath);
@@ -269,6 +265,10 @@ void MeetingManager::handleGenerateQRCodeButtonClick()
 
 void MeetingManager::handleExportPdfButtonClick()
 {
+    if (!ui || !ui->meetingTableWidget) {
+        qDebug() << "Error: UI components not initialized";
+        return;
+    }
     int row = ui->meetingTableWidget->currentRow();
     if (row < 0) {
         QMessageBox::warning(nullptr, "Error", "Please select a meeting to export.");
@@ -276,12 +276,14 @@ void MeetingManager::handleExportPdfButtonClick()
     }
 
     int id = ui->meetingTableWidget->item(row, 0)->text().toInt();
-    meeting m(ui->meetingTableWidget->item(row, 1)->text(),
-              ui->meetingTableWidget->item(row, 2)->text(),
-              ui->meetingTableWidget->item(row, 3)->text(),
-              ui->meetingTableWidget->item(row, 4)->text(),
-              ui->meetingTableWidget->item(row, 5)->text().replace(" min", "").toInt(),
-              QDateTime::fromString(ui->meetingTableWidget->item(row, 6)->text(), "yyyy-MM-dd hh:mm"));
+    meeting m(
+        ui->meetingTableWidget->item(row, 1)->text(),
+        ui->meetingTableWidget->item(row, 2)->text(),
+        ui->meetingTableWidget->item(row, 3)->text(),
+        ui->meetingTableWidget->item(row, 4)->text(),
+        ui->meetingTableWidget->item(row, 5)->text().replace(" min", "").toInt(),
+        QDateTime::fromString(ui->meetingTableWidget->item(row, 6)->text(), "yyyy-MM-dd hh:mm")
+        );
     m.setId(id);
 
     QPixmap qrCode = m.generateQRCode();
@@ -355,7 +357,7 @@ void MeetingManager::handleSortCriteriaChanged(int index)
     default: return;
     }
 
-    QString queryStr = QString("SELECT id, title, organiser, participant, agenda, duration, datem FROM meeting ORDER BY %1").arg(column);
+    QString queryStr = QString("SELECT id, title, organiser, participant, agenda, duration, datem FROM AHMED.MEETING ORDER BY %1").arg(column);
     QSqlQuery query(queryStr);
 
     ui->meetingTableWidget->setRowCount(0);
@@ -383,13 +385,11 @@ void MeetingManager::handleStatisticsButtonClick()
         QMessageBox::warning(nullptr, "Database Error", "Cannot open statistics: Database is not connected.");
         return;
     }
-    // Defer to MainWindow's ChartWindow
     QMessageBox::information(nullptr, "Statistics", "Statistics are available via the main Statistics button.");
 }
 
 void MeetingManager::handleRefreshStatsButtonClick()
 {
-    // Placeholder: meetingRefreshStatsButton not in mainwindow.ui
     QMessageBox::information(nullptr, "Refresh Stats", "Statistics refresh is currently disabled.");
 }
 
@@ -417,74 +417,40 @@ void MeetingManager::updateInputFields()
 
 void MeetingManager::refreshTableWidget()
 {
-    qDebug() << "Entering refreshTableWidget, m_dbConnected =" << m_dbConnected;
-    if (!ui || !ui->meetingTableWidget) {
-        qDebug() << "Error: ui or meetingTableWidget is null";
+    qDebug() << "Entering MeetingManager::refreshTableWidget";
+    if (!ui || !m_dbConnected || !notificationManager) {
+        qDebug() << "Error: ui, m_dbConnected, or notificationManager is null";
         return;
     }
 
-    if (!m_dbConnected) {
-        qDebug() << "Error: Database is not connected";
-        ui->meetingTableWidget->setRowCount(0);
-        ui->meetingTableWidget->setColumnCount(7);
-        ui->meetingTableWidget->setHorizontalHeaderLabels({"ID", "Title", "Organiser", "Participant", "Agenda", "Duration", "Date and Time"});
+    QSqlQuery query;
+    query.prepare("SELECT ID, TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, DATEM, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID FROM AHMED.MEETING");
+    if (!query.exec()) {
+        qDebug() << "Error executing query in refreshTableWidget:" << query.lastError().text();
         return;
     }
 
-    meeting m;
-    QSqlQueryModel* model = m.afficher();
-    if (!model) {
-        qDebug() << "Error: Failed to create QSqlQueryModel";
-        ui->meetingTableWidget->setRowCount(0);
-        return;
-    }
-
-    if (model->lastError().isValid()) {
-        qDebug() << "SQL Error in refreshTableWidget:" << model->lastError().text();
-        delete model;
-        return;
-    }
-
-    ui->meetingTableWidget->setColumnCount(7);
-    ui->meetingTableWidget->setHorizontalHeaderLabels({"ID", "Title", "Organiser", "Participant", "Agenda", "Duration", "Date and Time"});
+    ui->meetingTableWidget->clearContents();
     ui->meetingTableWidget->setRowCount(0);
+    ui->meetingTableWidget->setColumnCount(7);
+    ui->meetingTableWidget->setHorizontalHeaderLabels({"ID", "Title", "Organiser", "Participant", "Agenda", "Duration (min)", "Date"});
 
-    qDebug() << "refreshTableWidget: Model has" << model->rowCount() << "rows";
-    for (int row = 0; row < model->rowCount(); ++row) {
+    int row = 0;
+    while (query.next()) {
         ui->meetingTableWidget->insertRow(row);
-        for (int col = 0; col < 7; ++col) {
-            QVariant data = model->data(model->index(row, col));
-            QString displayData;
-            if (data.isNull()) {
-                qDebug() << "Null data at row" << row << "col" << col;
-                displayData = "N/A";
-            } else if (col == 5) {
-                displayData = data.toString() + " min";
-            } else if (col == 6) {
-                QDateTime dateTime = data.toDateTime();
-                if (dateTime.isValid()) {
-                    displayData = dateTime.toString("yyyy-MM-dd hh:mm");
-                } else {
-                    qDebug() << "Invalid DateTime at row" << row << "col" << col << "data:" << data.toString();
-                    displayData = "Invalid Date";
-                }
-            } else {
-                displayData = data.toString();
-            }
-            QTableWidgetItem* item = new QTableWidgetItem(displayData);
-            if (item) {
-                ui->meetingTableWidget->setItem(row, col, item);
-            } else {
-                qDebug() << "Error: Failed to create QTableWidgetItem at row" << row << "col" << col;
-            }
-        }
+        ui->meetingTableWidget->setItem(row, 0, new QTableWidgetItem(query.value("ID").toString()));
+        ui->meetingTableWidget->setItem(row, 1, new QTableWidgetItem(query.value("TITLE").toString()));
+        ui->meetingTableWidget->setItem(row, 2, new QTableWidgetItem(query.value("ORGANISER").toString()));
+        ui->meetingTableWidget->setItem(row, 3, new QTableWidgetItem(query.value("PARTICIPANT").toString()));
+        ui->meetingTableWidget->setItem(row, 4, new QTableWidgetItem(query.value("AGENDA").toString()));
+        ui->meetingTableWidget->setItem(row, 5, new QTableWidgetItem(query.value("DURATION").toString() + " min"));
+        ui->meetingTableWidget->setItem(row, 6, new QTableWidgetItem(query.value("DATEM").toDateTime().toString("yyyy-MM-dd hh:mm")));
+
+        row++;
     }
 
-    ui->meetingTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->meetingTableWidget->setColumnWidth(6, 150);
-
-    delete model;
-    qDebug() << "Exiting refreshTableWidget";
+    ui->meetingTableWidget->resizeColumnsToContents();
+    qDebug() << "Exiting MeetingManager::refreshTableWidget, rows:" << row;
 }
 
 void MeetingManager::applyThemeStyles()

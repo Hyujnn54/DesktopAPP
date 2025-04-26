@@ -7,6 +7,7 @@
 #include <QPixmap>
 #include <QSqlQueryModel>
 #include <QSqlError>
+#include <QVariant>
 
 class meeting {
 private:
@@ -16,15 +17,15 @@ private:
     QString participant;
     QString agenda;
     int duration;
-    QDateTime datem;
-    int employeeId;
-    int clientId;
-    int resourceId;
+    QDateTime m_dateTime;
+    QVariant employeeId;
+    QVariant clientId;
+    QVariant resourceId;
 
 public:
-    meeting();  // Added default constructor
-    meeting(QString title, QString organiser, QString participant, QString agenda, int duration, QDateTime datem,
-            int employeeId = -1, int clientId = -1, int resourceId = -1);
+    meeting();
+    meeting(QString title, QString organiser, QString participant, QString agenda, int duration, QDateTime dateTime,
+            QVariant employeeId = QVariant(), QVariant clientId = QVariant(), QVariant resourceId = QVariant());
 
     // Getters
     int getId() const;
@@ -34,9 +35,9 @@ public:
     QString getAgenda() const;
     int getDuration() const;
     QDateTime getDatem() const;
-    int getEmployeeId() const;
-    int getClientId() const;
-    int getResourceId() const;
+    QVariant getEmployeeId() const;
+    QVariant getClientId() const;
+    QVariant getResourceId() const;
 
     // Setters
     void setId(const int &id);
@@ -45,10 +46,10 @@ public:
     void setParticipant(const QString &participant);
     void setAgenda(const QString &agenda);
     void setDuration(int duration);
-    void setDatem(const QDateTime &datem);
-    void setEmployeeId(int employeeId);
-    void setClientId(int clientId);
-    void setResourceId(int resourceId);
+    void setDatem(const QDateTime &dateTime);
+    void setEmployeeId(const QVariant &employeeId);
+    void setClientId(const QVariant &clientId);
+    void setResourceId(const QVariant &resourceId);
 
     // Functionalities
     bool add();
