@@ -472,6 +472,8 @@ QMap<QString, int> MeetingManager::getStatisticsByCategory(const QString &catego
     QString column;
     if (category == "Organiser") {
         column = "ORGANISER";
+    } else if (category == "Participant") {
+        column = "PARTICIPANT";
     } else if (category == "Agenda") {
         column = "AGENDA";
     } else if (category == "Date") {
@@ -482,10 +484,10 @@ QMap<QString, int> MeetingManager::getStatisticsByCategory(const QString &catego
     }
 
     QString queryString = QString(
-                              "SELECT %1, COUNT(*) AS count "
-                              "FROM AHMED.MEETING "
-                              "GROUP BY %1"
-                              ).arg(column);
+        "SELECT %1, COUNT(*) AS count "
+        "FROM AHMED.MEETING "
+        "GROUP BY %1"
+    ).arg(column);
 
     QSqlQuery query;
     query.prepare(queryString);
@@ -502,6 +504,9 @@ QMap<QString, int> MeetingManager::getStatisticsByCategory(const QString &catego
             key = date.toString("yyyy-MM-dd");
         } else {
             key = query.value(0).toString();
+            if (key.isEmpty()) {
+                key = "Unknown " + category;
+            }
         }
         int count = query.value(1).toInt();
         stats[key] = count;

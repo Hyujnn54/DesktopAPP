@@ -31,7 +31,6 @@ public:
     void refresh();
     void showStatistics();
     void setNotificationManager(NotificationManager *manager);
-    // Add this declaration
     QMap<QString, int> getStatisticsByCategory(const QString &category);
 
 private slots:
@@ -78,6 +77,7 @@ private:
                       const QString &consultant);
     void updateCalendarConsultations();
     void exportClientsToPdf();
+    void setClientTableHeaders(); // Add this declaration
 };
 
 #endif // CLIENTMANAGER_H

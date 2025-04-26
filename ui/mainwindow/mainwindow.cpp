@@ -338,7 +338,51 @@ void MainWindow::handleNotificationLabelClicked()
 
 void MainWindow::updateNotificationLabel(int count)
 {
-    ui->trainingNotificationLabel->setText(QString("Notifications: %1").arg(count));
+    // Create an eye-catching notification label with a badge style
+    QString styleSheet;
+    
+    if (count > 0) {
+        // Make the notification count more visible when there are notifications
+        styleSheet = QString(
+            "QPushButton {"
+            "  background-color: #3A5DAE;"
+            "  color: white;"
+            "  border-radius: 5px;"
+            "  padding: 5px 10px;"
+            "  font-weight: bold;"
+            "  min-width: 140px;"
+            "  max-width: 140px;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: #4A70C2;"
+            "}"
+            "QPushButton:pressed {"
+            "  background-color: #2A4682;"
+            "}"
+        );
+        
+        // Use a badge-like counter for the notification count
+        ui->trainingNotificationLabel->setText(QString("Notifications: ") + 
+            QString("<span style='background-color: #FF4500; color: white; border-radius: 8px; padding: 1px 5px;'>%1</span>").arg(count));
+    } else {
+        // Use more subtle styling when there are no notifications
+        styleSheet = QString(
+            "QPushButton {"
+            "  background-color: #808080;"
+            "  color: white;"
+            "  border-radius: 5px;"
+            "  padding: 5px 10px;"
+            "  min-width: 140px;"
+            "  max-width: 140px;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: #9A9A9A;"
+            "}"
+        );
+        ui->trainingNotificationLabel->setText("No Notifications");
+    }
+    
+    ui->trainingNotificationLabel->setStyleSheet(styleSheet);
 }
 
 void MainWindow::on_chatSendButton_clicked()
@@ -631,8 +675,24 @@ void MainWindow::updateClientChart()
         QChart *chart = ui->clientChartView->chart();
         if (!chart) return;
         
-        // Clear existing series
+        // Clear existing series and disconnect old connections
+        foreach(QAbstractSeries *series, chart->series()) {
+            if (QBarSeries *barSeries = qobject_cast<QBarSeries*>(series)) {
+                disconnect(barSeries, &QBarSeries::hovered, nullptr, nullptr);
+            } else if (QPieSeries *pieSeries = qobject_cast<QPieSeries*>(series)) {
+                for (QPieSlice *slice : pieSeries->slices()) {
+                    disconnect(slice, &QPieSlice::hovered, nullptr, nullptr);
+                }
+            }
+        }
         chart->removeAllSeries();
+        
+        // Also clear the axes to prevent duplication
+        QList<QAbstractAxis*> axes = chart->axes();
+        for (QAbstractAxis *axis : axes) {
+            chart->removeAxis(axis);
+            delete axis;
+        }
         
         // Update chart title based on filter
         chart->setTitle(QString("Client Statistics by %1").arg(filter));
@@ -700,7 +760,16 @@ void MainWindow::updateClientChart()
             series->attachAxis(axisX);
             
             QValueAxis *axisY = new QValueAxis();
-            axisY->setRange(0, set->at(set->count() - 1) * 1.1); // Set range with some padding
+            // Ensure we don't crash with empty data
+            if (set->count() > 0) {
+                double maxValue = 0;
+                for (int i = 0; i < set->count(); i++) {
+                    maxValue = qMax(maxValue, set->at(i));
+                }
+                axisY->setRange(0, maxValue * 1.1); // Set range with some padding
+            } else {
+                axisY->setRange(0, 10); // Default range if no data
+            }
             chart->addAxis(axisY, Qt::AlignLeft);
             series->attachAxis(axisY);
             
@@ -741,8 +810,24 @@ void MainWindow::updateTrainingChart()
         QChart *chart = ui->trainingChartView->chart();
         if (!chart) return;
         
-        // Clear existing series
+        // Clear existing series and disconnect old connections
+        foreach(QAbstractSeries *series, chart->series()) {
+            if (QBarSeries *barSeries = qobject_cast<QBarSeries*>(series)) {
+                disconnect(barSeries, &QBarSeries::hovered, nullptr, nullptr);
+            } else if (QPieSeries *pieSeries = qobject_cast<QPieSeries*>(series)) {
+                for (QPieSlice *slice : pieSeries->slices()) {
+                    disconnect(slice, &QPieSlice::hovered, nullptr, nullptr);
+                }
+            }
+        }
         chart->removeAllSeries();
+        
+        // Also clear the axes to prevent duplication
+        QList<QAbstractAxis*> axes = chart->axes();
+        for (QAbstractAxis *axis : axes) {
+            chart->removeAxis(axis);
+            delete axis;
+        }
         
         // Update chart title based on filter
         chart->setTitle(QString("Training Statistics by %1").arg(filter));
@@ -810,7 +895,16 @@ void MainWindow::updateTrainingChart()
             series->attachAxis(axisX);
             
             QValueAxis *axisY = new QValueAxis();
-            axisY->setRange(0, set->at(set->count() - 1) * 1.1); // Set range with some padding
+            // Ensure we don't crash with empty data
+            if (set->count() > 0) {
+                double maxValue = 0;
+                for (int i = 0; i < set->count(); i++) {
+                    maxValue = qMax(maxValue, set->at(i));
+                }
+                axisY->setRange(0, maxValue * 1.1); // Set range with some padding
+            } else {
+                axisY->setRange(0, 10); // Default range if no data
+            }
             chart->addAxis(axisY, Qt::AlignLeft);
             series->attachAxis(axisY);
             
@@ -840,99 +934,124 @@ void MainWindow::updateTrainingChart()
 void MainWindow::updateMeetingChart()
 {
     if (!m_dbConnected) return;
-    
+
     try {
         // Get chart type and filter
         QString chartType = ui->meetingChartTypeComboBox->currentText();
         QString filter = ui->meetingChartFilterComboBox->currentText();
         bool showLegend = ui->meetingToggleLegendCheckBox->isChecked();
-        
+
         // Get the chart from the view
         QChart *chart = ui->meetingChartView->chart();
         if (!chart) return;
-        
-        // Clear existing series
+
+        // Clear existing series and disconnect old connections
+        foreach(QAbstractSeries *series, chart->series()) {
+            if (QBarSeries *barSeries = qobject_cast<QBarSeries*>(series)) {
+                disconnect(barSeries, &QBarSeries::hovered, nullptr, nullptr);
+            } else if (QPieSeries *pieSeries = qobject_cast<QPieSeries*>(series)) {
+                for (QPieSlice *slice : pieSeries->slices()) {
+                    disconnect(slice, &QPieSlice::hovered, nullptr, nullptr);
+                }
+            }
+        }
         chart->removeAllSeries();
-        
+
+        // Also clear the axes to prevent duplication
+        QList<QAbstractAxis*> axes = chart->axes();
+        for (QAbstractAxis *axis : axes) {
+            chart->removeAxis(axis);
+            delete axis;
+        }
+
         // Update chart title based on filter
         chart->setTitle(QString("Meeting Statistics by %1").arg(filter));
-        
+
         // Show/hide legend based on checkbox
         chart->legend()->setVisible(showLegend);
-        
+
         // Create appropriate chart based on selection
         if (chartType == "Pie Chart") {
             QPieSeries *series = new QPieSeries();
-            
+
             // Get data from database through meeting manager
             QMap<QString, int> data = meetingManager->getStatisticsByCategory(filter);
-            
+
             // Add slices to the pie series
             for (auto it = data.begin(); it != data.end(); ++it) {
                 QPieSlice *slice = series->append(it.key(), it.value());
                 slice->setLabelVisible(true);
                 slice->setLabel(QString("%1: %2%").arg(it.key()).arg(100 * slice->percentage(), 0, 'f', 1));
-                
+
                 // Connect slice signals for hover effects
                 connect(slice, &QPieSlice::hovered, [this, slice](bool hovered) {
                     if (hovered) {
                         slice->setExploded(true);
                         ui->meetingHoverDescriptionLabel->setText(
                             QString("%1: %2 meetings (%3%)").arg(
-                                slice->label(), 
+                                slice->label(),
                                 QString::number(slice->value()),
                                 QString::number(100 * slice->percentage(), 'f', 1)
-                            )
-                        );
+                                )
+                            );
                     } else {
                         slice->setExploded(false);
                         ui->meetingHoverDescriptionLabel->setText("Hover over a chart element to see details");
                     }
                 });
             }
-            
+
             chart->addSeries(series);
         } else if (chartType == "Bar Chart") {
             QBarSeries *series = new QBarSeries();
-            
+
             // Get data from database through meeting manager
             QMap<QString, int> data = meetingManager->getStatisticsByCategory(filter);
-            
+
             // Create a bar set
             QBarSet *set = new QBarSet("Meetings");
-            
+
             // Create categories list for axis
             QStringList categories;
-            
+
             // Add values to the bar set
             for (auto it = data.begin(); it != data.end(); ++it) {
                 *set << it.value();
                 categories << it.key();
             }
-            
+
             series->append(set);
             chart->addSeries(series);
-            
+
             // Create axes
             QBarCategoryAxis *axisX = new QBarCategoryAxis();
             axisX->append(categories);
             chart->addAxis(axisX, Qt::AlignBottom);
             series->attachAxis(axisX);
-            
+
             QValueAxis *axisY = new QValueAxis();
-            axisY->setRange(0, set->at(set->count() - 1) * 1.1); // Set range with some padding
+            // Ensure we don't crash with empty data
+            if (set->count() > 0) {
+                double maxValue = 0;
+                for (int i = 0; i < set->count(); i++) {
+                    maxValue = qMax(maxValue, set->at(i));
+                }
+                axisY->setRange(0, maxValue * 1.1); // Set range with some padding
+            } else {
+                axisY->setRange(0, 10); // Default range if no data
+            }
             chart->addAxis(axisY, Qt::AlignLeft);
             series->attachAxis(axisY);
-            
-            // Connect hover signals
-            connect(series, &QBarSeries::hovered, [this](bool status, int index, QBarSet *barset) {
+
+            // Connect hover signals, capturing categories
+            connect(series, &QBarSeries::hovered, [this, categories](bool status, int index, QBarSet *barset) {
                 if (status) {
                     ui->meetingHoverDescriptionLabel->setText(
                         QString("%1: %2 meetings").arg(
-                            barset->label(), 
+                            categories.at(index),
                             QString::number(barset->at(index))
-                        )
-                    );
+                            )
+                        );
                 } else {
                     ui->meetingHoverDescriptionLabel->setText("Hover over a chart element to see details");
                 }

@@ -316,8 +316,29 @@ void ClientManager::on_clientTableViewHeader_clicked(int logicalIndex)
         qDebug() << "Error: Database not connected or proxy model is null";
         return;
     }
-    Qt::SortOrder order = ui->clientTableView->horizontalHeader()->sortIndicatorOrder();
-    clientProxyModel->sort(logicalIndex, order);
+
+    // Get current sort order or toggle if same column is clicked
+    Qt::SortOrder order = Qt::AscendingOrder;
+    if (ui->clientTableView->horizontalHeader()->sortIndicatorSection() == logicalIndex) {
+        order = (ui->clientTableView->horizontalHeader()->sortIndicatorOrder() == Qt::AscendingOrder)
+        ? Qt::DescendingOrder : Qt::AscendingOrder;
+    }
+
+    // Update the sort indicator
+    ui->clientTableView->horizontalHeader()->setSortIndicator(logicalIndex, order);
+
+    // Use the Client::sortByColumn method for enhanced sorting
+    QSqlQueryModel* sortedModel = client->sortByColumn(logicalIndex, order);
+    clientTableModel->setQuery(std::move(sortedModel->query())); // Use std::move to avoid deprecation warning
+    delete sortedModel;
+
+    // Make sure the proxy model reflects the changes
+    clientProxyModel->setSourceModel(clientTableModel);
+    ui->clientTableView->setModel(clientProxyModel);
+
+    // Apply headers and formatting
+    setClientTableHeaders();
+
     qDebug() << "Exiting on_clientTableViewHeader_clicked";
 }
 
@@ -585,14 +606,19 @@ void ClientManager::refreshClientTable()
 
     ui->clientTableView->setModel(clientProxyModel);
     ui->clientTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    setClientTableHeaders();
+
+    qDebug() << "Exiting refreshClientTable";
+}
+
+void ClientManager::setClientTableHeaders()
+{
     clientTableModel->setHeaderData(0, Qt::Horizontal, "Name");
     clientTableModel->setHeaderData(1, Qt::Horizontal, "Sector");
     clientTableModel->setHeaderData(2, Qt::Horizontal, "Contact Info");
     clientTableModel->setHeaderData(3, Qt::Horizontal, "Email");
     clientTableModel->setHeaderData(4, Qt::Horizontal, "Consultation Date");
     clientTableModel->setHeaderData(5, Qt::Horizontal, "Consultant");
-
-    qDebug() << "Exiting refreshClientTable";
 }
 
 bool ClientManager::updateClient(const QString &originalName, const QString &newName, const QString &sector,
