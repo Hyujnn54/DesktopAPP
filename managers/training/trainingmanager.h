@@ -5,8 +5,8 @@
 #include <QSqlQueryModel>
 #include <QSortFilterProxyModel>
 #include <QDateTime>
+#include <QList>
 #include "formations.h"
-#include "notificationmanager.h"
 
 namespace Ui {
 class MainWindow;
@@ -19,7 +19,7 @@ class TrainingManager : public QObject
     Q_OBJECT
 
 public:
-    explicit TrainingManager(bool dbConnected, NotificationManager *notificationManager, QObject *parent = nullptr);
+    explicit TrainingManager(bool dbConnected, QObject *parent = nullptr);
     ~TrainingManager();
 
     void initialize(Ui::MainWindow *ui);
@@ -33,18 +33,26 @@ private slots:
     void on_trainingSearchCriteriaComboBox_currentIndexChanged(int index);
     void on_trainingResetSearchButton_clicked();
     void on_trainingTableViewHeader_clicked(int logicalIndex);
-    void on_trainingExportPdfButton_clicked();
-    void updateNotificationCount(int count);
+    void on_trainingExportPdfButton_clicked(); // New slot for PDF export
+    void on_trainingNotificationLabel_clicked();
 
 private:
+    struct Notification {
+        QString action;
+        QDateTime timestamp;
+        QString location;
+        QString details;
+        int lineNumber;
+    };
+
     bool m_dbConnected;
     Ui::MainWindow *ui;
     formations *formations;
     QSqlQueryModel *trainingTableModel;
     QSortFilterProxyModel *trainingProxyModel;
-    NotificationManager *notificationManager;
-    int currentSortColumn;
-    Qt::SortOrder currentSortOrder;
+    QList<Notification> notifications;
+    int currentSortColumn; // Track the current sort column
+    Qt::SortOrder currentSortOrder; // Track the current sort order
 
     bool validateTrainingInputs();
     bool isValidName(const QString &name);
@@ -52,7 +60,7 @@ private:
     void performTrainingSearch();
     void refreshTrainingTable();
     void logNotification(const QString &action, const QString &location, const QString &details, int lineNumber);
-    void exportTrainingsToPdf();
+    void exportTrainingsToPdf(); // New method for PDF export
 };
 
 #endif // TRAININGMANAGER_H

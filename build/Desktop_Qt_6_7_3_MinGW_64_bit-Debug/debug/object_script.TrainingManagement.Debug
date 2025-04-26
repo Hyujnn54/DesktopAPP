@@ -2,7 +2,6 @@ debug/connection.o
 debug/customsqlquerymodel.o
 debug/emailsender.o
 debug/main.o
-debug/notificationmanager.o
 debug/chartwindow.o
 debug/mainwindow.o
 debug/updateclientdialog.o
@@ -12,7 +11,6 @@ debug/clientmanager.o
 debug/formations.o
 debug/trainingmanager.o
 debug/moc_emailsender.o
-debug/moc_notificationmanager.o
 debug/moc_chartwindow.o
 debug/moc_mainwindow.o
 debug/moc_updateclientdialog.o

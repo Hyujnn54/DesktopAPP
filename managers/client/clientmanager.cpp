@@ -13,8 +13,12 @@
 #include <QSqlRecord>
 #include <QSqlError>
 #include <QFileDialog>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QTextEdit>
+#include <QPushButton>
 
-ClientManager::ClientManager(bool dbConnected, NotificationManager *notificationManager, QObject *parent)
+ClientManager::ClientManager(bool dbConnected, QObject *parent)
     : QObject(parent),
     m_dbConnected(dbConnected),
     ui(nullptr),
@@ -25,11 +29,8 @@ ClientManager::ClientManager(bool dbConnected, NotificationManager *notification
     clientProxyModel(new QSortFilterProxyModel(this)),
     emailAttempts(0),
     emailSuccesses(0),
-    lastCalendarUpdate(QDateTime::currentDateTime()),
-    notificationManager(notificationManager)
+    lastCalendarUpdate(QDateTime::currentDateTime())
 {
-    connect(notificationManager, &NotificationManager::notificationCountChanged,
-            this, &ClientManager::updateNotificationCount);
 }
 
 ClientManager::~ClientManager()
@@ -88,7 +89,7 @@ void ClientManager::initialize(Ui::MainWindow *ui)
     ui->clientDateConsultationsView->verticalHeader()->setVisible(false);
 
     // Set initial notification button text
-    updateNotificationCount(notificationManager->getNotificationCount());
+    ui->trainingNotificationLabel->setText("0 modifications");
 
     // Connect signals
     connect(ui->clientAddButton, &QPushButton::clicked, this, &ClientManager::on_clientAddButton_clicked);
@@ -330,17 +331,51 @@ void ClientManager::sendConsultationReminders()
 
 void ClientManager::on_trainingNotificationLabel_clicked()
 {
-    notificationManager->showNotifications(qobject_cast<QWidget*>(parent()));
-}
+    if (notifications.isEmpty()) {
+        QMessageBox::information(qobject_cast<QWidget*>(parent()), "Notifications", "No modifications recorded.");
+        return;
+    }
 
-void ClientManager::updateNotificationCount(int count)
-{
-    ui->trainingNotificationLabel->setText(QString("%1 modifications").arg(count));
+    QDialog *notificationDialog = new QDialog(qobject_cast<QWidget*>(parent()));
+    notificationDialog->setWindowTitle("Modification History");
+    notificationDialog->setFixedSize(400, 300);
+
+    QVBoxLayout *layout = new QVBoxLayout(notificationDialog);
+    QTextEdit *textEdit = new QTextEdit(notificationDialog);
+    textEdit->setReadOnly(true);
+    QPushButton *closeButton = new QPushButton("Close", notificationDialog);
+
+    layout->addWidget(textEdit);
+    layout->addWidget(closeButton);
+
+    QString notificationText;
+    for (const Notification &notification : notifications) {
+        notificationText += QString("[%1] %2\nLocation: %3\nLine: %4\nDetails: %5\n\n")
+        .arg(notification.timestamp.toString("yyyy-MM-dd HH:mm:ss"),
+             notification.action,
+             notification.location,
+             QString::number(notification.lineNumber),
+             notification.details);
+    }
+    textEdit->setText(notificationText);
+
+    connect(closeButton, &QPushButton::clicked, notificationDialog, &QDialog::accept);
+
+    notificationDialog->exec();
+    delete notificationDialog;
 }
 
 void ClientManager::logNotification(const QString &action, const QString &location, const QString &details, int lineNumber)
 {
-    notificationManager->addNotification(action, location, details, lineNumber);
+    Notification notification;
+    notification.action = action;
+    notification.timestamp = QDateTime::currentDateTime();
+    notification.location = location;
+    notification.details = details;
+    notification.lineNumber = lineNumber;
+    notifications.append(notification);
+
+    ui->trainingNotificationLabel->setText(QString("%1 modifications").arg(notifications.size()));
 }
 
 bool ClientManager::validateClientInputs()

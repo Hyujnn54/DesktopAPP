@@ -11,19 +11,13 @@ CONFIG += c++17
 # Debug output to verify flags
 message("C++ flags: $$QMAKE_CXXFLAGS")
 
-# Add include paths
+# Add managers/ to the include path (keeping this for now)
 INCLUDEPATH += $$PWD/managers
-INCLUDEPATH += $$PWD/ui/mainwindow  # Added this line to include the mainwindow directory
-INCLUDEPATH += $$PWD/core
-INCLUDEPATH += $$PWD/dialog/updateclientdialog
-INCLUDEPATH += $$PWD/dialog/updatetrainingdialog
-INCLUDEPATH += $$PWD/ui/chartwindow
 
 HEADERS += \
     core/connection.h \
     core/customsqlquerymodel.h \
     core/emailsender.h \
-    core/notificationmanager.h \
     ui/chartwindow/chartwindow.h \
     ui/mainwindow/mainwindow.h \
     dialog/updateclientdialog/updateclientdialog.h \
@@ -38,7 +32,6 @@ SOURCES += \
     core/customsqlquerymodel.cpp \
     core/emailsender.cpp \
     core/main.cpp \
-    core/notificationmanager.cpp \
     ui/chartwindow/chartwindow.cpp \
     ui/mainwindow/mainwindow.cpp \
     dialog/updateclientdialog/updateclientdialog.cpp \
@@ -47,7 +40,6 @@ SOURCES += \
     managers/client/clientmanager.cpp \
     managers/training/formations.cpp \
     managers/training/trainingmanager.cpp
-
 
 FORMS += \
     ui/chartwindow/ChartWindow.ui \

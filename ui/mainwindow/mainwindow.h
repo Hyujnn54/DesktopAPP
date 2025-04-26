@@ -1,9 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "client/clientmanager.h"
-#include "training/trainingmanager.h"
-#include "notificationmanager.h"  // Add this include
+#include "ClientManager.h"
+#include "TrainingManager.h"
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -15,7 +14,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(bool dbConnected, NotificationManager *notificationManager, QWidget *parent = nullptr);
+    MainWindow(bool dbConnected, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
@@ -34,7 +33,6 @@ private:
     bool m_dbConnected;
     ClientManager *clientManager;
     TrainingManager *trainingManager;
-    NotificationManager *notificationManager;  // Add this member
 };
 
 #endif // MAINWINDOW_H

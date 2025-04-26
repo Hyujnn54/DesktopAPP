@@ -2,7 +2,6 @@ release/connection.o
 release/customsqlquerymodel.o
 release/emailsender.o
 release/main.o
-release/notificationmanager.o
 release/chartwindow.o
 release/mainwindow.o
 release/updateclientdialog.o
@@ -12,7 +11,6 @@ release/clientmanager.o
 release/formations.o
 release/trainingmanager.o
 release/moc_emailsender.o
-release/moc_notificationmanager.o
 release/moc_chartwindow.o
 release/moc_mainwindow.o
 release/moc_updateclientdialog.o

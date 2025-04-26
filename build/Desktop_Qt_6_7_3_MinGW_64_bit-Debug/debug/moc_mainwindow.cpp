@@ -6,7 +6,7 @@
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
 
-#include "../../../ui/mainwindow/mainwindow.h"
+#include "../../../mainwindow.h"
 #include <QtGui/qtextcursor.h>
 #include <QtGui/qscreen.h>
 #include <QtCharts/qlineseries.h>

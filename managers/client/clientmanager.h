@@ -6,10 +6,10 @@
 #include <QSortFilterProxyModel>
 #include <QMap>
 #include <QDateTime>
+#include <QList>
 #include "Client.h"
 #include "EmailSender.h"
 #include "ChartWindow.h"
-#include "notificationmanager.h"
 
 namespace Ui {
 class MainWindow;
@@ -23,7 +23,7 @@ class ClientManager : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientManager(bool dbConnected, NotificationManager *notificationManager, QObject *parent = nullptr);
+    explicit ClientManager(bool dbConnected, QObject *parent = nullptr);
     ~ClientManager();
 
     void initialize(Ui::MainWindow *ui);
@@ -43,9 +43,16 @@ private slots:
     void on_clientExportPdfButton_clicked();
     void sendConsultationReminders();
     void on_trainingNotificationLabel_clicked();
-    void updateNotificationCount(int count);
 
 private:
+    struct Notification {
+        QString action;
+        QDateTime timestamp;
+        QString location;
+        QString details;
+        int lineNumber;
+    };
+
     bool m_dbConnected;
     Ui::MainWindow *ui;
     Client *client;
@@ -57,7 +64,7 @@ private:
     int emailAttempts;
     int emailSuccesses;
     QDateTime lastCalendarUpdate;
-    NotificationManager *notificationManager;
+    QList<Notification> notifications;
 
     bool validateClientInputs();
     bool isValidName(const QString &name);

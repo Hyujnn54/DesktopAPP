@@ -7,22 +7,23 @@
 #include <QPdfWriter>
 #include <QPainter>
 #include <QTextDocument>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QTextEdit>
+#include <QPushButton>
 #include <QSqlRecord>
 #include <QSqlError>
 
-TrainingManager::TrainingManager(bool dbConnected, NotificationManager *notificationManager, QObject *parent)
+TrainingManager::TrainingManager(bool dbConnected, QObject *parent)
     : QObject(parent),
     m_dbConnected(dbConnected),
     ui(nullptr),
     formations(new class formations),
     trainingTableModel(new QSqlQueryModel(this)),
     trainingProxyModel(new QSortFilterProxyModel(this)),
-    notificationManager(notificationManager),
     currentSortColumn(-1),
     currentSortOrder(Qt::AscendingOrder)
 {
-    connect(notificationManager, &NotificationManager::notificationCountChanged,
-            this, &TrainingManager::updateNotificationCount);
 }
 
 TrainingManager::~TrainingManager()
@@ -52,6 +53,7 @@ void TrainingManager::initialize(Ui::MainWindow *ui)
     connect(ui->trainingSearchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &TrainingManager::on_trainingSearchCriteriaComboBox_currentIndexChanged);
     connect(ui->trainingResetSearchButton, &QPushButton::clicked, this, &TrainingManager::on_trainingResetSearchButton_clicked);
+    connect(ui->trainingNotificationLabel, &QPushButton::clicked, this, &TrainingManager::on_trainingNotificationLabel_clicked);
 
     refresh();
 }
@@ -263,7 +265,14 @@ void TrainingManager::refreshTrainingTable()
 
 void TrainingManager::logNotification(const QString &action, const QString &location, const QString &details, int lineNumber)
 {
-    notificationManager->addNotification(action, location, details, lineNumber);
+    Notification notification;
+    notification.action = action;
+    notification.timestamp = QDateTime::currentDateTime();
+    notification.location = location;
+    notification.details = details;
+    notification.lineNumber = lineNumber;
+    notifications.append(notification);
+    ui->trainingNotificationLabel->setText(QString("%1 modifications").arg(notifications.size()));
 }
 
 void TrainingManager::on_trainingSearchInput_textChanged(const QString &text)
@@ -391,7 +400,16 @@ void TrainingManager::exportTrainingsToPdf()
     }
 }
 
-void TrainingManager::updateNotificationCount(int count)
+void TrainingManager::on_trainingNotificationLabel_clicked()
 {
-    ui->trainingNotificationLabel->setText(QString("%1 modifications").arg(count));
+    if (!notifications.isEmpty()) {
+        const Notification &latest = notifications.last();
+        QMessageBox::information(
+            qobject_cast<QWidget*>(parent()),
+            "Notification Details",
+            QString("Action: %1\nTimestamp: %2\nLocation: %3\nDetails: %4\nLine: %5")
+                .arg(latest.action, latest.timestamp.toString(), latest.location, latest.details)
+                .arg(latest.lineNumber)
+            );
+    }
 }
