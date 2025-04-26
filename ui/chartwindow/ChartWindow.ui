@@ -101,17 +101,12 @@
              <string>Training Statistics</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Meeting Statistics</string>
+            </property>
+           </item>
           </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="filterLabel">
-           <property name="text">
-            <string>Filter:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="filterComboBox"/>
          </item>
          <item>
           <widget class="QLabel" name="chartTypeLabel">
@@ -145,16 +140,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="refreshChartButton">
+          <widget class="QPushButton" name="refreshButton">
            <property name="text">
             <string>Refresh</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="resetChartButton">
-           <property name="text">
-            <string>Reset</string>
            </property>
           </widget>
          </item>

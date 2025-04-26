@@ -21,11 +21,7 @@ public:
     ~ChartWindow();
 
 private slots:
-    void populateStatsViews();
-    void updateFilterComboBox();
     void updateChart();
-    void on_refreshChartButton_clicked();
-    void on_resetChartButton_clicked();
     void handlePieSliceHovered(QPieSlice *slice, bool state);
     void handleBarHovered(bool status, int index);
 

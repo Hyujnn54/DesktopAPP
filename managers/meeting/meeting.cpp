@@ -19,8 +19,8 @@ meeting::meeting()
 }
 
 meeting::meeting(int id, const QString &title, const QString &organiser, const QString &participant,
-                 const QString &agenda, int duration, const QVariant &employeeId, const QVariant &clientId,
-                 const QVariant &resourceId, const QDateTime &dateTime)
+                const QString &agenda, int duration, const QDateTime &dateTime,
+                const QVariant &employeeId, const QVariant &clientId, const QVariant &resourceId)
     : id(id), title(title), organiser(organiser), participant(participant),
     agenda(agenda), duration(duration), m_dateTime(dateTime),
     employeeId(employeeId), clientId(clientId), resourceId(resourceId)
@@ -54,29 +54,85 @@ void meeting::setResourceId(const QVariant &resourceId) { this->resourceId = res
 // Functionalities
 bool meeting::add()
 {
-    QSqlQuery query;
-    query.prepare("INSERT INTO AHMED.MEETING (TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID, DATEM) "
-                  "VALUES (:title, :organiser, :participant, :agenda, :duration, :employee_id, :client_id, :ressource_id, :datem) "
-                  "RETURNING ID INTO :id");
-    query.bindValue(":title", title);
-    query.bindValue(":organiser", organiser);
-    query.bindValue(":participant", participant);
-    query.bindValue(":agenda", agenda);
-    query.bindValue(":duration", duration);
-    query.bindValue(":employee_id", employeeId.isNull() ? QVariant() : employeeId.toInt());
-    query.bindValue(":client_id", clientId.isNull() ? QVariant() : clientId.toInt());
-    query.bindValue(":ressource_id", resourceId.isNull() ? QVariant() : resourceId.toInt());
-    query.bindValue(":datem", m_dateTime);
-    query.bindValue(":id", 0, QSql::Out); // Bind output parameter for ID
+    try {
+        // Make sure required fields are not empty
+        if (title.isEmpty() || organiser.isEmpty() || participant.isEmpty() || agenda.isEmpty()) {
+            qDebug() << "Error: Required fields cannot be empty";
+            return false;
+        }
+        
+        QSqlQuery query;
+        // Use a simpler INSERT statement without RETURNING clause
+        query.prepare("INSERT INTO AHMED.MEETING (TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID, DATEM) "
+                    "VALUES (:title, :organiser, :participant, :agenda, :duration, :employee_id, :client_id, :ressource_id, :datem)");
+        
+        query.bindValue(":title", title);
+        query.bindValue(":organiser", organiser);
+        query.bindValue(":participant", participant);
+        query.bindValue(":agenda", agenda);
+        query.bindValue(":duration", duration);
 
-    if (!query.exec()) {
-        qDebug() << "Error executing query in meeting::add:" << query.lastError().text();
+        // Properly handle NULL values for foreign keys
+        if (employeeId.isValid() && !employeeId.isNull()) {
+            bool ok;
+            int empId = employeeId.toInt(&ok);
+            if (ok) {
+                query.bindValue(":employee_id", empId);
+            } else {
+                query.bindValue(":employee_id", QVariant(QVariant::Int));
+            }
+        } else {
+            query.bindValue(":employee_id", QVariant(QVariant::Int));
+        }
+        
+        if (clientId.isValid() && !clientId.isNull()) {
+            bool ok;
+            int clId = clientId.toInt(&ok);
+            if (ok) {
+                query.bindValue(":client_id", clId);
+            } else {
+                query.bindValue(":client_id", QVariant(QVariant::Int));
+            }
+        } else {
+            query.bindValue(":client_id", QVariant(QVariant::Int));
+        }
+        
+        if (resourceId.isValid() && !resourceId.isNull()) {
+            bool ok;
+            int resId = resourceId.toInt(&ok);
+            if (ok) {
+                query.bindValue(":ressource_id", resId);
+            } else {
+                query.bindValue(":ressource_id", QVariant(QVariant::Int));
+            }
+        } else {
+            query.bindValue(":ressource_id", QVariant(QVariant::Int));
+        }
+        
+        query.bindValue(":datem", m_dateTime);
+
+        if (!query.exec()) {
+            qDebug() << "Error executing query in meeting::add:" << query.lastError().text();
+            return false;
+        }
+
+        // Get the last inserted ID using a separate query
+        QSqlQuery idQuery("SELECT MAX(ID) FROM AHMED.MEETING");
+        if (idQuery.next()) {
+            id = idQuery.value(0).toInt();
+            qDebug() << "Successfully added meeting with ID:" << id;
+        } else {
+            qDebug() << "Could not retrieve the ID of the newly inserted meeting";
+        }
+        
+        return true;
+    } catch (const std::exception& e) {
+        qDebug() << "Exception in meeting::add:" << e.what();
+        return false;
+    } catch (...) {
+        qDebug() << "Unknown exception in meeting::add";
         return false;
     }
-
-    // Retrieve the assigned ID
-    id = query.boundValue(":id").toInt();
-    return true;
 }
 
 QPixmap meeting::generateQRCode() const
@@ -169,10 +225,44 @@ bool meeting::update()
     query.bindValue(":participant", participant);
     query.bindValue(":agenda", agenda);
     query.bindValue(":duration", duration);
-    // Use QVariant() for NULL values, otherwise bind the integer value
-    query.bindValue(":employeeId", employeeId.isNull() ? QVariant() : employeeId.toInt());
-    query.bindValue(":clientId", clientId.isNull() ? QVariant() : clientId.toInt());
-    query.bindValue(":resourceId", resourceId.isNull() ? QVariant() : resourceId.toInt());
+    
+    // Properly handle NULL values for foreign keys using the same approach as in add()
+    if (employeeId.isValid() && !employeeId.isNull()) {
+        bool ok;
+        int empId = employeeId.toInt(&ok);
+        if (ok) {
+            query.bindValue(":employeeId", empId);
+        } else {
+            query.bindValue(":employeeId", QVariant(QVariant::Int));
+        }
+    } else {
+        query.bindValue(":employeeId", QVariant(QVariant::Int));
+    }
+    
+    if (clientId.isValid() && !clientId.isNull()) {
+        bool ok;
+        int clId = clientId.toInt(&ok);
+        if (ok) {
+            query.bindValue(":clientId", clId);
+        } else {
+            query.bindValue(":clientId", QVariant(QVariant::Int));
+        }
+    } else {
+        query.bindValue(":clientId", QVariant(QVariant::Int));
+    }
+    
+    if (resourceId.isValid() && !resourceId.isNull()) {
+        bool ok;
+        int resId = resourceId.toInt(&ok);
+        if (ok) {
+            query.bindValue(":resourceId", resId);
+        } else {
+            query.bindValue(":resourceId", QVariant(QVariant::Int));
+        }
+    } else {
+        query.bindValue(":resourceId", QVariant(QVariant::Int));
+    }
+    
     query.bindValue(":datem", m_dateTime);
 
     if (!query.exec()) {

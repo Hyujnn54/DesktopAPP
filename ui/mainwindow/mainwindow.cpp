@@ -110,8 +110,35 @@ void MainWindow::on_statisticsButton_clicked()
         QMessageBox::warning(this, "Database Error", "Cannot open statistics: Database is not connected.");
         return;
     }
-    chartWindow->show();
-    chartWindow->findChild<QComboBox*>("statsTypeComboBox")->setCurrentText("Meeting Statistics");
+    
+    try {
+        // Show chart window with error handling
+        chartWindow->show();
+        
+        // Find the combo box with error handling
+        QComboBox* statsComboBox = chartWindow->findChild<QComboBox*>("statsTypeComboBox");
+        if (!statsComboBox) {
+            qDebug() << "Error: statsTypeComboBox not found in ChartWindow";
+            return;
+        }
+        
+        // Set to default statistics type that's less likely to crash
+        int meetingStatsIndex = statsComboBox->findText("Meeting Statistics");
+        if (meetingStatsIndex >= 0) {
+            statsComboBox->setCurrentIndex(meetingStatsIndex);
+        } else {
+            // If "Meeting Statistics" not found, use the first item
+            if (statsComboBox->count() > 0) {
+                statsComboBox->setCurrentIndex(0);
+            }
+        }
+    } catch (const std::exception& e) {
+        qDebug() << "Exception in on_statisticsButton_clicked: " << e.what();
+        QMessageBox::critical(this, "Error", "An error occurred opening statistics: " + QString(e.what()));
+    } catch (...) {
+        qDebug() << "Unknown exception in on_statisticsButton_clicked";
+        QMessageBox::critical(this, "Error", "An unknown error occurred opening statistics");
+    }
 }
 
 void MainWindow::toggleSidebar()
@@ -386,7 +413,8 @@ meeting MainWindow::createMeetingFromInput(const QString &input)
     int duration = match.captured(5).toInt();
     QDateTime dateTime = QDateTime::fromString(match.captured(6), "yyyy-MM-dd hh:mm");
 
-    return meeting(title, organiser, participant, agenda, duration, dateTime);
+    // Use -1 as temporary ID, using the constructor compatible with meeting.h
+    return meeting(-1, title, organiser, participant, agenda, duration, dateTime);
 }
 
 bool MainWindow::validateMeetingInput(const QStringList &parts, QString &errorMessage)
