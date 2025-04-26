@@ -27,3 +27,6 @@ managers/training/trainingmanager.h
 managers/training/trainingmanager.cpp
 resources/img.qrc
 assets/background.jpg
+
+RESOURCES += \
+    img.qrc

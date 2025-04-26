@@ -1,3 +1,4 @@
+// managers/training/trainingmanager.h
 #ifndef TRAININGMANAGER_H
 #define TRAININGMANAGER_H
 
@@ -5,8 +6,9 @@
 #include <QSqlQueryModel>
 #include <QSortFilterProxyModel>
 #include <QDateTime>
-#include <QList>
 #include "formations.h"
+#include "core/notificationmanager.h"
+#include "dialog/updatetrainingdialog/updatetrainingdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -24,6 +26,7 @@ public:
 
     void initialize(Ui::MainWindow *ui);
     void refresh();
+    void setNotificationManager(NotificationManager *manager);
 
 private slots:
     void on_trainingAddButton_clicked();
@@ -33,34 +36,24 @@ private slots:
     void on_trainingSearchCriteriaComboBox_currentIndexChanged(int index);
     void on_trainingResetSearchButton_clicked();
     void on_trainingTableViewHeader_clicked(int logicalIndex);
-    void on_trainingExportPdfButton_clicked(); // New slot for PDF export
-    void on_trainingNotificationLabel_clicked();
+    void on_trainingExportPdfButton_clicked();
 
 private:
-    struct Notification {
-        QString action;
-        QDateTime timestamp;
-        QString location;
-        QString details;
-        int lineNumber;
-    };
-
     bool m_dbConnected;
     Ui::MainWindow *ui;
     formations *formations;
     QSqlQueryModel *trainingTableModel;
     QSortFilterProxyModel *trainingProxyModel;
-    QList<Notification> notifications;
-    int currentSortColumn; // Track the current sort column
-    Qt::SortOrder currentSortOrder; // Track the current sort order
+    NotificationManager *notificationManager;
+    int currentSortColumn;
+    Qt::SortOrder currentSortOrder;
 
     bool validateTrainingInputs();
     bool isValidName(const QString &name);
     void clearTrainingInputs();
     void performTrainingSearch();
     void refreshTrainingTable();
-    void logNotification(const QString &action, const QString &location, const QString &details, int lineNumber);
-    void exportTrainingsToPdf(); // New method for PDF export
+    void exportTrainingsToPdf();
 };
 
 #endif // TRAININGMANAGER_H

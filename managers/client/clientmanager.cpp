@@ -1,6 +1,7 @@
-#include "ClientManager.h"
+// managers/client/clientmanager.cpp
+#include "clientmanager.h"
 #include "ui_mainwindow.h"
-#include "UpdateClientDialog.h"
+#include "dialog/updateclientdialog/updateclientdialog.h"
 #include <QMessageBox>
 #include <QSqlQuery>
 #include <QDebug>
@@ -13,10 +14,6 @@
 #include <QSqlRecord>
 #include <QSqlError>
 #include <QFileDialog>
-#include <QDialog>
-#include <QVBoxLayout>
-#include <QTextEdit>
-#include <QPushButton>
 
 ClientManager::ClientManager(bool dbConnected, QObject *parent)
     : QObject(parent),
@@ -29,7 +26,8 @@ ClientManager::ClientManager(bool dbConnected, QObject *parent)
     clientProxyModel(new QSortFilterProxyModel(this)),
     emailAttempts(0),
     emailSuccesses(0),
-    lastCalendarUpdate(QDateTime::currentDateTime())
+    lastCalendarUpdate(QDateTime::currentDateTime()),
+    notificationManager(nullptr)
 {
 }
 
@@ -40,6 +38,11 @@ ClientManager::~ClientManager()
     delete emailSender;
     delete clientTableModel;
     delete clientProxyModel;
+}
+
+void ClientManager::setNotificationManager(NotificationManager *manager)
+{
+    notificationManager = manager;
 }
 
 void ClientManager::initialize(Ui::MainWindow *ui)
@@ -88,9 +91,6 @@ void ClientManager::initialize(Ui::MainWindow *ui)
     ui->clientDateConsultationsView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->clientDateConsultationsView->verticalHeader()->setVisible(false);
 
-    // Set initial notification button text
-    ui->trainingNotificationLabel->setText("0 modifications");
-
     // Connect signals
     connect(ui->clientAddButton, &QPushButton::clicked, this, &ClientManager::on_clientAddButton_clicked);
     connect(ui->clientDeleteButton, &QPushButton::clicked, this, &ClientManager::on_clientDeleteButton_clicked);
@@ -107,7 +107,6 @@ void ClientManager::initialize(Ui::MainWindow *ui)
             this, &ClientManager::on_clientConsultationCalendar_activated);
     connect(ui->clientExportPdfButton, &QPushButton::clicked, this, &ClientManager::on_clientExportPdfButton_clicked);
     connect(ui->reportsButton, &QPushButton::clicked, this, &ClientManager::sendConsultationReminders);
-    connect(ui->trainingNotificationLabel, &QPushButton::clicked, this, &ClientManager::on_trainingNotificationLabel_clicked);
 
     if (m_dbConnected) {
         loadEmployees();
@@ -139,7 +138,7 @@ void ClientManager::showStatistics()
 void ClientManager::on_clientAddButton_clicked()
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Database Error", "Cannot add client: Database is not connected.");
+        QMessageBox::warning(nullptr, "Database Error", "Cannot add client: Database is not connected.");
         return;
     }
     if (!validateClientInputs()) {
@@ -155,18 +154,20 @@ void ClientManager::on_clientAddButton_clicked()
     QString consultant = employeeMap.value(consultantName, "-1");
 
     if (consultant == "-1") {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Input Error", "Please select a valid consultant.");
+        QMessageBox::warning(nullptr, "Input Error", "Please select a valid consultant.");
         return;
     }
     auto result = client->ajouter(name, sector, contact, email, dateTime, consultant);
     if (result.first) {
-        QMessageBox::information(qobject_cast<QWidget*>(parent()), "Success", "Client added successfully!");
+        QMessageBox::information(nullptr, "Success", "Client added successfully!");
         refreshClientTable();
         clientProxyModel->setFilterRegularExpression(""); // Reset filter
         clientProxyModel->sort(-1); // Reset sorting
         ui->clientTableView->viewport()->update(); // Force repaint
         int newRow = clientTableModel->rowCount() - 1; // Last row
-        logNotification("Added Client", "Client Section", QString("Client: %1").arg(name), newRow);
+        if (notificationManager) {
+            notificationManager->addNotification("Added Client", "Client Section", QString("Client: %1").arg(name), newRow);
+        }
         ui->clientNameInput->clear();
         ui->clientSectorInput->clear();
         ui->clientContactInfoInput->clear();
@@ -177,38 +178,40 @@ void ClientManager::on_clientAddButton_clicked()
         ui->clientConsultantComboBox->setCurrentIndex(0);
         updateCalendarConsultations();
     } else {
-        QMessageBox::critical(qobject_cast<QWidget*>(parent()), "Error", "Failed to add client: " + result.second);
+        QMessageBox::critical(nullptr, "Error", "Failed to add client: " + result.second);
     }
 }
 
 void ClientManager::on_clientDeleteButton_clicked()
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Database Error", "Cannot delete client: Database is not connected.");
+        QMessageBox::warning(nullptr, "Database Error", "Cannot delete client: Database is not connected.");
         return;
     }
     QModelIndexList selectedRows = ui->clientTableView->selectionModel()->selectedRows();
     if (selectedRows.isEmpty()) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Selection Error", "Please select a client to delete.");
+        QMessageBox::warning(nullptr, "Selection Error", "Please select a client to delete.");
         return;
     }
     int row = selectedRows[0].row();
     QString clientName = clientProxyModel->data(clientProxyModel->index(row, 0)).toString();
     QMessageBox::StandardButton reply = QMessageBox::question(
-        qobject_cast<QWidget*>(parent()), "Confirm Delete",
+        nullptr, "Confirm Delete",
         QString("Are you sure you want to delete client '%1'?").arg(clientName),
         QMessageBox::Yes | QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         if (client->removeByName(clientName)) {
-            QMessageBox::information(qobject_cast<QWidget*>(parent()), "Success", "Client deleted successfully!");
-            logNotification("Deleted Client", "Client Section", QString("Client: %1").arg(clientName), row);
+            QMessageBox::information(nullptr, "Success", "Client deleted successfully!");
+            if (notificationManager) {
+                notificationManager->addNotification("Deleted Client", "Client Section", QString("Client: %1").arg(clientName), row);
+            }
             refreshClientTable();
             clientProxyModel->setFilterRegularExpression(""); // Reset filter
             clientProxyModel->sort(-1); // Reset sorting
             ui->clientTableView->viewport()->update(); // Force repaint
             updateCalendarConsultations();
         } else {
-            QMessageBox::critical(qobject_cast<QWidget*>(parent()), "Error", "Failed to delete client.");
+            QMessageBox::critical(nullptr, "Error", "Failed to delete client.");
         }
     }
 }
@@ -216,12 +219,12 @@ void ClientManager::on_clientDeleteButton_clicked()
 void ClientManager::on_clientUpdateButton_clicked()
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Database Error", "Cannot update client: Database is not connected.");
+        QMessageBox::warning(nullptr, "Database Error", "Cannot update client: Database is not connected.");
         return;
     }
     QModelIndexList selectedRows = ui->clientTableView->selectionModel()->selectedRows();
     if (selectedRows.isEmpty()) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Selection Error", "Please select a client to update.");
+        QMessageBox::warning(nullptr, "Selection Error", "Please select a client to update.");
         return;
     }
     int row = selectedRows[0].row();
@@ -233,7 +236,7 @@ void ClientManager::on_clientUpdateButton_clicked()
     QString consultantName = clientProxyModel->data(clientProxyModel->index(row, 5)).toString();
     QString consultantId = employeeMap.key(consultantName, "-1");
 
-    UpdateClientDialog dialog(qobject_cast<QWidget*>(parent()));
+    UpdateClientDialog dialog(nullptr);
     dialog.setClientData(name, sector, contact, email, consultationDate, consultantId);
 
     if (dialog.exec() == QDialog::Accepted) {
@@ -245,15 +248,17 @@ void ClientManager::on_clientUpdateButton_clicked()
         QString newConsultant = dialog.getConsultant();
 
         if (updateClient(name, newName, newSector, newContact, newEmail, newDateTime, newConsultant)) {
-            QMessageBox::information(qobject_cast<QWidget*>(parent()), "Success", "Client updated successfully!");
-            logNotification("Updated Client", "Client Section", QString("Client: %1 updated to %2").arg(name, newName), row);
+            QMessageBox::information(nullptr, "Success", "Client updated successfully!");
+            if (notificationManager) {
+                notificationManager->addNotification("Updated Client", "Client Section", QString("Client: %1 updated to %2").arg(name, newName), row);
+            }
             refreshClientTable();
             clientProxyModel->setFilterRegularExpression(""); // Reset filter
             clientProxyModel->sort(-1); // Reset sorting
             ui->clientTableView->viewport()->update(); // Force repaint
             updateCalendarConsultations();
         } else {
-            QMessageBox::critical(qobject_cast<QWidget*>(parent()), "Error", "Failed to update client.");
+            QMessageBox::critical(nullptr, "Error", "Failed to update client.");
         }
     }
 }
@@ -315,7 +320,7 @@ void ClientManager::on_clientConsultationCalendar_activated(const QDate &date)
 void ClientManager::on_clientExportPdfButton_clicked()
 {
     if (!m_dbConnected) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Database Error", "Cannot export to PDF: Database is not connected.");
+        QMessageBox::warning(nullptr, "Database Error", "Cannot export to PDF: Database is not connected.");
         return;
     }
     exportClientsToPdf();
@@ -329,55 +334,6 @@ void ClientManager::sendConsultationReminders()
     checkAndSendReminders();
 }
 
-void ClientManager::on_trainingNotificationLabel_clicked()
-{
-    if (notifications.isEmpty()) {
-        QMessageBox::information(qobject_cast<QWidget*>(parent()), "Notifications", "No modifications recorded.");
-        return;
-    }
-
-    QDialog *notificationDialog = new QDialog(qobject_cast<QWidget*>(parent()));
-    notificationDialog->setWindowTitle("Modification History");
-    notificationDialog->setFixedSize(400, 300);
-
-    QVBoxLayout *layout = new QVBoxLayout(notificationDialog);
-    QTextEdit *textEdit = new QTextEdit(notificationDialog);
-    textEdit->setReadOnly(true);
-    QPushButton *closeButton = new QPushButton("Close", notificationDialog);
-
-    layout->addWidget(textEdit);
-    layout->addWidget(closeButton);
-
-    QString notificationText;
-    for (const Notification &notification : notifications) {
-        notificationText += QString("[%1] %2\nLocation: %3\nLine: %4\nDetails: %5\n\n")
-        .arg(notification.timestamp.toString("yyyy-MM-dd HH:mm:ss"),
-             notification.action,
-             notification.location,
-             QString::number(notification.lineNumber),
-             notification.details);
-    }
-    textEdit->setText(notificationText);
-
-    connect(closeButton, &QPushButton::clicked, notificationDialog, &QDialog::accept);
-
-    notificationDialog->exec();
-    delete notificationDialog;
-}
-
-void ClientManager::logNotification(const QString &action, const QString &location, const QString &details, int lineNumber)
-{
-    Notification notification;
-    notification.action = action;
-    notification.timestamp = QDateTime::currentDateTime();
-    notification.location = location;
-    notification.details = details;
-    notification.lineNumber = lineNumber;
-    notifications.append(notification);
-
-    ui->trainingNotificationLabel->setText(QString("%1 modifications").arg(notifications.size()));
-}
-
 bool ClientManager::validateClientInputs()
 {
     QString name = ui->clientNameInput->text().trimmed();
@@ -387,19 +343,19 @@ bool ClientManager::validateClientInputs()
 
     if (name.isEmpty() || ui->clientSectorInput->text().trimmed().isEmpty() ||
         ui->clientContactInfoInput->text().trimmed().isEmpty() || email.isEmpty()) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Input Error", "Please fill in all fields.");
+        QMessageBox::warning(nullptr, "Input Error", "Please fill in all fields.");
         return false;
     }
     if (!isValidName(name)) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Input Error", "Invalid name format.");
+        QMessageBox::warning(nullptr, "Input Error", "Invalid name format.");
         return false;
     }
     if (!isValidEmail(email)) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Input Error", "Invalid email format.");
+        QMessageBox::warning(nullptr, "Input Error", "Invalid email format.");
         return false;
     }
     if (!isValidDateTime(dateTime)) {
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Input Error", "Consultation date must be in the future.");
+        QMessageBox::warning(nullptr, "Input Error", "Consultation date must be in the future.");
         return false;
     }
     return true;
@@ -462,7 +418,7 @@ void ClientManager::updateSelectedDateInfo(const QDate &date)
 
         if (dateConsultationsModel->lastError().isValid()) {
             qDebug() << "Consultation query failed:" << dateConsultationsModel->lastError().text();
-            QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Query Error",
+            QMessageBox::warning(nullptr, "Query Error",
                                  "Failed to load consultations: " + dateConsultationsModel->lastError().text());
             return;
         }
@@ -570,7 +526,7 @@ void ClientManager::refreshClientTable()
 
     if (clientTableModel->lastError().isValid()) {
         qDebug() << "Client query failed:" << clientTableModel->lastError().text();
-        QMessageBox::warning(qobject_cast<QWidget*>(parent()), "Query Error",
+        QMessageBox::warning(nullptr, "Query Error",
                              "Failed to load clients: " + clientTableModel->lastError().text());
         return;
     }
@@ -585,7 +541,7 @@ void ClientManager::refreshClientTable()
     clientTableModel->setHeaderData(5, Qt::Horizontal, "Consultant");
 }
 
-bool ClientManager::updateClient(const QString &originalName, const QString &newName, const QString sector,
+bool ClientManager::updateClient(const QString &originalName, const QString &newName, const QString &sector,
                                  const QString &contactInfo, const QString &email, const QDateTime &consultationDateTime,
                                  const QString &consultant)
 {
@@ -616,7 +572,7 @@ void ClientManager::updateCalendarConsultations()
 
 void ClientManager::exportClientsToPdf()
 {
-    QString fileName = QFileDialog::getSaveFileName(qobject_cast<QWidget*>(parent()), "Save PDF", "", "PDF Files (*.pdf)");
+    QString fileName = QFileDialog::getSaveFileName(nullptr, "Save PDF", "", "PDF Files (*.pdf)");
     if (fileName.isEmpty()) {
         return;
     }
@@ -651,6 +607,7 @@ void ClientManager::exportClientsToPdf()
     int rowCount = clientProxyModel->rowCount();
     if (rowCount == 0) {
         painter.drawText(20, y, "No clients to display.");
+        painter.end();
         return;
     }
 
@@ -677,4 +634,5 @@ void ClientManager::exportClientsToPdf()
             y += 10;
         }
     }
+    painter.end();
 }

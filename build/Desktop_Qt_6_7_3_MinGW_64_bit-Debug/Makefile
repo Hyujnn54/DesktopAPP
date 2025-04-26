@@ -386,7 +386,6 @@ Makefile: ../../client.pro C:/Qt/6.7.3/mingw_64/mkspecs/win32-g++/qmake.conf C:/
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/toolchain.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/default_pre.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/win32/default_pre.prf \
-		../../client.files \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/resolve_config.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/exclusive_builds_post.prf \
 		C:/Qt/6.7.3/mingw_64/mkspecs/features/default_post.prf \
@@ -736,7 +735,6 @@ C:/Qt/6.7.3/mingw_64/mkspecs/features/exclusive_builds.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/toolchain.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/default_pre.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/win32/default_pre.prf:
-../../client.files:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/resolve_config.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/exclusive_builds_post.prf:
 C:/Qt/6.7.3/mingw_64/mkspecs/features/default_post.prf:

@@ -1,8 +1,10 @@
+// ui/mainwindow/mainwindow.h
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "ClientManager.h"
-#include "TrainingManager.h"
+#include "managers/client/clientmanager.h"
+#include "managers/training/trainingmanager.h"
+#include "core/notificationmanager.h"
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -23,6 +25,8 @@ private slots:
     void on_statisticsButton_clicked();
     void toggleSidebar();
     void toggleTheme();
+    void on_notificationLabel_clicked();
+    void updateNotificationLabel(int count);
 
 private:
     void setupUiConnections();
@@ -33,6 +37,7 @@ private:
     bool m_dbConnected;
     ClientManager *clientManager;
     TrainingManager *trainingManager;
+    NotificationManager *notificationManager;
 };
 
 #endif // MAINWINDOW_H

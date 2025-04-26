@@ -1,3 +1,4 @@
+// managers/client/clientmanager.h
 #ifndef CLIENTMANAGER_H
 #define CLIENTMANAGER_H
 
@@ -6,10 +7,10 @@
 #include <QSortFilterProxyModel>
 #include <QMap>
 #include <QDateTime>
-#include <QList>
-#include "Client.h"
-#include "EmailSender.h"
-#include "ChartWindow.h"
+#include "client.h"
+#include "core/emailsender.h"
+#include "ui/chartwindow/chartwindow.h"
+#include "core/notificationmanager.h"
 
 namespace Ui {
 class MainWindow;
@@ -29,6 +30,7 @@ public:
     void initialize(Ui::MainWindow *ui);
     void refresh();
     void showStatistics();
+    void setNotificationManager(NotificationManager *manager);
 
 private slots:
     void on_clientAddButton_clicked();
@@ -42,17 +44,8 @@ private slots:
     void on_clientConsultationCalendar_activated(const QDate &date);
     void on_clientExportPdfButton_clicked();
     void sendConsultationReminders();
-    void on_trainingNotificationLabel_clicked();
 
 private:
-    struct Notification {
-        QString action;
-        QDateTime timestamp;
-        QString location;
-        QString details;
-        int lineNumber;
-    };
-
     bool m_dbConnected;
     Ui::MainWindow *ui;
     Client *client;
@@ -64,7 +57,7 @@ private:
     int emailAttempts;
     int emailSuccesses;
     QDateTime lastCalendarUpdate;
-    QList<Notification> notifications;
+    NotificationManager *notificationManager;
 
     bool validateClientInputs();
     bool isValidName(const QString &name);
@@ -78,12 +71,11 @@ private:
     bool eventFilter(QObject *watched, QEvent *event);
     void loadEmployees();
     void refreshClientTable();
-    bool updateClient(const QString &originalName, const QString &newName, const QString sector,
+    bool updateClient(const QString &originalName, const QString &newName, const QString &sector,
                       const QString &contactInfo, const QString &email, const QDateTime &consultationDateTime,
                       const QString &consultant);
     void updateCalendarConsultations();
     void exportClientsToPdf();
-    void logNotification(const QString &action, const QString &location, const QString &details, int lineNumber);
 };
 
 #endif // CLIENTMANAGER_H
