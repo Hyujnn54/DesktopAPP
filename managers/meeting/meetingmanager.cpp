@@ -8,6 +8,8 @@
 #include <QFontMetrics>
 #include <QPdfWriter>
 #include <QPainter>
+#include <QSqlQuery>
+#include <QSqlError>
 
 MeetingManager::MeetingManager(bool dbConnected, QObject *parent)
     : QObject(parent), m_dbConnected(dbConnected), ui(nullptr), notificationManager(nullptr)
@@ -31,12 +33,15 @@ void MeetingManager::initialize(Ui::MainWindow *ui)
     connect(ui->meetingAddButton, &QPushButton::clicked, this, &MeetingManager::handleAddButtonClick);
     connect(ui->meetingDeleteButton, &QPushButton::clicked, this, &MeetingManager::handleDeleteButtonClick);
     connect(ui->meetingUpdateButton, &QPushButton::clicked, this, &MeetingManager::handleUpdateButtonClick);
-    connect(ui->meetingResetSearchButton, &QPushButton::clicked, this, &MeetingManager::handleSearchButtonClick); // Correct button
+    connect(ui->meetingResetSearchButton, &QPushButton::clicked, this, &MeetingManager::handleSearchButtonClick);
     connect(ui->meetingSearchInput, &QLineEdit::textChanged, this, &MeetingManager::handleSearchTextChanged);
     connect(ui->meetingTableWidget, &QTableWidget::itemSelectionChanged, this, &MeetingManager::updateInputFields);
     connect(ui->meetingGenerateQRCodeButton, &QPushButton::clicked, this, &MeetingManager::handleGenerateQRCodeButtonClick);
     connect(ui->meetingExportPdfButton, &QPushButton::clicked, this, &MeetingManager::handleExportPdfButtonClick);
     connect(ui->meetingTabWidget, &QTabWidget::currentChanged, this, &MeetingManager::handleTabChanged);
+    connect(ui->meetingSearchCriteriaComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MeetingManager::handleSortCriteriaChanged);
+    connect(ui->statisticsButton, &QPushButton::clicked, this, &MeetingManager::handleStatisticsButtonClick);
+    // connect(ui->meetingRefreshStatsButton, &QPushButton::clicked, this, &MeetingManager::handleRefreshStatsButtonClick); // Commented out: Button not in UI
 
     // Set up table properties
     ui->meetingTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -214,11 +219,26 @@ void MeetingManager::handleGenerateQRCodeButtonClick()
     m.setDatem(QDateTime::fromString(ui->meetingTableWidget->item(row, 6)->text(), "yyyy-MM-dd hh:mm"));
 
     QPixmap qrCode = m.generateQRCode();
+    if (qrCode.isNull()) {
+        QMessageBox::critical(nullptr, "Error", "Failed to generate QR code.");
+        return;
+    }
+
     QMessageBox qrDialog(nullptr);
     qrDialog.setWindowTitle("Meeting QR Code");
     qrDialog.setText("Scan this QR code for full meeting details:");
     qrDialog.setIconPixmap(qrCode.scaled(200, 200, Qt::KeepAspectRatio));
     qrDialog.exec();
+
+    // Optional: Save QR code to file
+    QString filePath = QFileDialog::getSaveFileName(nullptr, "Save QR Code", "Meeting_" + QString::number(id) + ".png", "PNG Files (*.png)");
+    if (!filePath.isEmpty()) {
+        qrCode.save(filePath);
+        if (notificationManager) {
+            notificationManager->addNotification("QR Code Generated", "Meeting ID: " + QString::number(id), "QR code saved to " + filePath, -1);
+        }
+        QMessageBox::information(nullptr, "Success", "QR code saved successfully!");
+    }
 }
 
 void MeetingManager::handleExportPdfButtonClick()
@@ -317,6 +337,60 @@ void MeetingManager::handleTabChanged(int index)
         ui->meetingDurationInput->clear();
         ui->meetingDateTimeEdit->setDateTime(QDateTime::currentDateTime());
     }
+}
+
+void MeetingManager::handleSortCriteriaChanged(int index)
+{
+    if (!m_dbConnected) return;
+
+    QString column;
+    switch (index) {
+    case 0: column = "id"; break;
+    case 1: column = "title"; break;
+    case 2: column = "organiser"; break;
+    case 3: column = "participant"; break;
+    case 4: column = "agenda"; break;
+    case 5: column = "duration"; break;
+    case 6: column = "datem"; break;
+    default: return;
+    }
+
+    QString queryStr = QString("SELECT id, title, organiser, participant, agenda, duration, datem FROM meeting ORDER BY %1").arg(column);
+    QSqlQuery query(queryStr);
+
+    ui->meetingTableWidget->setRowCount(0);
+
+    int row = 0;
+    while (query.next()) {
+        ui->meetingTableWidget->insertRow(row);
+        ui->meetingTableWidget->setItem(row, 0, new QTableWidgetItem(query.value("id").toString()));
+        ui->meetingTableWidget->setItem(row, 1, new QTableWidgetItem(query.value("title").toString()));
+        ui->meetingTableWidget->setItem(row, 2, new QTableWidgetItem(query.value("organiser").toString()));
+        ui->meetingTableWidget->setItem(row, 3, new QTableWidgetItem(query.value("participant").toString()));
+        ui->meetingTableWidget->setItem(row, 4, new QTableWidgetItem(query.value("agenda").toString()));
+        ui->meetingTableWidget->setItem(row, 5, new QTableWidgetItem(query.value("duration").toString() + " min"));
+        ui->meetingTableWidget->setItem(row, 6, new QTableWidgetItem(query.value("datem").toDateTime().toString("yyyy-MM-dd hh:mm")));
+        row++;
+    }
+
+    ui->meetingTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->meetingTableWidget->setColumnWidth(6, 150);
+}
+
+void MeetingManager::handleStatisticsButtonClick()
+{
+    if (!m_dbConnected) {
+        QMessageBox::warning(nullptr, "Database Error", "Cannot open statistics: Database is not connected.");
+        return;
+    }
+    // Defer to MainWindow's ChartWindow
+    QMessageBox::information(nullptr, "Statistics", "Statistics are available via the main Statistics button.");
+}
+
+void MeetingManager::handleRefreshStatsButtonClick()
+{
+    // Placeholder: meetingRefreshStatsButton not in mainwindow.ui
+    QMessageBox::information(nullptr, "Refresh Stats", "Statistics refresh is currently disabled.");
 }
 
 void MeetingManager::updateInputFields()

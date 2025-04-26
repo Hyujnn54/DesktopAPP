@@ -14,6 +14,7 @@ debug/mainwindow.o
 debug/updateclientdialog.o
 debug/updatetrainingdialog.o
 debug/updatemeeting.o
+debug/qrcodegen.o
 debug/qrc_img.o
 debug/moc_emailsender.o
 debug/moc_notificationmanager.o

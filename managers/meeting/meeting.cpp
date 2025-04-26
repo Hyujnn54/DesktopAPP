@@ -2,8 +2,9 @@
 #include "meeting.h"
 #include <QSqlQuery>
 #include <QSqlQueryModel>
-#include "lib/qrcodegen/qrcodegen.hpp"
+#include "lib/qrcodegen/qrcodegen.hpp" // Explicit path
 #include <QPainter>
+#include <QDebug>
 
 // Parameterized constructor
 meeting::meeting(QString title, QString organiser, QString participant, QString agenda, int duration, QDateTime datem)
@@ -62,26 +63,35 @@ QPixmap meeting::generateQRCode() const
                          .arg(duration)
                          .arg(datem.toString("yyyy-MM-dd hh:mm"));
 
-    QrCode qr = QrCode::encodeText(qrData.toUtf8().constData(), QrCode::Ecc::MEDIUM);
+    try {
+        QrCode qr = QrCode::encodeText(qrData.toUtf8().constData(), QrCode::Ecc::MEDIUM);
+        const int scale = 10;
+        const int size = qr.getSize() * scale;
+        if (size <= 0) {
+            qDebug() << "QR code size is invalid";
+            return QPixmap();
+        }
 
-    const int scale = 10;
-    const int size = qr.getSize() * scale;
-    QPixmap pixmap(size, size);
-    pixmap.fill(Qt::white);
+        QPixmap pixmap(size, size);
+        pixmap.fill(Qt::white);
 
-    QPainter painter(&pixmap);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(Qt::black);
+        QPainter painter(&pixmap);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(Qt::black);
 
-    for (int y = 0; y < qr.getSize(); y++) {
-        for (int x = 0; x < qr.getSize(); x++) {
-            if (qr.getModule(x, y)) {
-                painter.drawRect(x * scale, y * scale, scale, scale);
+        for (int y = 0; y < qr.getSize(); y++) {
+            for (int x = 0; x < qr.getSize(); x++) {
+                if (qr.getModule(x, y)) {
+                    painter.drawRect(x * scale, y * scale, scale, scale);
+                }
             }
         }
-    }
 
-    return pixmap;
+        return pixmap;
+    } catch (const std::exception &e) {
+        qDebug() << "QR code generation failed:" << e.what();
+        return QPixmap();
+    }
 }
 
 QSqlQueryModel* meeting::afficher()

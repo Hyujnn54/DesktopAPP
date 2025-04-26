@@ -7,16 +7,17 @@ TEMPLATE = app
 
 CONFIG += c++17
 
-INCLUDEPATH += $$PWD/core \
-               $$PWD/managers/client \
-               $$PWD/managers/training \
-               $$PWD/managers/meeting \
-               $$PWD/ui/mainwindow \
-               $$PWD/ui/chartwindow \
-               $$PWD/dialog/updateclientdialog \
-               $$PWD/dialog/updatetrainingdialog \
-               $$PWD/dialog/updatemeeting
-               $$PWD/lib/qrcodegen
+# Quote paths to handle spaces
+INCLUDEPATH += "$$PWD/core" \
+               "$$PWD/managers/client" \
+               "$$PWD/managers/training" \
+               "$$PWD/managers/meeting" \
+               "$$PWD/ui/mainwindow" \
+               "$$PWD/ui/chartwindow" \
+               "$$PWD/dialog/updateclientdialog" \
+               "$$PWD/dialog/updatetrainingdialog" \
+               "$$PWD/dialog/updatemeeting" \
+               "$$PWD/lib/qrcodegen"
 
 HEADERS += \
     core/connection.h \
@@ -33,7 +34,7 @@ HEADERS += \
     ui/mainwindow/mainwindow.h \
     dialog/updateclientdialog/updateclientdialog.h \
     dialog/updatetrainingdialog/updatetrainingdialog.h \
-    dialog/updatemeeting/updatemeeting.h
+    dialog/updatemeeting/updatemeeting.h \
     lib/qrcodegen/qrcodegen.hpp
 
 SOURCES += \
@@ -52,7 +53,7 @@ SOURCES += \
     ui/mainwindow/mainwindow.cpp \
     dialog/updateclientdialog/updateclientdialog.cpp \
     dialog/updatetrainingdialog/updatetrainingdialog.cpp \
-    dialog/updatemeeting/updatemeeting.cpp
+    dialog/updatemeeting/updatemeeting.cpp \
     lib/qrcodegen/qrcodegen.cpp
 
 FORMS += \
