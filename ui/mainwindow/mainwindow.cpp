@@ -20,7 +20,7 @@
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QChartView>
 #include <QHeaderView>
-
+#include <QRegularExpression>
 MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -159,7 +159,7 @@ void MainWindow::on_employeeSectionButton_clicked()
     ui->mainStackedWidget->setCurrentWidget(ui->employeePage);
     QSqlQueryModel* model = employeeManager->getAllEmployees();
     ui->tableView->setModel(model);
-    
+
     // Configure table columns width to show all content
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     // Set fixed width for specific columns
@@ -167,18 +167,18 @@ void MainWindow::on_employeeSectionButton_clicked()
     ui->tableView->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed); // CIN
     ui->tableView->horizontalHeader()->setSectionResizeMode(7, QHeaderView::Fixed); // Gender
     ui->tableView->horizontalHeader()->setSectionResizeMode(8, QHeaderView::Fixed); // Salary
-    
+
     ui->tableView->setColumnWidth(0, 50);  // ID
     ui->tableView->setColumnWidth(1, 100); // CIN
     ui->tableView->setColumnWidth(7, 70);  // Gender
     ui->tableView->setColumnWidth(8, 80);  // Salary
-    
+
     // Connect search functionality
     connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_employeeSearchChanged);
-    
+
     // Sorting
     ui->tableView->setSortingEnabled(true);
-    
+
     // Apply improved table styling for better readability
     improveTableDisplay(ui->tableView);
 }
@@ -1692,14 +1692,13 @@ void MainWindow::improveTableDisplay(QTableView* tableView)
     
     // Optimiser la largeur des colonnes spécifiquement pour la table des employés
     if (tableView->model() && tableView->model()->columnCount() >= 14) {
-        // Vérifier si c'est la table des employés en vérifiant le nom des colonnes
         if (tableView->model()->headerData(1, Qt::Horizontal).toString() == "CIN" &&
             tableView->model()->headerData(2, Qt::Horizontal).toString() == "Last Name") {
-            
+
             // Configurer la largeur des colonnes pour qu'elles s'adaptent au contenu
             tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
             tableView->horizontalHeader()->setStretchLastSection(true);
-            
+
             // Définir des largeurs optimales pour chaque colonne
             tableView->setColumnWidth(0, 40);   // ID
             tableView->setColumnWidth(1, 80);   // CIN
@@ -1715,8 +1714,8 @@ void MainWindow::improveTableDisplay(QTableView* tableView)
             tableView->setColumnWidth(11, 80);  // Image
             tableView->setColumnWidth(12, 80);  // Role
             tableView->setColumnWidth(13, 80);  // RFID UID
-            
-            // Cachons la colonne Image qui contient des données BLOB
+
+            // Hide the IMAGE column
             tableView->setColumnHidden(11, true);
         } else {
             // Configuration par défaut si ce n'est pas la table des employés

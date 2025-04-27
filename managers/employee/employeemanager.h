@@ -34,6 +34,7 @@ public:
     QMap<QString, int> getEmployeeCountByRole();
     QMap<QString, int> getEmployeeCountBySpecialty();
 
+
 private:
     Employee *employee;
 };
