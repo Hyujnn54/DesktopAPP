@@ -1,5 +1,7 @@
 #include <QSqlError>
 #include <QDebug>
+#include "Connection.h"
+
 
 Connection::Connection() {
     // Initialize db in constructor, but don't open it yet

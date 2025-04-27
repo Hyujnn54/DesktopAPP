@@ -100,6 +100,7 @@ public:
     QPushButton *refreshStatsButton;
     QWidget *waiting_room;
     QPlainTextEdit *setText;
+    QPushButton *wrr;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -107,7 +108,7 @@ public:
     {
         if (formationwindow->objectName().isEmpty())
             formationwindow->setObjectName("formationwindow");
-        formationwindow->resize(1202, 690);
+        formationwindow->resize(1113, 685);
         formationwindow->setStyleSheet(QString::fromUtf8(""));
         centralwidget = new QWidget(formationwindow);
         centralwidget->setObjectName("centralwidget");
@@ -444,6 +445,9 @@ public:
         setText = new QPlainTextEdit(waiting_room);
         setText->setObjectName("setText");
         setText->setGeometry(QRect(170, 180, 104, 70));
+        wrr = new QPushButton(waiting_room);
+        wrr->setObjectName("wrr");
+        wrr->setGeometry(QRect(230, 290, 80, 18));
         tabWidget->addTab(waiting_room, QString());
 
         verticalLayout_5->addWidget(tabWidget);
@@ -454,7 +458,7 @@ public:
         formationwindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(formationwindow);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 1202, 21));
+        menubar->setGeometry(QRect(0, 0, 1113, 21));
         formationwindow->setMenuBar(menubar);
         statusbar = new QStatusBar(formationwindow);
         statusbar->setObjectName("statusbar");
@@ -508,6 +512,7 @@ public:
         refreshStatsButton->setText(QCoreApplication::translate("formationwindow", "Statistics", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(widget), QCoreApplication::translate("formationwindow", "Statistics", nullptr));
         setText->setPlainText(QString());
+        wrr->setText(QCoreApplication::translate("formationwindow", "-", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(waiting_room), QCoreApplication::translate("formationwindow", "Waiting room", nullptr));
     } // retranslateUi
 

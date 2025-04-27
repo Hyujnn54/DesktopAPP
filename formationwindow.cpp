@@ -62,6 +62,8 @@ FormationWindow::FormationWindow(QWidget *parent)
     connect(ui->refreshStatsButton, &QPushButton::clicked, this, &FormationWindow::on_refreshStatsButton_clicked);
     connect(ui->searchInput, &QLineEdit::textChanged, this, &FormationWindow::on_searchInput_textChanged);
     connect(ui->resetSearchButton, &QPushButton::clicked, this, &FormationWindow::on_resetSearchButton_clicked);
+    connect(ui->wrr, &QPushButton::clicked, this, &FormationWindow::on_wrr_clicked);
+    // New connection
 
     // Validators
     QRegularExpression formationRx("[A-Za-z0-9\\s]{1,50}");
@@ -102,7 +104,7 @@ FormationWindow::FormationWindow(QWidget *parent)
 
     // Connect timer to read Arduino data every 5 seconds
     connect(arduinoTimer, &QTimer::timeout, this, &FormationWindow::readArduinoData);
-    arduinoTimer->start(5000); // Poll every 5 seconds
+    arduinoTimer->start(1000); // Poll every 1 second
 
     refreshTableView();
     updateStatistics();
@@ -125,8 +127,8 @@ void FormationWindow::setupArduino()
     int result = arduino->connectArduino();
     if (result == 0) {
         qDebug() << "Arduino connected successfully on port:" << arduino->getSerial()->portName();
-        // Connect serial readyRead signal to read data
-        connect(arduino->getSerial(), &QSerialPort::readyRead, this, &FormationWindow::readArduinoData);
+        // Increase read buffer size to handle larger messages
+        arduino->getSerial()->setReadBufferSize(1024);
     } else {
         qDebug() << "Failed to connect to Arduino. Result:" << result;
         ui->setText->setPlainText("Waiting Room: Arduino Disconnected");
@@ -134,51 +136,130 @@ void FormationWindow::setupArduino()
         QMessageBox::warning(this, "Arduino Error", "Could not connect to Arduino. Check connection and try again.");
     }
 }
-
 void FormationWindow::readArduinoData()
 {
+    static QDateTime lastDataTime = QDateTime::currentDateTime();
+    static QSet<unsigned long> processedMessageIds; // Track processed message IDs
+    const int maxProcessedIds = 100; // Limit stored IDs
+
     if (!arduino || !arduino->getSerial()->isOpen()) {
         qDebug() << "Arduino not connected or serial port not open";
         ui->setText->setPlainText("Waiting Room: Arduino Disconnected");
         ui->setText->setStyleSheet("font-weight: bold; color: white; background-color: #D93025; border: 1px solid #D93025; border-radius: 4px; padding: 4px;");
-        updateWaitingRoomCount(); // Fallback to database count
+        updateWaitingRoomCount();
+        lastDataTime = QDateTime::currentDateTime();
         return;
     }
 
     QByteArray data = arduino->readFromArduino();
     if (data.isEmpty()) {
         qDebug() << "No data received from Arduino";
+        if (lastDataTime.secsTo(QDateTime::currentDateTime()) > 30) {
+            qDebug() << "Arduino communication timeout";
+            updateNotificationCount(1, "Arduino communication timeout");
+            ui->setText->setPlainText("Waiting Room: Arduino Timeout");
+            ui->setText->setStyleSheet("font-weight: bold; color: white; background-color: #D93025; border: 1px solid #D93025; border-radius: 4px; padding: 4px;");
+        }
         return;
     }
 
-    // Append the received data to the buffer
-    arduinoDataBuffer += QString::fromUtf8(data).trimmed();
-    qDebug() << "Current Arduino data buffer:" << arduinoDataBuffer;
+    lastDataTime = QDateTime::currentDateTime();
+    arduinoDataBuffer.append(QString::fromUtf8(data));
+    qDebug() << "Appended to buffer. Current Arduino data buffer:" << arduinoDataBuffer;
 
-    // Check if the buffer contains a complete message (ends with a number or newline)
-    QRegularExpression endOfMessage("Total:\\s*\\d+");
-    if (!endOfMessage.match(arduinoDataBuffer).hasMatch()) {
-        qDebug() << "Incomplete message in buffer, waiting for more data";
-        return;
+    while (true) {
+        int newlineIndex = arduinoDataBuffer.indexOf('\n');
+        if (newlineIndex == -1) {
+            qDebug() << "No complete line found. Waiting for more data. Buffer:" << arduinoDataBuffer;
+            break;
+        }
+
+        QString line = arduinoDataBuffer.left(newlineIndex).remove('\r').trimmed();
+        arduinoDataBuffer.remove(0, newlineIndex + 1);
+
+        if (line.isEmpty()) {
+            qDebug() << "Empty line received, skipping";
+            continue;
+        }
+
+        // Extract message ID
+        unsigned long messageId = 0;
+        bool hasValidId = false;
+        if (line.contains(" ID: ")) {
+            QStringList parts = line.split(" ID: ");
+            if (parts.size() == 2) {
+                bool ok;
+                messageId = parts[1].toULong(&ok);
+                if (ok) {
+                    hasValidId = true;
+                    line = parts[0]; // Process the main message
+                }
+            }
+        }
+
+        // Check for duplicate message ID
+        if (hasValidId && processedMessageIds.contains(messageId)) {
+            qDebug() << "Duplicate Arduino message ID ignored:" << messageId << "Message:" << line;
+            continue;
+        }
+
+        // Store message ID
+        if (hasValidId) {
+            processedMessageIds.insert(messageId);
+            if (processedMessageIds.size() > maxProcessedIds) {
+                processedMessageIds.remove(*processedMessageIds.begin()); // Remove oldest
+            }
+        }
+
+        qDebug() << "Processing Arduino message:" << line << "ID:" << (hasValidId ? QString::number(messageId) : "None");
+
+        if (line.startsWith("Person detected. Total: ")) {
+            QString countStr = line.mid(23).trimmed();
+            bool ok;
+            int count = countStr.toInt(&ok);
+            if (ok && count >= 0 && count <= 5) {
+                qDebug() << "Parsed person detected. Count:" << count;
+                updateMeetingWR(count);
+                updateWaitingRoomCount();
+                updateNotificationCount(1, QString("Person detected. Waiting room count: %1").arg(count));
+            } else {
+                qDebug() << "Invalid count in Person detected message:" << line;
+                updateNotificationCount(1, "Invalid Arduino count: " + line);
+            }
+        } else if (line.startsWith("Counter reset due to inactivity. Total: ")) {
+            QString countStr = line.mid(39).trimmed();
+            bool ok;
+            int count = countStr.toInt(&ok);
+            if (ok && count >= 0 && count <= 5) {
+                qDebug() << "Parsed counter reset. Count:" << count;
+                updateMeetingWR(count);
+                updateWaitingRoomCount();
+                updateNotificationCount(1, QString("Counter reset. Waiting room count: %1").arg(count));
+            } else {
+                qDebug() << "Invalid count in Counter reset message:" << line;
+                updateNotificationCount(1, "Invalid Arduino count: " + line);
+            }
+        } else if (line.startsWith("Received WR count:") || line == "Green LED ON" || line == "Green LED OFF") {
+            qDebug() << "Arduino response:" << line;
+        } else if (line.startsWith("Invalid") || line.startsWith("Unknown command")) {
+            qDebug() << "Arduino error:" << line;
+            updateNotificationCount(1, "Arduino error: " + line);
+        } else {
+            qDebug() << "Unrecognized Arduino message:" << line;
+            updateNotificationCount(1, "Unrecognized Arduino message: " + line);
+        }
     }
 
-    // Parse the complete message
-    QRegularExpression re("Total:\\s*(\\d+)");
-    QRegularExpressionMatch match = re.match(arduinoDataBuffer);
-    if (match.hasMatch()) {
-        int count = match.captured(1).toInt();
-        qDebug() << "Parsed people count:" << count;
-        updateMeetingWR(count); // Update database
-        updateWaitingRoomCount(); // Update UI
-    } else {
-        qDebug() << "Invalid Arduino data format in buffer:" << arduinoDataBuffer;
-        updateNotificationCount(1, "Invalid Arduino data format received: " + arduinoDataBuffer);
+    if (arduinoDataBuffer.size() > 1024) {
+        qDebug() << "Buffer size exceeded 1KB, clearing. Buffer was:" << arduinoDataBuffer;
+        updateNotificationCount(1, "Arduino buffer overflow, cleared");
+        arduinoDataBuffer.clear();
     }
 
-    // Clear the buffer after processing
-    arduinoDataBuffer.clear();
+    if (!arduinoDataBuffer.isEmpty()) {
+        qDebug() << "Partial Arduino data remaining:" << arduinoDataBuffer;
+    }
 }
-
 void FormationWindow::updateMeetingWR(int count)
 {
     QSqlDatabase db = QSqlDatabase::database();
@@ -223,38 +304,101 @@ void FormationWindow::updateMeetingWR(int count)
         return;
     }
 
-    qDebug() << "Updated WR in MEETING table for ID 1 to:" << count;
+    qDebug() << "Successfully updated WR in MEETING table for ID 1 to:" << count;
     updateNotificationCount(1, QString("Updated waiting room count to %1 for meeting ID 1").arg(count));
 }
 
 void FormationWindow::updateWaitingRoomCount()
 {
-    int waitingCount = 0;
-    bool useArduinoData = (arduino && arduino->getSerial()->isOpen());
+    qDebug() << "Entering updateWaitingRoomCount";
 
+    QSqlDatabase db = QSqlDatabase::database();
+    if (!db.isOpen()) {
+        qDebug() << "Database not connected";
+        ui->setText->setPlainText("Waiting Room: Database Error");
+        ui->setText->setStyleSheet("font-weight: bold; color: white; background-color: #D93025; border: 1px solid #D93025; border-radius: 4px; padding: 4px;");
+        updateNotificationCount(1, "Database connection lost in updateWaitingRoomCount");
+        return;
+    }
+
+    int waitingCount = 0;
     QSqlQuery query;
     query.prepare("SELECT WR FROM AHMED.MEETING WHERE ID = 1");
     if (query.exec() && query.next()) {
         waitingCount = query.value("WR").toInt();
         qDebug() << "Retrieved WR count for ID 1:" << waitingCount;
     } else {
-        qDebug() << "Failed to retrieve WR count for ID 1:" << query.lastError().text();
+        qDebug() << "Failed to retrieve WR count for ID 1:" << query.lastError().text() << "Query:" << query.lastQuery();
         waitingCount = 0;
-        ui->setText->setPlainText("Waiting Room: Error");
+        ui->setText->setPlainText("Waiting Room: Query Error");
         ui->setText->setStyleSheet("font-weight: bold; color: white; background-color: #D93025; border: 1px solid #D93025; border-radius: 4px; padding: 4px;");
-        QMessageBox::critical(this, "Error", "Failed to retrieve waiting room count: " + query.lastError().text());
+        updateNotificationCount(1, "Failed to retrieve waiting room count: " + query.lastError().text());
         return;
     }
 
     // Update UI
-    ui->setText->setPlainText(QString("Waiting Room: %1").arg(waitingCount));
-    if (waitingCount > 0) {
+    const int MAX_COUNT = 5;
+    QString displayText = waitingCount >= MAX_COUNT ?
+                              QString("Waiting Room: %1 (MAX)").arg(waitingCount) :
+                              QString("Waiting Room: %1").arg(waitingCount);
+    ui->setText->setPlainText(displayText);
+    if (waitingCount >= MAX_COUNT) {
         ui->setText->setStyleSheet("font-weight: bold; color: white; background-color: #D93025; border: 1px solid #D93025; border-radius: 4px; padding: 4px;");
+    } else if (waitingCount > 0) {
+        ui->setText->setStyleSheet("font-weight: bold; color: white; background-color: #FF9800; border: 1px solid #FF9800; border-radius: 4px; padding: 4px;");
     } else {
         ui->setText->setStyleSheet(isDarkTheme ?
                                        "font-weight: bold; color: #F0F0F0; background-color: #6A6A6A; border: 1px solid #F28C6F; border-radius: 4px; padding: 4px;" :
                                        "font-weight: bold; color: #3A5DAE; background-color: #F5F7FA; border: 1px solid #3A5DAE; border-radius: 4px; padding: 4px;");
     }
+    qDebug() << "Updated UI with waiting room count:" << waitingCount;
+
+    // Send WR count to Arduino
+    if (arduino && arduino->getSerial()->isOpen()) {
+        QString command = QString("WR:%1\n").arg(waitingCount);
+        if (arduino->writeToArduino(command.toUtf8())) {
+            qDebug() << "Sent WR count to Arduino:" << command.trimmed();
+        } else {
+            qDebug() << "Failed to send WR count to Arduino";
+            updateNotificationCount(1, "Failed to send WR count to Arduino");
+        }
+    } else {
+        qDebug() << "Arduino not connected, cannot send WR count";
+    }
+
+    // Ensure widget is visible
+    ui->setText->setVisible(true);
+}
+
+void FormationWindow::on_wrr_clicked()
+{
+    qDebug() << "wrr button clicked";
+    QSqlDatabase db = QSqlDatabase::database();
+    if (!db.isOpen()) {
+        qDebug() << "Database not connected";
+        QMessageBox::critical(this, "Database Error", "Database connection lost. Please reconnect.");
+        return;
+    }
+
+    QSqlQuery query;
+    query.prepare("SELECT WR FROM AHMED.MEETING WHERE ID = 1");
+    if (!query.exec() || !query.next()) {
+        qDebug() << "Failed to retrieve WR count for ID 1:" << query.lastError().text();
+        QMessageBox::critical(this, "Error", "Failed to retrieve waiting room count: " + query.lastError().text());
+        return;
+    }
+
+    int currentCount = query.value("WR").toInt();
+    qDebug() << "Current waiting room count:" << currentCount;
+
+    if (currentCount <= 0) {
+        QMessageBox::information(this, "Waiting Room", "The waiting room is already empty!");
+        return;
+    }
+
+    int newCount = currentCount - 1;
+    updateMeetingWR(newCount); // Update database
+    updateWaitingRoomCount(); // Refresh UI and send WR count to Arduino
 }
 
 void FormationWindow::on_refreshStatsButton_clicked()
@@ -355,12 +499,8 @@ void FormationWindow::updateStatistics()
 
 void FormationWindow::onNotificationLabelClicked()
 {
-    if (notificationCount == 0) {
-        QMessageBox::information(this, "Notifications", "No recent changes.");
-    } else {
-        QString message = "Recent Changes:\n" + changeHistory.join("\n");
-        QMessageBox::information(this, "Notifications", message);
-    }
+    QString message = notificationCount == 0 ? "No recent changes." : "Recent Changes:\n" + changeHistory.join("\n");
+    QMessageBox::information(this, "Notifications", message);
     resetNotificationCount();
 }
 
@@ -375,11 +515,9 @@ void FormationWindow::updateNotificationCount(int change, const QString &changeD
     }
 
     QString labelText = QString("<img src=':/images/notification_icon.png' width='16' height='16'> <a href='#'>Notifications: %1</a>").arg(notificationCount);
-    if (notificationCount > 0) {
-        ui->notificationLabel->setStyleSheet("background-color: #D93025; color: white; border-radius: 10px; padding: 2px 6px;");
-    } else {
-        ui->notificationLabel->setStyleSheet("font-weight: bold; color: #3A5DAE;");
-    }
+    ui->notificationLabel->setStyleSheet(notificationCount > 0 ?
+                                             "background-color: #D93025; color: white; border-radius: 10px; padding: 2px 6px;" :
+                                             "font-weight: bold; color: #3A5DAE;");
     ui->notificationLabel->setText(labelText);
     qDebug() << "Notification count updated to:" << notificationCount << "Change:" << changeDescription;
 }
@@ -497,11 +635,7 @@ void FormationWindow::exportToPdf()
     painter.setPen(borderColor);
     for (int row = 0; row < tableModel->rowCount(); ++row) {
         xPos = margin;
-        if (row % 2 == 0) {
-            painter.setBrush(alternateRowBg);
-        } else {
-            painter.setBrush(Qt::white);
-        }
+        painter.setBrush(row % 2 == 0 ? alternateRowBg : Qt::white);
 
         for (int col = 0; col < 7; ++col) {
             QRect cellRect(xPos, yPos, columnWidths[col], lineHeight);

@@ -41,6 +41,7 @@ private slots:
     void onSmsRequestFinished(QNetworkReply *reply);
     void updateWaitingRoomCount();
     void readArduinoData(); // New slot to read Arduino data
+    void on_wrr_clicked(); // New slot for wrr button
 
 private:
     Ui::formationwindow *ui;
@@ -67,6 +68,7 @@ private:
     void setupArduino(); // Initialize Arduino connection
     void updateMeetingWR(int count); // Update WR in MEETING table
     QString arduinoDataBuffer;
+
 };
 
 #endif // FORMATIONWINDOW_H

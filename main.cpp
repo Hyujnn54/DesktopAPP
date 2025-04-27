@@ -1,6 +1,6 @@
 
 #include "connection.h"
-#include "mainwindow.h"
+#include "formationwindow.h"
 #include <QApplication>
 #include <QMessageBox>
 #include <QDebug>
@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 
     Connection c; // Keep connection in scope
     bool test = c.createconnect();
-    MainWindow w; // Note: Replace MainWindow with FormationWindow if needed
+    FormationWindow w; // Note: Replace MainWindow with FormationWindow if needed
     if (test) {
         w.show();
         QMessageBox::information(nullptr, QObject::tr("database is open"),
