@@ -21,6 +21,9 @@
 #include <QtCharts/QChartView>
 #include <QHeaderView>
 #include <QRegularExpression>
+#include <QRegularExpressionValidator>
+#include <QDoubleValidator>
+
 MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -72,6 +75,7 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
         clientManager->initialize(ui);
         trainingManager->initialize(ui);
         meetingManager->initialize(ui);
+        employeeManager->initialize(this); // Correction: passage de 'this' au lieu de 'ui'
         
         // Apply improved table styling to all tables right after initialization
         if (ui->clientTableView) improveTableDisplay(ui->clientTableView);
@@ -117,6 +121,143 @@ void MainWindow::setupUiConnections()
     connect(ui->themeButton, &QPushButton::clicked, this, &MainWindow::toggleTheme);
     connect(ui->meetingChatSendButton, &QPushButton::clicked, this, &MainWindow::on_chatSendButton_clicked);
     connect(ui->meetingChatClearButton, &QPushButton::clicked, this, &MainWindow::on_chatClearButton_clicked);
+    
+    // Configurer les validateurs d'entrée
+    setupInputValidators();
+}
+
+void MainWindow::setupInputValidators()
+{
+    // Configuration des validateurs pour les champs d'entrée employé
+    
+    // CIN - Validation en temps réel
+    connect(ui->lineEdit_CIN, &QLineEdit::textChanged, this, &MainWindow::validateCIN);
+    
+    // Nom et prénom - Validation en temps réel
+    connect(ui->lineEdit_Nom, &QLineEdit::textChanged, this, &MainWindow::validateName);
+    connect(ui->lineEdit_Prenom, &QLineEdit::textChanged, this, &MainWindow::validateName);
+    
+    // Téléphone - Validation en temps réel
+    connect(ui->lineEdit_phone, &QLineEdit::textChanged, this, &MainWindow::validatePhone);
+    
+    // Email - Validation en temps réel
+    connect(ui->lineEdit_email, &QLineEdit::textChanged, this, &MainWindow::validateEmail);
+    
+    // Salaire - Validation en temps réel
+    connect(ui->lineEdit_salaire, &QLineEdit::textChanged, this, &MainWindow::validateSalary);
+    
+    // Réinitialiser les styles des champs
+    ui->lineEdit_CIN->setStyleSheet("");
+    ui->lineEdit_Nom->setStyleSheet("");
+    ui->lineEdit_Prenom->setStyleSheet("");
+    ui->lineEdit_phone->setStyleSheet("");
+    ui->lineEdit_email->setStyleSheet("");
+    ui->lineEdit_salaire->setStyleSheet("");
+}
+
+void MainWindow::validateCIN(const QString &text)
+{
+    // Limiter à 8 caractères et seulement des chiffres
+    QString filtered = text;
+    for (int i = filtered.length() - 1; i >= 0; --i) {
+        if (!filtered[i].isDigit()) {
+            filtered.remove(i, 1);
+        }
+    }
+    
+    // Limiter à 8 chiffres maximum
+    if (filtered.length() > 8) {
+        filtered = filtered.left(8);
+    }
+    
+    // Si le texte a été modifié, mettre à jour le champ
+    if (filtered != text) {
+        ui->lineEdit_CIN->setText(filtered);
+    }
+    
+    // Mise à jour du style selon la validité
+    if (filtered.length() == 8) {
+        ui->lineEdit_CIN->setStyleSheet("border: 1px solid green;");
+    } else {
+        ui->lineEdit_CIN->setStyleSheet("border: 1px solid red;");
+    }
+}
+
+void MainWindow::validateName(const QString &text)
+{
+    QLineEdit* senderLineEdit = qobject_cast<QLineEdit*>(sender());
+    if (!senderLineEdit) return;
+    
+    QString filtered = text;
+    for (int i = filtered.length() - 1; i >= 0; --i) {
+        // Accepter seulement les lettres et les espaces
+        if (!filtered[i].isLetter() && filtered[i] != ' ' && filtered[i] != '-') {
+            filtered.remove(i, 1);
+        }
+    }
+    
+    // Si le texte a été modifié, mettre à jour le champ
+    if (filtered != text) {
+        senderLineEdit->setText(filtered);
+    }
+    
+    // Mise à jour du style selon la validité
+    if (!filtered.isEmpty()) {
+        senderLineEdit->setStyleSheet("border: 1px solid green;");
+    } else {
+        senderLineEdit->setStyleSheet("border: 1px solid red;");
+    }
+}
+
+void MainWindow::validatePhone(const QString &text)
+{
+    // Limiter à des chiffres seulement
+    QString filtered = text;
+    for (int i = filtered.length() - 1; i >= 0; --i) {
+        if (!filtered[i].isDigit()) {
+            filtered.remove(i, 1);
+        }
+    }
+    
+    // Si le texte a été modifié, mettre à jour le champ
+    if (filtered != text) {
+        ui->lineEdit_phone->setText(filtered);
+    }
+    
+    // Mise à jour du style selon la validité
+    if (filtered.length() >= 8) {
+        ui->lineEdit_phone->setStyleSheet("border: 1px solid green;");
+    } else {
+        ui->lineEdit_phone->setStyleSheet("border: 1px solid red;");
+    }
+}
+
+void MainWindow::validateEmail(const QString &text)
+{
+    // Vérification simple d'email avec une expression régulière
+    QRegularExpression emailRegex("\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b");
+    bool isValid = emailRegex.match(text).hasMatch();
+    
+    // Mise à jour du style selon la validité
+    if (isValid || text.isEmpty()) {
+        ui->lineEdit_email->setStyleSheet("border: 1px solid green;");
+    } else {
+        ui->lineEdit_email->setStyleSheet("border: 1px solid red;");
+    }
+}
+
+void MainWindow::validateSalary(const QString &text)
+{
+    // Vérifier que le texte peut être converti en nombre
+    bool ok;
+    text.toDouble(&ok);
+    
+    // Mise à jour du style selon la validité
+    if (ok || text.isEmpty()) {
+        ui->lineEdit_salaire->setStyleSheet("border: 1px solid green;");
+    } else {
+        ui->lineEdit_salaire->setStyleSheet("border: 1px solid red;");
+    }
 }
 
 void MainWindow::on_clientSectionButton_clicked()
@@ -158,29 +299,51 @@ void MainWindow::on_employeeSectionButton_clicked()
 {
     ui->mainStackedWidget->setCurrentWidget(ui->employeePage);
     QSqlQueryModel* model = employeeManager->getAllEmployees();
-    ui->tableView->setModel(model);
 
-    // Configure table columns width to show all content
-    ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    // Set fixed width for specific columns
-    ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed); // ID
-    ui->tableView->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed); // CIN
-    ui->tableView->horizontalHeader()->setSectionResizeMode(7, QHeaderView::Fixed); // Gender
-    ui->tableView->horizontalHeader()->setSectionResizeMode(8, QHeaderView::Fixed); // Salary
+    // Vérifier si le modèle est valide avant de l'assigner au tableView
+    if (model) {
+        ui->tableView->setModel(model);
 
-    ui->tableView->setColumnWidth(0, 50);  // ID
-    ui->tableView->setColumnWidth(1, 100); // CIN
-    ui->tableView->setColumnWidth(7, 70);  // Gender
-    ui->tableView->setColumnWidth(8, 80);  // Salary
+        // Configuration pour afficher toutes les colonnes correctement
+        ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
-    // Connect search functionality
-    connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_employeeSearchChanged);
+        // Définir des largeurs optimales pour chaque colonne
+        ui->tableView->setColumnWidth(0, 50);   // ID
+        ui->tableView->setColumnWidth(1, 100);  // CIN
+        ui->tableView->setColumnWidth(2, 120);  // Last Name
+        ui->tableView->setColumnWidth(3, 120);  // First Name
+        ui->tableView->setColumnWidth(4, 100);  // Date of Birth
+        ui->tableView->setColumnWidth(5, 100);  // Phone
+        ui->tableView->setColumnWidth(6, 180);  // Email
+        ui->tableView->setColumnWidth(7, 80);   // Gender
+        ui->tableView->setColumnWidth(8, 80);   // Salary
+        ui->tableView->setColumnWidth(9, 100);  // Date of Hiring
+        ui->tableView->setColumnWidth(10, 120); // Speciality
+        ui->tableView->setColumnWidth(11, 80);  // Image
+        ui->tableView->setColumnWidth(12, 80);  // Role
+        ui->tableView->setColumnWidth(13, 80);  // RFID UID
 
-    // Sorting
-    ui->tableView->setSortingEnabled(true);
+        // Assurez-vous que toutes les colonnes sont visibles
+        for (int i = 0; i < model->columnCount(); i++) {
+            ui->tableView->setColumnHidden(i, false);
+        }
 
-    // Apply improved table styling for better readability
-    improveTableDisplay(ui->tableView);
+        // Connect search functionality
+        connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_employeeSearchChanged);
+
+        // Sorting
+        ui->tableView->setSortingEnabled(true);
+
+        // Apply improved table styling for better readability
+        improveTableDisplay(ui->tableView);
+    } else {
+        // Afficher un message d'erreur à l'utilisateur
+        QMessageBox::critical(this, "Erreur", "Impossible de charger les données des employés. Vérifiez la connexion à la base de données.");
+
+        // Nettoyer le tableView pour éviter d'afficher d'anciennes données
+        ui->tableView->setModel(nullptr);
+    }
 }
 
 void MainWindow::on_statisticsButton_clicked()
@@ -288,7 +451,7 @@ void MainWindow::applyLightTheme()
         QWidget { 
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #F0F8FF, stop:1 #C4D7ED); 
             color: #333333; 
-            font-family: 'Segoe UI', Arial, sans-serif; 
+            font-family: Arial, sans-serif; /* Modification: utilisation d'une police plus universelle */
         }
         QPushButton { 
             background-color: #3A5DAE; 

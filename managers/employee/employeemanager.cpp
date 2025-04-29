@@ -15,6 +15,20 @@ EmployeeManager::~EmployeeManager()
     delete employee;
 }
 
+void EmployeeManager::initialize(QWidget* parent)
+{
+    Q_UNUSED(parent);
+    qDebug() << "Initialisation du gestionnaire d'employés";
+    
+    // Vérifier si la table existe et contient des données
+    QSqlQuery checkQuery("SELECT COUNT(*) FROM EMPLOYEE");
+    if (checkQuery.next() && checkQuery.value(0).toInt() > 0) {
+        qDebug() << "Table EMPLOYEE contient" << checkQuery.value(0).toInt() << "enregistrements";
+    } else {
+        qDebug() << "Table EMPLOYEE vide ou inexistante";
+    }
+}
+
 bool EmployeeManager::addEmployee(const QString& cin, const QString& lastName, const QString& firstName, 
                                 const QDate& dateOfBirth, const QString& phoneNumber, const QString& email, 
                                 const QString& gender, int salary, const QDate& dateOfHire, 

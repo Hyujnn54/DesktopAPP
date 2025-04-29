@@ -1,5 +1,5 @@
 --------------------------------------------------------
---  File created - Sunday-April-27-2025   
+--  File created - Tuesday-April-29-2025   
 --------------------------------------------------------
 --------------------------------------------------------
 --  DDL for Table CLIENTS
@@ -81,7 +81,8 @@
 	"DURATION" NUMBER, 
 	"EMPLOYEE_ID" NUMBER(*,0), 
 	"CLIENT_ID" NUMBER(*,0), 
-	"RESSOURCE_ID" NUMBER(*,0)
+	"RESSOURCE_ID" NUMBER(*,0), 
+	"DATEM" DATE
    ) SEGMENT CREATION IMMEDIATE 
   PCTFREE 10 PCTUSED 40 INITRANS 1 MAXTRANS 255 NOCOMPRESS LOGGING
   STORAGE(INITIAL 65536 NEXT 1048576 MINEXTENTS 1 MAXEXTENTS 2147483645
@@ -113,26 +114,30 @@
 REM INSERTING into AHMED.CLIENTS
 SET DEFINE OFF;
 Insert into AHMED.CLIENTS (CLIENT_ID,NAME,SECTOR,CONTACT_INFO,CONSULTATION_DATE,CONSULTANT,EMAIL,CONSULTANT_ID) values (3,'azer','finance','53413451',to_timestamp('01-JAN-25 08.34.39.145000000 PM','DD-MON-RR HH.MI.SSXFF AM'),'AHMED','azer@gmail.com',41);
+Insert into AHMED.CLIENTS (CLIENT_ID,NAME,SECTOR,CONTACT_INFO,CONSULTATION_DATE,CONSULTANT,EMAIL,CONSULTANT_ID) values (90,'ahmedssss','dqsdqdqsd','123455',to_timestamp('26-MAY-25 11.31.26.000000000 AM','DD-MON-RR HH.MI.SSXFF AM'),null,'shaco54lol@gmail.com',41);
+Insert into AHMED.CLIENTS (CLIENT_ID,NAME,SECTOR,CONTACT_INFO,CONSULTATION_DATE,CONSULTANT,EMAIL,CONSULTANT_ID) values (91,'qsdfghjuk','fghjk','12345678',to_timestamp('26-MAY-25 02.36.54.000000000 PM','DD-MON-RR HH.MI.SSXFF AM'),null,'shaco54lol@gmail.com',41);
 Insert into AHMED.CLIENTS (CLIENT_ID,NAME,SECTOR,CONTACT_INFO,CONSULTATION_DATE,CONSULTANT,EMAIL,CONSULTANT_ID) values (1,'abidi','flirting','33705166',to_timestamp('25-APR-25 08.35.45.403000000 PM','DD-MON-RR HH.MI.SSXFF AM'),'AHMED','abidi@gmail.com',41);
 REM INSERTING into AHMED.EMPLOYEE
 SET DEFINE OFF;
 Insert into AHMED.EMPLOYEE (ID,CIN,LAST_NAME,FIRST_NAME,DATE_BIRTH,PHONE,EMAIL,GENDER,SALARY,DATE_HIRING,SPECIALITY,ROLE,RFID_UID) values (41,'14530334','HAJJI','AHMED',to_date('01-JAN-00','DD-MON-RR'),'29167398','ahmed@gmail.com','Homme',20000,to_date('01-JAN-25','DD-MON-RR'),'Informatique','Admin','A3E82928');
 Insert into AHMED.EMPLOYEE (ID,CIN,LAST_NAME,FIRST_NAME,DATE_BIRTH,PHONE,EMAIL,GENDER,SALARY,DATE_HIRING,SPECIALITY,ROLE,RFID_UID) values (1,'14530338','loukil','khalil',to_date('01-JAN-02','DD-MON-RR'),'94184831','khalil@gmail.com','Homme',1000,to_date('01-JAN-25','DD-MON-RR'),'Informatique','Employee','5185B17B');
 Insert into AHMED.EMPLOYEE (ID,CIN,LAST_NAME,FIRST_NAME,DATE_BIRTH,PHONE,EMAIL,GENDER,SALARY,DATE_HIRING,SPECIALITY,ROLE,RFID_UID) values (46,'13547763','ben moussa','mohamed',to_date('01-JUL-04','DD-MON-RR'),'98474731','mohamed@gmail.com','Homme',1000,to_date('12-MAR-25','DD-MON-RR'),'Informatique','Admin',null);
-Insert into AHMED.EMPLOYEE (ID,CIN,LAST_NAME,FIRST_NAME,DATE_BIRTH,PHONE,EMAIL,GENDER,SALARY,DATE_HIRING,SPECIALITY,ROLE,RFID_UID) values (42,'14539414','belhaj','omar',to_date('12-FEB-03','DD-MON-RR'),'53645148','omar@gmail.com','Homme',1200,to_date('10-MAR-25','DD-MON-RR'),'Informatique','Employee',null);
+Insert into AHMED.EMPLOYEE (ID,CIN,LAST_NAME,FIRST_NAME,DATE_BIRTH,PHONE,EMAIL,GENDER,SALARY,DATE_HIRING,SPECIALITY,ROLE,RFID_UID) values (48,'14536341','RAREARA','GERARA',to_date('01-JAN-00','DD-MON-RR'),'23814313','GARAE@gmail.com','Homme',2133,to_date('01-JAN-25','DD-MON-RR'),'Informatique','Admin',null);
+Insert into AHMED.EMPLOYEE (ID,CIN,LAST_NAME,FIRST_NAME,DATE_BIRTH,PHONE,EMAIL,GENDER,SALARY,DATE_HIRING,SPECIALITY,ROLE,RFID_UID) values (42,'14539414','belhaj','omar',to_date('12-FEB-03','DD-MON-RR'),'53645149','omar@gmail.com','Homme',1200,to_date('10-MAR-25','DD-MON-RR'),'Informatique','Employee',null);
 Insert into AHMED.EMPLOYEE (ID,CIN,LAST_NAME,FIRST_NAME,DATE_BIRTH,PHONE,EMAIL,GENDER,SALARY,DATE_HIRING,SPECIALITY,ROLE,RFID_UID) values (47,'16732873','frej','aymen',to_date('01-JUL-02','DD-MON-RR'),'98372747','aymen@gmail.com','Homme',1900,to_date('12-MAR-25','DD-MON-RR'),'Communication','Employee','50FA2285');
 REM INSERTING into AHMED.FORMATIONS
 SET DEFINE OFF;
 Insert into AHMED.FORMATIONS (IDFORM,FORMATION,DESCRIPTION,TRAINER,DATEF,TIME,PRIX,EPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (21,'electro','besh ta9ra lili itmout','omar',to_date('19-JAN-00','DD-MON-RR'),22,0,null,null,null);
+Insert into AHMED.FORMATIONS (IDFORM,FORMATION,DESCRIPTION,TRAINER,DATEF,TIME,PRIX,EPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (22,'ahmedsqssssss','bara','mohamed',to_date('30-APR-26','DD-MON-RR'),11,6,null,null,null);
 REM INSERTING into AHMED.MEETING
 SET DEFINE OFF;
-Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (20,'gdfgfs','gsfd','sfg','car advice',14,null,null,null);
-Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (11,'trdhy','eytry','trey','life advice',14,null,null,null);
-Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (21,'ahmed','juju','aszqsd','car advice',14,null,null,null);
-Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (22,'sssssss','sssssssssssss','ssssssssss','car advice',14,null,null,null);
-Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (17,'htrh','rtytr','rtyrt','life advice',14,null,null,null);
-Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (16,'fdsfds','fdsfez','sdfez','car advice',14,null,null,null);
-Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID) values (19,'hbjh','nik','vgh','life advice',14,null,null,null);
+Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID,DATEM) values (20,'gdfgfs','gsfd','sfg','car advice',14,null,null,null,null);
+Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID,DATEM) values (11,'trdhy','eytry','trey','life advice',14,null,null,null,null);
+Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID,DATEM) values (21,'ahmed','juju','aszqsd','car advice',14,null,null,null,null);
+Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID,DATEM) values (22,'sssssss','sssssssssssss','ssssssssss','car advice',14,null,null,null,null);
+Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID,DATEM) values (17,'htrh','rtytr','rtyrt','life advice',14,null,null,null,null);
+Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID,DATEM) values (16,'fdsfds','fdsfez','sdfez','car advice',14,null,null,null,null);
+Insert into AHMED.MEETING (ID,TITLE,ORGANISER,PARTICIPANT,AGENDA,DURATION,EMPLOYEE_ID,CLIENT_ID,RESSOURCE_ID,DATEM) values (19,'hbjh','nik','vgh','life advice',14,null,null,null,null);
 REM INSERTING into AHMED.RESOURCES
 SET DEFINE OFF;
 Insert into AHMED.RESOURCES (RESOURCE_ID,NAME,TYPE,BRAND,QUANTITY,PURCHASE_DATE,EMPLOYEE_ID) values (9,'fdgdfg','Cleaning Supplies','fjghgfj',555,to_date('01-JAN-00','DD-MON-RR'),null);
@@ -199,8 +204,28 @@ BEGIN
   END COLUMN_SEQUENCES;
 END;
 
+
+
 /
 ALTER TRIGGER "AHMED"."CLIENTS_TRG" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger EMPLOYEE_TRG1
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "AHMED"."EMPLOYEE_TRG1" 
+BEFORE INSERT ON EMPLOYEE 
+FOR EACH ROW 
+BEGIN
+  <<COLUMN_SEQUENCES>>
+  BEGIN
+    IF INSERTING AND :NEW.ID IS NULL THEN
+      SELECT EMPLOYEE_SEQ.NEXTVAL INTO :NEW.ID FROM SYS.DUAL;
+    END IF;
+  END COLUMN_SEQUENCES;
+END;
+
+/
+ALTER TRIGGER "AHMED"."EMPLOYEE_TRG1" ENABLE;
 --------------------------------------------------------
 --  DDL for Trigger EMPLOYEE_TRG
 --------------------------------------------------------
@@ -214,38 +239,10 @@ BEGIN
     NULL;
   END COLUMN_SEQUENCES;
 END;
+
+
 /
 ALTER TRIGGER "AHMED"."EMPLOYEE_TRG" ENABLE;
---------------------------------------------------------
---  DDL for Trigger EMPLOYEE_TRG1
---------------------------------------------------------
-
-  CREATE OR REPLACE TRIGGER "AHMED"."EMPLOYEE_TRG1" 
-BEFORE INSERT ON EMPLOYEE 
-FOR EACH ROW 
-BEGIN
-  <<COLUMN_SEQUENCES>>
-  BEGIN
-    NULL;
-  END COLUMN_SEQUENCES;
-END;
-/
-ALTER TRIGGER "AHMED"."EMPLOYEE_TRG1" ENABLE;
---------------------------------------------------------
---  DDL for Trigger FORMATIONS_TRG
---------------------------------------------------------
-
-  CREATE OR REPLACE TRIGGER "AHMED"."FORMATIONS_TRG" 
-BEFORE INSERT ON FORMATIONS 
-FOR EACH ROW 
-BEGIN
-  <<COLUMN_SEQUENCES>>
-  BEGIN
-    NULL;
-  END COLUMN_SEQUENCES;
-END;
-/
-ALTER TRIGGER "AHMED"."FORMATIONS_TRG" ENABLE;
 --------------------------------------------------------
 --  DDL for Trigger FORMATION_TRG
 --------------------------------------------------------
@@ -260,8 +257,59 @@ BEGIN
   END COLUMN_SEQUENCES;
 END;
 
+
+
 /
 ALTER TRIGGER "AHMED"."FORMATION_TRG" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger FORMATIONS_TRG
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "AHMED"."FORMATIONS_TRG" 
+BEFORE INSERT ON FORMATIONS 
+FOR EACH ROW 
+BEGIN
+  <<COLUMN_SEQUENCES>>
+  BEGIN
+    NULL;
+  END COLUMN_SEQUENCES;
+END;
+
+
+/
+ALTER TRIGGER "AHMED"."FORMATIONS_TRG" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger MEETING_TRG
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "AHMED"."MEETING_TRG" 
+BEFORE INSERT ON MEETING 
+FOR EACH ROW 
+BEGIN
+  <<COLUMN_SEQUENCES>>
+  BEGIN
+    NULL;
+  END COLUMN_SEQUENCES;
+END;
+
+
+/
+ALTER TRIGGER "AHMED"."MEETING_TRG" ENABLE;
+--------------------------------------------------------
+--  DDL for Trigger MEETING_TRG1
+--------------------------------------------------------
+
+  CREATE OR REPLACE TRIGGER "AHMED"."MEETING_TRG1" 
+BEFORE INSERT ON MEETING 
+FOR EACH ROW 
+BEGIN
+  <<COLUMN_SEQUENCES>>
+  BEGIN
+    NULL;
+  END COLUMN_SEQUENCES;
+END;
+/
+ALTER TRIGGER "AHMED"."MEETING_TRG1" ENABLE;
 --------------------------------------------------------
 --  DDL for Trigger TABLE1_TRG
 --------------------------------------------------------
@@ -276,23 +324,10 @@ BEGIN
   END COLUMN_SEQUENCES;
 END;
 
+
+
 /
 ALTER TRIGGER "AHMED"."TABLE1_TRG" ENABLE;
---------------------------------------------------------
---  DDL for Trigger MEETING_TRG
---------------------------------------------------------
-
-  CREATE OR REPLACE TRIGGER "AHMED"."MEETING_TRG" 
-BEFORE INSERT ON MEETING 
-FOR EACH ROW 
-BEGIN
-  <<COLUMN_SEQUENCES>>
-  BEGIN
-    NULL;
-  END COLUMN_SEQUENCES;
-END;
-/
-ALTER TRIGGER "AHMED"."MEETING_TRG" ENABLE;
 --------------------------------------------------------
 --  DDL for Trigger RESOURCE_TRIGGER
 --------------------------------------------------------
@@ -307,12 +342,15 @@ BEGIN
 END;
 
 
+
+
 /
 ALTER TRIGGER "AHMED"."RESOURCE_TRIGGER" ENABLE;
 --------------------------------------------------------
 --  Constraints for Table CLIENTS
 --------------------------------------------------------
 
+  ALTER TABLE "AHMED"."CLIENTS" MODIFY ("CONSULTANT_ID" NOT NULL ENABLE);
   ALTER TABLE "AHMED"."CLIENTS" MODIFY ("CLIENT_ID" NOT NULL ENABLE);
   ALTER TABLE "AHMED"."CLIENTS" MODIFY ("NAME" NOT NULL ENABLE);
   ALTER TABLE "AHMED"."CLIENTS" ADD CONSTRAINT "CLIENTS_PK" PRIMARY KEY ("CLIENT_ID")

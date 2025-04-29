@@ -5,12 +5,17 @@
 #include <QSqlQueryModel>
 #include "employee.h"
 
+class QWidget;
+
 class EmployeeManager : public QObject
 {
     Q_OBJECT
 public:
     explicit EmployeeManager(QObject *parent = nullptr);
     ~EmployeeManager();
+
+    // Méthode d'initialisation
+    void initialize(QWidget* parent);
 
     // Méthodes de base CRUD
     bool addEmployee(const QString& cin, const QString& lastName, const QString& firstName, 

@@ -4,9 +4,20 @@
 #include <QMessageBox>
 #include <QSqlDatabase>
 #include <QDebug>
+#include <QLoggingCategory>
 
 int main(int argc, char *argv[])
 {
+    // Désactiver les messages de débogage liés aux polices
+    QLoggingCategory::setFilterRules("qt.text.font.warning=false");
+    QLoggingCategory::setFilterRules("qt.gui.fonts.warning=false");
+    QLoggingCategory::setFilterRules("qt.directwrite.warning=false");
+    QFont::insertSubstitution("Fixedsys", "Segoe UI");
+    QFont::insertSubstitution("8514oem", "Segoe UI");
+    QFont::insertSubstitution("MS Serif", "Segoe UI");
+    QFont::insertSubstitution("Modern", "Segoe UI");
+
+
     QApplication a(argc, argv);
 
     // Check available drivers

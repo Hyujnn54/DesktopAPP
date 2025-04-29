@@ -181,7 +181,7 @@ QSqlQueryModel *Employee::loadEmployees(){
     QSqlQuery query;
     
     // Requête avec tous les champs explicitement listés
-    query.prepare("SELECT ID, CIN, LAST_NAME, FIRST_NAME, DATE_BIRTH, PHONE, EMAIL, GENDER, SALARY, DATE_HIRING, SPECIALITY, IMAGE, ROLE, RFID_UID FROM EMPLOYEE ORDER BY ID");
+    query.prepare("SELECT ID, CIN, LAST_NAME, FIRST_NAME, DATE_BIRTH, PHONE, EMAIL, GENDER, SALARY, DATE_HIRING, SPECIALITY, IMAGE, ROLE, RFID_UID FROM EMPLOYEE");
 
     if (query.exec()) {
         model->setQuery(std::move(query));

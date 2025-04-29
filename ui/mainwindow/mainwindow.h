@@ -54,6 +54,13 @@ private slots:
     void on_generateQRCodeBtn_clicked();
     bool validateEmployeeInput();
     
+    // Input validation slots
+    void validateCIN(const QString &text);
+    void validateName(const QString &text);
+    void validatePhone(const QString &text);
+    void validateEmail(const QString &text);
+    void validateSalary(const QString &text);
+    
     // New chart handlers for each section
     void on_clientChartRefreshButton_clicked();
     void on_trainingChartRefreshButton_clicked();
@@ -67,6 +74,7 @@ private slots:
 
 private:
     void setupUiConnections();
+    void setupInputValidators();
     void applyLightTheme();
     void applyDarkTheme();
     void appendChatMessage(const QString &message, bool isBot = false);
