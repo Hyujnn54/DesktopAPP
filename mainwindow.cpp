@@ -225,10 +225,12 @@ void MainWindow::handleSerialData()
             qDebug() << "Query Error:" << query.lastError().text();
             QMessageBox::warning(this, "Database Error", "Failed to execute query: " + query.lastError().text());
             statusBar()->showMessage("Database Error", 5000);
+            arduino->sendData("0"); // Send "0" for error
             continue;
         }
 
         if (query.next()) {
+            // Output Phase: Employee found, proceed with consultation count
             int employeeId = query.value("ID").toInt();
             QString firstName = query.value("FIRST_NAME").toString();
             QString lastName = query.value("LAST_NAME").toString();
@@ -238,33 +240,155 @@ void MainWindow::handleSerialData()
             QSqlQuery countQuery;
             countQuery.prepare("SELECT COUNT(*) FROM CLIENTS WHERE CONSULTANT_ID = :employeeId AND TRUNC(CONSULTATION_DATE) = TO_DATE(:today, 'YYYY-MM-DD')");
             countQuery.bindValue(":employeeId", employeeId);
-            countQuery.bindValue(":today", QDate::currentDate().toString("yyyy-MM-dd")); // Use current date dynamically
+            countQuery.bindValue(":today", QDate::currentDate().toString("yyyy-MM-dd"));
             if (!countQuery.exec()) {
                 qDebug() << "Count Query Error:" << countQuery.lastError().text();
                 statusBar()->showMessage("Error retrieving consultation count", 5000);
-                // Send "0" to Arduino in case of query error
                 arduino->sendData("0");
             } else if (countQuery.next()) {
                 int consultationCount = countQuery.value(0).toInt();
                 statusBar()->showMessage("Consultations Today for " + firstName + " " + lastName + ": " + QString::number(consultationCount), 5000);
                 qDebug() << "Consultations today for Employee ID" << employeeId << ":" << consultationCount;
-                // Send the consultation count to the Arduino
                 arduino->sendData(QString::number(consultationCount));
             } else {
                 statusBar()->showMessage("Consultations Today for " + firstName + " " + lastName + ": 0", 5000);
                 qDebug() << "No consultations found for Employee ID" << employeeId;
-                // Send "0" to Arduino if no consultations
                 arduino->sendData("0");
             }
 
-            // Display employee info in a message box (without consultation count)
             QMessageBox::information(this, "Employee Found", "RFID card belongs to Employee ID: " + QString::number(employeeId) + "\nName: " + firstName + " " + lastName);
         } else {
+            // Input Phase: No employee found with this RFID UID
             qDebug() << "No employee found with RFID UID:" << uid;
-            QMessageBox::warning(this, "No Match", "No employee found with RFID UID " + uid + ".");
             statusBar()->showMessage("No employee found for RFID UID: " + uid, 5000);
-            // Send "0" to Arduino if no employee found
-            arduino->sendData("0");
+
+            // Check for duplicate UID to prevent conflicts
+            QSqlQuery checkUidQuery;
+            checkUidQuery.prepare("SELECT COUNT(*) FROM EMPLOYEE WHERE RFID_UID = :uid");
+            checkUidQuery.bindValue(":uid", uid);
+            if (checkUidQuery.exec() && checkUidQuery.next() && checkUidQuery.value(0).toInt() > 0) {
+                QMessageBox::warning(this, "Duplicate UID", "This RFID UID is already assigned to another employee.");
+                arduino->sendData("0");
+                continue;
+            }
+
+            // Prompt user to assign the UID to a new or existing employee
+            QMessageBox msgBox(this);
+            msgBox.setWindowTitle("Unknown RFID UID");
+            msgBox.setText("No employee is associated with RFID UID " + uid + ".\nWould you like to assign it to a new employee or an existing one?");
+            QAbstractButton* newEmployeeButton = msgBox.addButton("Create new employee", QMessageBox::YesRole);
+            QAbstractButton* existingEmployeeButton = msgBox.addButton("Select an existing employee", QMessageBox::NoRole);
+            QAbstractButton* cancelButton = msgBox.addButton(QMessageBox::Cancel);
+            msgBox.exec();
+
+            if (msgBox.clickedButton() == newEmployeeButton) {
+                // Option 1: Create a new employee
+                bool ok;
+                QString cin = QInputDialog::getText(this, "New Employee", "Enter CIN (8 digits):", QLineEdit::Normal, "", &ok);
+                if (!ok || cin.isEmpty()) {
+                    arduino->sendData("0"); // Send "0" if canceled
+                    continue;
+                }
+
+                // Validate CIN (8 digits)
+                QRegularExpression cinRegex("^[0-9]{8}$");
+                if (!cinRegex.match(cin).hasMatch()) {
+                    QMessageBox::warning(this, "Invalid Input", "CIN must be an 8-digit number.");
+                    arduino->sendData("0");
+                    continue;
+                }
+
+                QString lastName = QInputDialog::getText(this, "New Employee", "Enter Last Name:", QLineEdit::Normal, "", &ok);
+                if (!ok || lastName.isEmpty()) {
+                    arduino->sendData("0");
+                    continue;
+                }
+
+                QString firstName = QInputDialog::getText(this, "New Employee", "Enter First Name:", QLineEdit::Normal, "", &ok);
+                if (!ok || firstName.isEmpty()) {
+                    arduino->sendData("0");
+                    continue;
+                }
+
+                // Create a new employee with minimal required fields
+                QDate dateOfBirth = QDate::currentDate().addYears(-18); // Default: 18 years ago
+                QString phoneNumber = "00000000"; // Default
+                QString email = "example@domain.com"; // Default
+                QString gender = "Homme"; // Default
+                int salary = 1000; // Default
+                QDate dateOfHire = QDate::currentDate();
+                QString field = "General"; // Default
+                QString imagePath = ""; // Default
+                QString role = "Employee"; // Default
+
+                Employee newEmployee(cin, lastName, firstName, dateOfBirth, phoneNumber, email, gender, salary, dateOfHire, field, imagePath, role);
+                if (newEmployee.ajouter()) {
+                    // Update the RFID_UID for the new employee
+                    QSqlQuery updateQuery;
+                    updateQuery.prepare("UPDATE EMPLOYEE SET RFID_UID = :uid WHERE CIN = :cin");
+                    updateQuery.bindValue(":uid", uid);
+                    updateQuery.bindValue(":cin", cin);
+                    if (updateQuery.exec()) {
+                        QMessageBox::information(this, "Success", "New employee created and RFID UID assigned.");
+                        loadEmployees(); // Refresh the employee table
+                    } else {
+                        qDebug() << "Error updating RFID_UID:" << updateQuery.lastError().text();
+                        QMessageBox::warning(this, "Database Error", "Failed to assign RFID UID.");
+                    }
+                } else {
+                    QMessageBox::warning(this, "Database Error", "Failed to create new employee.");
+                }
+                arduino->sendData("0"); // Send "0" after input phase
+            } else if (msgBox.clickedButton() == existingEmployeeButton) {
+                // Option 2: Assign to an existing employee
+                QSqlQuery employeeQuery;
+                employeeQuery.prepare("SELECT ID, FIRST_NAME, LAST_NAME FROM EMPLOYEE WHERE RFID_UID IS NULL OR RFID_UID = ''");
+                if (!employeeQuery.exec()) {
+                    qDebug() << "Error fetching employees:" << employeeQuery.lastError().text();
+                    QMessageBox::warning(this, "Database Error", "Failed to fetch employees.");
+                    arduino->sendData("0");
+                    continue;
+                }
+
+                QStringList employeeNames;
+                QMap<QString, int> employeeIds;
+                while (employeeQuery.next()) {
+                    int id = employeeQuery.value("ID").toInt();
+                    QString name = employeeQuery.value("FIRST_NAME").toString() + " " + employeeQuery.value("LAST_NAME").toString();
+                    employeeNames << name;
+                    employeeIds[name] = id;
+                }
+
+                if (employeeNames.isEmpty()) {
+                    QMessageBox::warning(this, "No Employees", "No employees without RFID UIDs are available.");
+                    arduino->sendData("0");
+                    continue;
+                }
+
+                bool ok;
+                QString selectedEmployee = QInputDialog::getItem(this, "Select Employee", "Choose an employee to assign the RFID UID:", employeeNames, 0, false, &ok);
+                if (!ok || selectedEmployee.isEmpty()) {
+                    arduino->sendData("0");
+                    continue;
+                }
+
+                int selectedId = employeeIds[selectedEmployee];
+                QSqlQuery updateQuery;
+                updateQuery.prepare("UPDATE EMPLOYEE SET RFID_UID = :uid WHERE ID = :id");
+                updateQuery.bindValue(":uid", uid);
+                updateQuery.bindValue(":id", selectedId);
+                if (updateQuery.exec()) {
+                    QMessageBox::information(this, "Success", "RFID UID assigned to " + selectedEmployee + ".");
+                    loadEmployees(); // Refresh the employee table
+                } else {
+                    qDebug() << "Error updating RFID_UID:" << updateQuery.lastError().text();
+                    QMessageBox::warning(this, "Database Error", "Failed to assign RFID UID.");
+                }
+                arduino->sendData("0"); // Send "0" after input phase
+            } else {
+                // Cancel: Do nothing
+                arduino->sendData("0");
+            }
         }
     }
 }
