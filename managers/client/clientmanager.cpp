@@ -168,13 +168,16 @@ void ClientManager::on_clientAddButton_clicked()
     QString email = ui->clientEmailInput->text().trimmed();
     QDateTimeEdit *dateTimeEdit = ui->clientAddTab->findChild<QDateTimeEdit*>("consultation_datetime");
     QDateTime dateTime = dateTimeEdit ? dateTimeEdit->dateTime() : QDateTime::currentDateTime();
-    QString consultantName = ui->clientConsultantComboBox->currentText();
-    QString consultant = employeeMap.value(consultantName, "-1");
-
-    if (consultant == "-1") {
+    
+    // Get the consultant ID directly from the combo box's item data
+    int currentIndex = ui->clientConsultantComboBox->currentIndex();
+    QString consultant = ui->clientConsultantComboBox->itemData(currentIndex).toString();
+    
+    if (consultant.isEmpty() || consultant == "-1") {
         QMessageBox::warning(nullptr, "Input Error", "Please select a valid consultant.");
         return;
     }
+    
     auto result = client->ajouter(name, sector, contact, email, dateTime, consultant);
     if (result.first) {
         QMessageBox::information(nullptr, "Success", "Client added successfully!");
@@ -559,6 +562,11 @@ void ClientManager::loadEmployees()
         // Clear existing employee data
         employeeMap.clear();
         
+        // Clear and repopulate the consultant combo box
+        if (ui && ui->clientConsultantComboBox) {
+            ui->clientConsultantComboBox->clear();
+        }
+        
         QSqlQuery query;
         
         // Prepare the query first to avoid function sequence errors
@@ -578,12 +586,21 @@ void ClientManager::loadEmployees()
             int id = query.value(0).toInt();
             QString firstName = query.value(1).toString();
             QString lastName = query.value(2).toString();
+            QString fullName = firstName + " " + lastName;
             
             // Store in map for later lookup
-            employeeMap[QString::number(id)] = firstName + " " + lastName;
+            employeeMap[QString::number(id)] = fullName;
+            
+            // Add to the combo box if it exists
+            if (ui && ui->clientConsultantComboBox) {
+                ui->clientConsultantComboBox->addItem(fullName, QString::number(id));
+            }
         }
         
         qDebug() << "Loaded" << employeeMap.size() << "employees successfully";
+        if (ui && ui->clientConsultantComboBox) {
+            qDebug() << "Combo box now has" << ui->clientConsultantComboBox->count() << "items";
+        }
     } catch (const std::exception& e) {
         qDebug() << "Error in loadEmployees:" << e.what();
     }
@@ -802,28 +819,35 @@ QMap<QString, int> ClientManager::getStatisticsByCategory(const QString &categor
     
     QSqlQuery query;
     
-    if (category == "sector") {
+    if (category == "Sector") {
         query.prepare("SELECT SECTOR, COUNT(*) as count FROM AHMED.CLIENTS GROUP BY SECTOR ORDER BY count DESC");
     } 
-    else if (category == "consultant") {
+    else if (category == "Consultant") {
         query.prepare("SELECT (e.FIRST_NAME || ' ' || e.LAST_NAME) AS consultant, COUNT(*) as count "
                      "FROM AHMED.CLIENTS c "
                      "JOIN AHMED.EMPLOYEE e ON c.CONSULTANT_ID = e.ID "
                      "GROUP BY e.FIRST_NAME, e.LAST_NAME "
                      "ORDER BY count DESC");
     }
-    else if (category == "month") {
+    else if (category == "Month") {
         query.prepare("SELECT TO_CHAR(CONSULTATION_DATE, 'MONTH') as month, COUNT(*) as count "
                      "FROM AHMED.CLIENTS "
                      "GROUP BY TO_CHAR(CONSULTATION_DATE, 'MONTH') "
                      "ORDER BY count DESC");
     }
-    else {
+    else if (category == "Date") {
         // Default case - by day
         query.prepare("SELECT TO_CHAR(CONSULTATION_DATE, 'YYYY-MM-DD') as day, COUNT(*) as count "
                      "FROM AHMED.CLIENTS "
                      "GROUP BY TO_CHAR(CONSULTATION_DATE, 'YYYY-MM-DD') "
-                     "ORDER BY count DESC");
+                     "ORDER BY day ASC");
+    }
+    else {
+        // Fallback if category doesn't match
+        query.prepare("SELECT TO_CHAR(CONSULTATION_DATE, 'YYYY-MM-DD') as day, COUNT(*) as count "
+                     "FROM AHMED.CLIENTS "
+                     "GROUP BY TO_CHAR(CONSULTATION_DATE, 'YYYY-MM-DD') "
+                     "ORDER BY day ASC");
     }
     
     if (query.exec()) {

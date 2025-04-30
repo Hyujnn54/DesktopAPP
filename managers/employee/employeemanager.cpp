@@ -215,3 +215,160 @@ QMap<QString, int> EmployeeManager::getEmployeeCountBySpecialty()
     
     return specialtyCounts;
 }
+
+QMap<QString, int> EmployeeManager::getEmployeeCountByGender()
+{
+    QMap<QString, int> genderCounts;
+    QSqlQuery query("SELECT GENDER, COUNT(*) as count FROM EMPLOYEE GROUP BY GENDER");
+    
+    while (query.next()) {
+        QString gender = query.value("GENDER").toString();
+        int count = query.value("count").toInt();
+        genderCounts[gender] = count;
+    }
+    
+    return genderCounts;
+}
+
+QMap<QString, int> EmployeeManager::getEmployeeCountByCategory(const QString& category)
+{
+    QMap<QString, int> statistics;
+    
+    if (category == "role") {
+        return getEmployeeCountByRole();
+    } 
+    else if (category == "specialty") {
+        return getEmployeeCountBySpecialty();
+    }
+    else if (category == "gender") {
+        return getEmployeeCountByGender();
+    }
+    else if (category == "age_group") {
+        QSqlQuery query;
+        query.prepare("SELECT "
+                     "CASE "
+                     "WHEN (SYSDATE - DATE_BIRTH)/365 < 30 THEN 'Under 30' "
+                     "WHEN (SYSDATE - DATE_BIRTH)/365 BETWEEN 30 AND 40 THEN '30-40' "
+                     "WHEN (SYSDATE - DATE_BIRTH)/365 BETWEEN 41 AND 50 THEN '41-50' "
+                     "ELSE 'Over 50' "
+                     "END as age_group, "
+                     "COUNT(*) as count "
+                     "FROM EMPLOYEE "
+                     "GROUP BY "
+                     "CASE "
+                     "WHEN (SYSDATE - DATE_BIRTH)/365 < 30 THEN 'Under 30' "
+                     "WHEN (SYSDATE - DATE_BIRTH)/365 BETWEEN 30 AND 40 THEN '30-40' "
+                     "WHEN (SYSDATE - DATE_BIRTH)/365 BETWEEN 41 AND 50 THEN '41-50' "
+                     "ELSE 'Over 50' "
+                     "END "
+                     "ORDER BY CASE "
+                     "WHEN age_group = 'Under 30' THEN 1 "
+                     "WHEN age_group = '30-40' THEN 2 "
+                     "WHEN age_group = '41-50' THEN 3 "
+                     "WHEN age_group = 'Over 50' THEN 4 "
+                     "END");
+        
+        if (query.exec()) {
+            while (query.next()) {
+                QString ageGroup = query.value(0).toString();
+                int count = query.value(1).toInt();
+                statistics[ageGroup] = count;
+            }
+        } else {
+            qDebug() << "Error getting age group statistics:" << query.lastError().text();
+        }
+    }
+    else if (category == "tenure") {
+        QSqlQuery query;
+        query.prepare("SELECT "
+                     "CASE "
+                     "WHEN (SYSDATE - DATE_HIRING)/365 < 1 THEN 'Less than 1 year' "
+                     "WHEN (SYSDATE - DATE_HIRING)/365 BETWEEN 1 AND 3 THEN '1-3 years' "
+                     "WHEN (SYSDATE - DATE_HIRING)/365 BETWEEN 4 AND 5 THEN '4-5 years' "
+                     "ELSE 'More than 5 years' "
+                     "END as tenure, "
+                     "COUNT(*) as count "
+                     "FROM EMPLOYEE "
+                     "GROUP BY "
+                     "CASE "
+                     "WHEN (SYSDATE - DATE_HIRING)/365 < 1 THEN 'Less than 1 year' "
+                     "WHEN (SYSDATE - DATE_HIRING)/365 BETWEEN 1 AND 3 THEN '1-3 years' "
+                     "WHEN (SYSDATE - DATE_HIRING)/365 BETWEEN 4 AND 5 THEN '4-5 years' "
+                     "ELSE 'More than 5 years' "
+                     "END "
+                     "ORDER BY CASE "
+                     "WHEN tenure = 'Less than 1 year' THEN 1 "
+                     "WHEN tenure = '1-3 years' THEN 2 "
+                     "WHEN tenure = '4-5 years' THEN 3 "
+                     "WHEN tenure = 'More than 5 years' THEN 4 "
+                     "END");
+        
+        if (query.exec()) {
+            while (query.next()) {
+                QString tenureGroup = query.value(0).toString();
+                int count = query.value(1).toInt();
+                statistics[tenureGroup] = count;
+            }
+        } else {
+            qDebug() << "Error getting tenure statistics:" << query.lastError().text();
+        }
+    }
+    else if (category == "salary_range") {
+        QSqlQuery query;
+        query.prepare("SELECT "
+                     "CASE "
+                     "WHEN SALARY < 1000 THEN 'Under 1000' "
+                     "WHEN SALARY BETWEEN 1000 AND 1999 THEN '1000-1999' "
+                     "WHEN SALARY BETWEEN 2000 AND 2999 THEN '2000-2999' "
+                     "WHEN SALARY BETWEEN 3000 AND 3999 THEN '3000-3999' "
+                     "ELSE '4000+' "
+                     "END as salary_range, "
+                     "COUNT(*) as count "
+                     "FROM EMPLOYEE "
+                     "GROUP BY "
+                     "CASE "
+                     "WHEN SALARY < 1000 THEN 'Under 1000' "
+                     "WHEN SALARY BETWEEN 1000 AND 1999 THEN '1000-1999' "
+                     "WHEN SALARY BETWEEN 2000 AND 2999 THEN '2000-2999' "
+                     "WHEN SALARY BETWEEN 3000 AND 3999 THEN '3000-3999' "
+                     "ELSE '4000+' "
+                     "END "
+                     "ORDER BY CASE "
+                     "WHEN salary_range = 'Under 1000' THEN 1 "
+                     "WHEN salary_range = '1000-1999' THEN 2 "
+                     "WHEN salary_range = '2000-2999' THEN 3 "
+                     "WHEN salary_range = '3000-3999' THEN 4 "
+                     "WHEN salary_range = '4000+' THEN 5 "
+                     "END");
+        
+        if (query.exec()) {
+            while (query.next()) {
+                QString salaryRange = query.value(0).toString();
+                int count = query.value(1).toInt();
+                statistics[salaryRange] = count;
+            }
+        } else {
+            qDebug() << "Error getting salary range statistics:" << query.lastError().text();
+        }
+    }
+    
+    return statistics;
+}
+
+double EmployeeManager::getAverageSalary()
+{
+    QSqlQuery query("SELECT AVG(SALARY) FROM EMPLOYEE");
+    if (query.next()) {
+        return query.value(0).toDouble();
+    }
+    return 0.0;
+}
+
+int EmployeeManager::getTotalEmployeeCount()
+{
+    QSqlQuery query("SELECT COUNT(*) FROM EMPLOYEE");
+    if (query.next()) {
+        return query.value(0).toInt();
+    }
+    return 0;
+}

@@ -580,28 +580,27 @@ QMap<QString, int> MeetingManager::getStatisticsByCategory(const QString &catego
         return stats;
     }
 
-    QString column;
-    if (category == "Organiser") {
-        column = "ORGANISER";
-    } else if (category == "Participant") {
-        column = "PARTICIPANT";
-    } else if (category == "Agenda") {
-        column = "AGENDA";
-    } else if (category == "Date") {
-        column = "TRUNC(MEETING_DATE)";
-    } else {
-        qDebug() << "Unsupported filter category for meetings:" << category;
-        return stats;
-    }
-
-    QString queryString = QString(
-        "SELECT %1, COUNT(*) AS count "
-        "FROM AHMED.MEETING "
-        "GROUP BY %1"
-    ).arg(column);
-
     QSqlQuery query;
-    query.prepare(queryString);
+    
+    if (category == "Organiser") {
+        query.prepare("SELECT ORGANISER, COUNT(*) AS count FROM AHMED.MEETING GROUP BY ORGANISER ORDER BY count DESC");
+    } 
+    else if (category == "Participant") {
+        query.prepare("SELECT PARTICIPANT, COUNT(*) AS count FROM AHMED.MEETING GROUP BY PARTICIPANT ORDER BY count DESC");
+    } 
+    else if (category == "Agenda") {
+        query.prepare("SELECT AGENDA, COUNT(*) AS count FROM AHMED.MEETING GROUP BY AGENDA ORDER BY count DESC");
+    } 
+    else if (category == "Date") {
+        query.prepare("SELECT TO_CHAR(DATEM, 'YYYY-MM-DD') as meeting_date, COUNT(*) AS count "
+                     "FROM AHMED.MEETING "
+                     "GROUP BY TO_CHAR(DATEM, 'YYYY-MM-DD') "
+                     "ORDER BY meeting_date ASC");
+    } 
+    else {
+        // Default fallback - by organizer
+        query.prepare("SELECT ORGANISER, COUNT(*) AS count FROM AHMED.MEETING GROUP BY ORGANISER ORDER BY count DESC");
+    }
 
     if (!query.exec()) {
         qDebug() << "Query failed in getStatisticsByCategory:" << query.lastError().text();
@@ -609,15 +608,9 @@ QMap<QString, int> MeetingManager::getStatisticsByCategory(const QString &catego
     }
 
     while (query.next()) {
-        QString key;
-        if (category == "Date") {
-            QDate date = query.value(0).toDate();
-            key = date.toString("yyyy-MM-dd");
-        } else {
-            key = query.value(0).toString();
-            if (key.isEmpty()) {
-                key = "Unknown " + category;
-            }
+        QString key = query.value(0).toString().trimmed();
+        if (key.isEmpty()) {
+            key = "Unknown " + category;
         }
         int count = query.value(1).toInt();
         stats[key] = count;

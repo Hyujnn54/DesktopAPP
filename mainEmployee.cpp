@@ -773,9 +773,14 @@ void MainWindow::loadEmployees()
         // Masquer la colonne de l'image
         ui->tableView->hideColumn(11);
         
-        // Ajuster la taille des colonnes
-        ui->tableView->resizeColumnsToContents();
-        ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        // Enable horizontal scroll bar
+        ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        
+        // Setup columns to better fit their content
+        ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        
+        // Make the last column stretch to fill available space
+        ui->tableView->horizontalHeader()->setStretchLastSection(true);
         
         // Sélectionner la première ligne si disponible
         if (employeeModel->rowCount() > 0) {

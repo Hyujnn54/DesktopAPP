@@ -18,6 +18,7 @@ INCLUDEPATH += "$$PWD/core" \
                "$$PWD/dialog/updateclientdialog" \
                "$$PWD/dialog/updatetrainingdialog" \
                "$$PWD/dialog/updatemeeting" \
+               "$$PWD/dialog/updateemployee" \
                "$$PWD/lib/qrcodegen"
 
 HEADERS += \
@@ -38,8 +39,8 @@ HEADERS += \
     dialog/updateclientdialog/updateclientdialog.h \
     dialog/updatetrainingdialog/updatetrainingdialog.h \
     dialog/updatemeeting/updatemeeting.h \
-    lib/qrcodegen/qrcodegen.hpp \
-    updateemployeedialog.h
+    dialog/updateemployee/updateemployeedialog.h \
+    lib/qrcodegen/qrcodegen.hpp
 
 SOURCES += \
     core/connection.cpp \
@@ -60,8 +61,8 @@ SOURCES += \
     dialog/updateclientdialog/updateclientdialog.cpp \
     dialog/updatetrainingdialog/updatetrainingdialog.cpp \
     dialog/updatemeeting/updatemeeting.cpp \
-    lib/qrcodegen/qrcodegen.cpp \
-    updateemployeedialog.cpp
+    dialog/updateemployee/updateemployeedialog.cpp \
+    lib/qrcodegen/qrcodegen.cpp
 
 FORMS += \
     ui/chartwindow/ChartWindow.ui \
@@ -69,7 +70,7 @@ FORMS += \
     dialog/updateclientdialog/updateclientdialog.ui \
     dialog/updatetrainingdialog/updatetrainingdialog.ui \
     dialog/updatemeeting/updatemeeting.ui \
-    UpdateEmployeeDialog.ui
+    dialog/updateemployee/UpdateEmployeeDialog.ui
 
 RESOURCES += img.qrc
 

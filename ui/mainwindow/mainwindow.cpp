@@ -2,7 +2,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "managers/meeting/meeting.h"
-#include "../../../updateemployeedialog.h"  // Correction du chemin d'inclusion
+#include "updateemployeedialog.h"  // Correction du chemin d'inclusion
 #include "lib/qrcodegen/qrcodegen.hpp"  // Ajout de l'inclusion qrcodegen
 #include <QMessageBox>
 #include <QRegularExpression>
@@ -304,6 +304,30 @@ void MainWindow::on_employeeSectionButton_clicked()
     if (model) {
         ui->tableView->setModel(model);
 
+        // Enable sorting
+        ui->tableView->setSortingEnabled(true);
+        
+        // Enable horizontal scroll bar to see all columns
+        ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        
+        // Configure headers to be clickable for sorting
+        ui->tableView->horizontalHeader()->setSortIndicatorShown(true);
+        ui->tableView->horizontalHeader()->setSectionsClickable(true);
+        
+        // Connect the header click to sorting function
+        connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionClicked, this, [this](int logicalIndex) {
+            Qt::SortOrder order = ui->tableView->horizontalHeader()->sortIndicatorOrder();
+            QSqlQueryModel* sortedModel = employeeManager->sortEmployees(logicalIndex, order);
+            if (sortedModel) {
+                ui->tableView->setModel(sortedModel);
+                
+                // Restore visual settings after model change
+                ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+                ui->tableView->horizontalHeader()->setSortIndicatorShown(true);
+                improveTableDisplay(ui->tableView);
+            }
+        });
+
         // Configuration pour afficher toutes les colonnes correctement
         ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
         ui->tableView->horizontalHeader()->setStretchLastSection(true);
@@ -331,9 +355,6 @@ void MainWindow::on_employeeSectionButton_clicked()
 
         // Connect search functionality
         connect(ui->searchInput, &QLineEdit::textChanged, this, &MainWindow::on_employeeSearchChanged);
-
-        // Sorting
-        ui->tableView->setSortingEnabled(true);
 
         // Apply improved table styling for better readability
         improveTableDisplay(ui->tableView);

@@ -38,6 +38,10 @@ public:
     // Statistiques
     QMap<QString, int> getEmployeeCountByRole();
     QMap<QString, int> getEmployeeCountBySpecialty();
+    QMap<QString, int> getEmployeeCountByGender();
+    QMap<QString, int> getEmployeeCountByCategory(const QString& category);
+    double getAverageSalary();
+    int getTotalEmployeeCount();
 
 
 private:
