@@ -2,8 +2,9 @@
 #define SIGN_H
 
 #include <QMainWindow>
-#include <opencv2/opencv.hpp>
-#include <opencv2/face.hpp>
+// Commented out OpenCV includes
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/face.hpp>
 #include <QSettings>
 #include <QVector>
 #include <QMap>
@@ -29,8 +30,9 @@ private slots :
 
 private:
     Ui::sign *ui;
-    cv::CascadeClassifier faceCascade;
-    cv::Ptr<cv::face::LBPHFaceRecognizer> recognizer;
+    // Commented out OpenCV related members
+    // cv::CascadeClassifier faceCascade;
+    // cv::Ptr<cv::face::LBPHFaceRecognizer> recognizer;
     QMap<int, QString> idToCinMap;
     QString loggedInRole;
     bool loadFaceData();

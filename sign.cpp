@@ -5,16 +5,19 @@
 #include <QSqlError>
 #include "mainwindow.h"
 #include <QSettings>
-#include <opencv2/opencv.hpp>
+// Commented out OpenCV includes
+// #include <opencv2/opencv.hpp>
 #include <QFile>
 sign::sign(QWidget *parent) : QMainWindow(parent), ui(new Ui::sign)
 {
     ui->setupUi(this);
     connect(ui->signBtn, &QPushButton::clicked, this, &sign::handleLogin);
-    bool connected = connect(ui->faceIdBtn, &QPushButton::clicked, this, &sign::faceId);
-    qDebug() << "Face ID button connection status:" << (connected ? "Success" : "Failed");
+    // Disable face ID button connection
+    // connect(ui->faceIdBtn, &QPushButton::clicked, this, &sign::faceId);
     loadLoginCredentials();
 
+    // Disabled OpenCV code
+    /*
     // Load Haar cascade
     QString cascadePath = "C:/opencv/build/install/etc/haarcascades/haarcascade_frontalface_default.xml";
     if (!faceCascade.load(cascadePath.toStdString())) {
@@ -28,6 +31,13 @@ sign::sign(QWidget *parent) : QMainWindow(parent), ui(new Ui::sign)
     if (!loadFaceData()) {
         qDebug() << "Failed to load face data from database";
         QMessageBox::warning(this, "Warning", "Face recognition unavailable due to database error.");
+    }
+    */
+    
+    // Disable Face ID button to prevent user from attempting to use it
+    if (ui->faceIdBtn) {
+        ui->faceIdBtn->setEnabled(false);
+        ui->faceIdBtn->setToolTip("Face ID temporarily disabled");
     }
 }
 
@@ -72,6 +82,9 @@ void sign::handleLogin()
         saveLoginCredentials("", "", false);
     }
 }
+
+// Disabled OpenCV-dependent functions
+/*
 bool sign::loadFaceData()
 {
     QSqlQuery query;
@@ -121,105 +134,19 @@ bool sign::loadFaceData()
     qDebug() << "Face recognizer trained with" << images.size() << "images";
     return true;
 }
+*/
+
+// Replace with dummy implementation
+bool sign::loadFaceData()
+{
+    // Disabled implementation
+    return false;
+}
+
+// Replace with dummy implementation
 void sign::faceId()
 {
-    qDebug() << "faceId() called";
-
-    cv::VideoCapture cap(0);
-    if (!cap.isOpened()) {
-        qDebug() << "Failed to open camera in faceId()";
-        QMessageBox::critical(this, "Camera Error", "Failed to open the camera.");
-        return;
-    }
-    qDebug() << "Camera opened successfully in faceId()";
-
-    if (idToCinMap.isEmpty()) {
-        qDebug() << "Face recognizer not trained, no valid data loaded";
-        QMessageBox::critical(this, "Face ID Error", "Face recognition unavailable: no valid face data in database.");
-        cap.release();
-        return;
-    }
-
-    cv::Mat frame, gray;
-    bool faceDetected = false;
-    int id = -1;
-    double confidence = 0.0;
-
-    while (true) {
-        cap >> frame;
-        if (frame.empty()) {
-            qDebug() << "Failed to capture frame in faceId()";
-            QMessageBox::critical(this, "Camera Error", "Failed to capture an image from the camera.");
-            break;
-        }
-
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-
-        std::vector<cv::Rect> faces;
-        faceCascade.detectMultiScale(gray, faces, 1.1, 3, 0, cv::Size(30, 30));
-
-        id = -1;
-        confidence = 0.0;
-        faceDetected = false;
-
-        if (!faces.empty()) {
-            cv::Mat faceROI = gray(faces[0]);
-            recognizer->predict(faceROI, id, confidence);
-
-            cv::rectangle(frame, faces[0], cv::Scalar(0, 255, 0), 2);
-            QString label = QString("ID: %1, Confidence: %2").arg(id).arg(confidence);
-            cv::putText(frame, label.toStdString(), cv::Point(faces[0].x, faces[0].y - 10),
-                        cv::FONT_HERSHEY_SIMPLEX, 0.9, cv::Scalar(0, 255, 0), 2);
-
-            qDebug() << "Face detected - ID:" << id << "Confidence:" << confidence;
-
-            if (confidence < 50.0) {
-                faceDetected = true;
-            }
-        }
-
-        cv::imshow("Face ID - Press 'q' to quit", frame);
-        int key = cv::waitKey(30);
-        if (key == 'q' || key == 27) {
-            qDebug() << "User quit the camera feed";
-            break;
-        }
-
-        if (faceDetected) {
-            break;
-        }
-    }
-
-    cap.release();
-    cv::destroyAllWindows();
-    qDebug() << "Camera feed closed in faceId()";
-
-    if (faceDetected && idToCinMap.contains(id)) {
-        QString cin = idToCinMap[id];
-        QSqlQuery query;
-        query.prepare("SELECT EMAIL, ROLE FROM EMPLOYEE WHERE CIN = :cin"); // Added ROLE
-        query.bindValue(":cin", cin);
-        if (query.exec() && query.next()) {
-            QString email = query.value("EMAIL").toString();
-            loggedInRole = query.value("ROLE").toString(); // Store the role
-            qDebug() << "Logging in - CIN:" << cin << "Email:" << email << "Role:" << loggedInRole;
-            QMessageBox::information(this, "Face ID Successful", "Welcome!");
-            MainWindow *mainWindow = new MainWindow(true, nullptr); // Correction: passer true comme premier paramètre
-            mainWindow->setLoggedInRole(loggedInRole); // Pass role to MainWindow
-            mainWindow->show();
-            this->hide(); // Use hide() to match handleLogin()
-
-            if (ui->rememberMeCheckBox->isChecked()) {
-                saveLoginCredentials(email, cin, true);
-            }
-        } else {
-            qDebug() << "Face recognized but no matching employee found for CIN:" << cin;
-            QMessageBox::critical(this, "Login Failed", "Face recognized but no matching employee found.");
-        }
-    } else {
-        qDebug() << "Face ID failed - Detected:" << faceDetected << "ID in map:" << idToCinMap.contains(id);
-        QMessageBox::critical(this, "Face ID Failed", "No matching face found in the database.");
-    }
+    QMessageBox::information(this, "Face ID Disabled", "Face ID functionality is temporarily disabled.");
 }
 
 void sign::saveLoginCredentials(const QString &email, const QString &cin, bool remember)
