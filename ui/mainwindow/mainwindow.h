@@ -5,6 +5,7 @@
 #include "managers/client/clientmanager.h"
 #include "managers/training/trainingmanager.h"
 #include "managers/meeting/meetingmanager.h"
+#include "managers/resources/resourcemanager.h"
 #include "managers/employee/employeemanager.h"
 #include "core/notificationmanager.h"
 #include <QMainWindow>
@@ -34,6 +35,7 @@ private slots:
     void on_trainingSectionButton_clicked();
     void on_meetingSectionButton_clicked();
     void on_employeeSectionButton_clicked();
+    void on_resourceSectionButton_clicked();
     void on_statisticsButton_clicked();
     void toggleSidebar();
     void toggleTheme();
@@ -73,6 +75,20 @@ private slots:
     void on_trainingChartFilterComboBox_currentIndexChanged(int index);
     void on_meetingChartFilterComboBox_currentIndexChanged(int index);
 
+    // Resource management
+    void on_confirmFormButton_clicked();
+    void on_btnSelectImage_clicked();
+    void on_cancelFormButton_clicked();
+    void on_updateButton_clicked();
+    void on_deleteButton_clicked();
+    void on_exportPdfButton_clicked();
+    void on_searchTextChanged(const QString &text);
+    void on_resetResourceSearchButton_clicked(); // Corrected from resetSearchButton_2
+    void on_downloadHistoryButton_clicked();
+    void on_clearHistoryButton_clicked();
+    void on_btnLookForResource_clicked();
+    void on_searchTimeout();
+
 private:
     void setupUiConnections();
     void setupInputValidators();
@@ -92,10 +108,12 @@ private:
     void setupTrainingChart();
     void setupMeetingChart();
     void setupEmployeeChart();
+    void setupResourceChart();
     void updateClientChart();
     void updateTrainingChart();
     void updateMeetingChart();
     void updateEmployeeChart();
+    void updateResourceChart();
 
     Ui::MainWindow *ui;
     bool m_dbConnected;
@@ -104,8 +122,18 @@ private:
     TrainingManager *trainingManager;
     MeetingManager *meetingManager;
     EmployeeManager *employeeManager;
+    ResourceManager *resourceManager;
     NotificationManager *notificationManager;
     QNetworkAccessManager *networkManager;
+    
+    // Resource management variables
+    int selectedResourceId;
+    QByteArray imageData;
+    int currentSortColumn;
+    Qt::SortOrder currentSortOrder;
+    QTimer *searchTimer;
+    QPieSeries *pieSeries;
+    QBarSeries *barSeries;
 };
 
 #endif // MAINWINDOW_H

@@ -2,7 +2,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "managers/meeting/meeting.h"
-#include "dialog/updateemployee/updateemployeedialog.h"  // Correction du chemin d'inclusion
+#include "dialog/updateemployee/updateemployeedialog.h"  // Updated include path
+#include "dialog/updateresourcesdialog/updateresourcesdialog.h"  // Include for UpdateResourceDialog
 #include "lib/qrcodegen/qrcodegen.hpp"  // Ajout de l'inclusion qrcodegen
 #include <QMessageBox>
 #include <QRegularExpression>
@@ -32,6 +33,7 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     trainingManager(new TrainingManager(dbConnected, this)),
     meetingManager(new MeetingManager(dbConnected, this)),
     employeeManager(new EmployeeManager(this)),
+    resourceManager(new ResourceManager(this)),
     notificationManager(new NotificationManager(this)),
     networkManager(new QNetworkAccessManager(this))
 {
@@ -47,6 +49,17 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     clientManager->setNotificationManager(notificationManager);
     trainingManager->setNotificationManager(notificationManager);
     meetingManager->setNotificationManager(notificationManager);
+
+    // Initialize resource-specific variables
+    selectedResourceId = -1;
+    imageData = QByteArray();
+    currentSortColumn = 0;
+    currentSortOrder = Qt::AscendingOrder;
+    searchTimer = new QTimer(this);
+    searchTimer->setSingleShot(true);
+    connect(searchTimer, &QTimer::timeout, this, &MainWindow::on_searchTimeout);
+    pieSeries = new QPieSeries(this);
+    barSeries = new QBarSeries(this);
 
     setupUiConnections();
     setupChartConnections();
@@ -70,6 +83,7 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
         ui->trainingSectionButton->setEnabled(false);
         ui->meetingSectionButton->setEnabled(false);
         ui->employeeSectionButton->setEnabled(false);
+        ui->resourceSectionButton->setEnabled(false);
         statusBar()->showMessage("Database not connected. Some features are disabled.");
     } else {
         clientManager->initialize(ui);
@@ -89,6 +103,7 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
         setupTrainingChart();
         setupMeetingChart();
         setupEmployeeChart();
+        setupResourceChart();
         
         on_meetingSectionButton_clicked();
     }
@@ -105,6 +120,7 @@ MainWindow::~MainWindow()
     delete trainingManager;
     delete meetingManager;
     delete employeeManager;
+    delete resourceManager;
     delete notificationManager;
     delete networkManager;
     delete ui;
@@ -117,6 +133,7 @@ void MainWindow::setupUiConnections()
     connect(ui->trainingSectionButton, &QPushButton::clicked, this, &MainWindow::on_trainingSectionButton_clicked);
     connect(ui->meetingSectionButton, &QPushButton::clicked, this, &MainWindow::on_meetingSectionButton_clicked);
     connect(ui->employeeSectionButton, &QPushButton::clicked, this, &MainWindow::on_employeeSectionButton_clicked);
+    connect(ui->resourceSectionButton, &QPushButton::clicked, this, &MainWindow::on_resourceSectionButton_clicked);
     connect(ui->menuButton, &QPushButton::clicked, this, &MainWindow::toggleSidebar);
     connect(ui->themeButton, &QPushButton::clicked, this, &MainWindow::toggleTheme);
     connect(ui->meetingChatSendButton, &QPushButton::clicked, this, &MainWindow::on_chatSendButton_clicked);
@@ -1362,31 +1379,20 @@ void MainWindow::setupEmployeeChart()
 {
     if (!m_dbConnected) return;
     
-    // Create a default chart if the chartsContainer exists in the employee stats tab
-    QVBoxLayout* chartsLayout = ui->chartsContainer ? 
-        qobject_cast<QVBoxLayout*>(ui->chartsContainer->layout()) : nullptr;
+    // Create a default chart directly using the employee chart view
+    QChart* chart = new QChart();
+    chart->setTitle("Employee Statistics");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
     
-    if (chartsLayout) {
-        // Clear existing charts
-        while (QLayoutItem* item = chartsLayout->takeAt(0)) {
-            if (QWidget* widget = item->widget())
-                widget->deleteLater();
-            delete item;
-        }
+    // Set the chart on the ChartView
+    if (ui->employeeChartView) {
+        ui->employeeChartView->setChart(chart);
+        ui->employeeChartView->setRenderHint(QPainter::Antialiasing);
         
-        // Create a new chart view
-        QChartView* chartView = new QChartView();
-        chartView->setMinimumHeight(350);
-        chartsLayout->addWidget(chartView);
-        
-        // Create and set up the chart
-        QChart* chart = new QChart();
-        chart->setTitle("Employee Statistics");
-        chart->setAnimationOptions(QChart::SeriesAnimations);
-        chart->legend()->setVisible(true);
-        chart->legend()->setAlignment(Qt::AlignBottom);
-        chartView->setChart(chart);
-        chartView->setRenderHint(QPainter::Antialiasing);
+        // Enable chart hover effects
+        ui->employeeChartView->setRubberBand(QChartView::RectangleRubberBand);
         
         // Update with initial data
         updateEmployeeChart();
@@ -1801,36 +1807,171 @@ void MainWindow::updateMeetingChart()
 void MainWindow::updateEmployeeChart()
 {
     if (!m_dbConnected) return;
-    
-    QVBoxLayout* chartsLayout = ui->chartsContainer ? 
-        qobject_cast<QVBoxLayout*>(ui->chartsContainer->layout()) : nullptr;
-    
-    if (!chartsLayout || chartsLayout->count() == 0) return;
-    
-    QChartView* chartView = qobject_cast<QChartView*>(chartsLayout->itemAt(0)->widget());
-    if (!chartView) return;
-    
-    QChart* chart = chartView->chart();
-    if (!chart) return;
-    
-    // Clear existing series
-    chart->removeAllSeries();
-    
-    // Create a pie series for employee specialties
-    QPieSeries* specialtySeries = new QPieSeries();
-    
-    QMap<QString, int> specialtyData = employeeManager->getEmployeeCountBySpecialty();
-    
-    // Add slices to the pie series
-    for (auto it = specialtyData.begin(); it != specialtyData.end(); ++it) {
-        QPieSlice* slice = specialtySeries->append(it.key(), it.value());
-        slice->setLabelVisible(true);
-        if (it.value() > 0) {
-            slice->setLabel(QString("%1: %2").arg(it.key()).arg(it.value()));
+
+    try {
+        // Get chart type and filter from employee-specific controls
+        QComboBox* employeeChartTypeComboBox = ui->mainStackedWidget->findChild<QComboBox*>("employeeChartTypeComboBox");
+        QComboBox* employeeChartFilterComboBox = ui->mainStackedWidget->findChild<QComboBox*>("employeeChartFilterComboBox");
+        QCheckBox* employeeToggleLegendCheckBox = ui->mainStackedWidget->findChild<QCheckBox*>("employeeToggleLegendCheckBox");
+        QLabel* employeeHoverLabel = ui->mainStackedWidget->findChild<QLabel*>("employeeHoverLabel");
+        
+        QString chartType = employeeChartTypeComboBox ? employeeChartTypeComboBox->currentText() : "Pie Chart";
+        QString filter = employeeChartFilterComboBox ? employeeChartFilterComboBox->currentText() : "Role";
+        bool showLegend = employeeToggleLegendCheckBox ? employeeToggleLegendCheckBox->isChecked() : true;
+
+        // Use employee-specific chart view
+        QChartView* chartView = ui->employeeChartView;
+        if (!chartView) return;
+
+        QChart* chart = chartView->chart();
+        if (!chart) return;
+
+        // Clear existing series
+        chart->removeAllSeries();
+        
+        // Clear existing axes
+        QList<QAbstractAxis*> axes = chart->axes();
+        for (QAbstractAxis* axis : axes) {
+            chart->removeAxis(axis);
+            delete axis;
         }
+
+        // Update chart title based on filter
+        chart->setTitle(QString("Employee Statistics by %1").arg(filter));
+        
+        // Show/hide legend based on checkbox
+        chart->legend()->setVisible(showLegend);
+
+        // Get data from employee manager
+        QMap<QString, int> data = employeeManager->getEmployeeCountByCategory(filter);
+
+        // Create appropriate chart based on selection
+        if (chartType == "Pie Chart") {
+            QPieSeries *series = new QPieSeries();
+
+            // Add slices to the pie series
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                QPieSlice *slice = series->append(it.key(), it.value());
+                slice->setLabelVisible(true);
+                slice->setLabelPosition(QPieSlice::LabelOutside);
+
+                // Format label to show percentage
+                slice->setLabel(QString("%1: %2%").arg(it.key()).arg(100 * slice->percentage(), 0, 'f', 1));
+
+                // Connect hover signals for interactive feedback using captured employeeHoverLabel
+                connect(slice, &QPieSlice::hovered, [this, slice](bool hovered) {
+                    if (hovered) {
+                        slice->setExploded(true);
+                        slice->setLabelVisible(true);
+                        ui->employeeHoverLabel->setText(
+                            QString("%1: %2 employees (%3%)").arg(
+                                slice->label().split(':').at(0), 
+                                QString::number(slice->value()),
+                                QString::number(100 * slice->percentage(), 'f', 1)
+                            )
+                        );
+                    } else if (ui->employeeHoverLabel) {
+                        slice->setExploded(false);
+                        ui->employeeHoverLabel->setText("Hover over a chart element to see details");
+                    }
+                });
+            }
+
+            chart->addSeries(series);
+            series->setLabelsVisible(true);
+
+            // Enable animations for a more modern look
+            chart->setAnimationOptions(QChart::SeriesAnimations);
+
+        } else if (chartType == "Bar Chart") {
+            QBarSeries *series = new QBarSeries();
+
+            // Create a bar set
+            QBarSet *set = new QBarSet("Employees");
+
+            // Create categories list for axis
+            QStringList categories;
+
+            // Add values to the bar set
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                *set << it.value();
+                categories << it.key();
+            }
+
+            series->append(set);
+            chart->addSeries(series);
+
+            // Create axes
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            series->attachAxis(axisX);
+
+            QValueAxis *axisY = new QValueAxis();
+            // Ensure we don't crash with empty data
+            if (set->count() > 0) {
+                double maxValue = 0;
+                for (int i = 0; i < set->count(); i++) {
+                    maxValue = qMax(maxValue, set->at(i));
+                }
+                axisY->setRange(0, maxValue * 1.1); // Set range with some padding
+            } else {
+                axisY->setRange(0, 10); // Default range if no data
+            }
+            chart->addAxis(axisY, Qt::AlignLeft);
+            series->attachAxis(axisY);
+
+            // Connect hover signals for interactive feedback
+            connect(series, &QBarSeries::hovered, [this, categories](bool status, int index, QBarSet *barset) {
+                if (status && index >= 0 && index < categories.size() && ui->employeeHoverLabel) {
+                    double percentage = 0;
+                    double total = 0;
+
+                    // Calculate total to get percentage
+                    for (int i = 0; i < barset->count(); i++) {
+                        total += barset->at(i);
+                    }
+
+                    if (total > 0) {
+                        percentage = (barset->at(index) / total) * 100.0;
+                    }
+
+                    ui->employeeHoverLabel->setText(
+                        QString("%1: %2 employees (%3%)").arg(
+                            categories.at(index), 
+                            QString::number(barset->at(index)),
+                            QString::number(percentage, 'f', 1)
+                        )
+                    );
+                } else if (ui->employeeHoverLabel) {
+                    ui->employeeHoverLabel->setText("Hover over a chart element to see details");
+                }
+            });
+
+            // Enable animations
+            chart->setAnimationOptions(QChart::SeriesAnimations);
+        }
+
+        // Update summary statistics if these labels exist
+        if (ui->employeeTotalCountLabel) {
+            ui->employeeTotalCountLabel->setText(QString("Total Employees: %1").arg(employeeManager->getTotalEmployeeCount()));
+        }
+        
+        if (ui->employeeAverageSalaryLabel) {
+            ui->employeeAverageSalaryLabel->setText(QString("Average Salary: $%1").arg(employeeManager->getAverageSalary(), 0, 'f', 2));
+        }
+
+        // Ensure the chart view is properly configured
+        chartView->setRenderHint(QPainter::Antialiasing);
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+
+    } catch (const std::exception& e) {
+        qDebug() << "Exception in updateEmployeeChart:" << e.what();
+        QMessageBox::warning(this, "Chart Error", "Failed to update employee chart: " + QString(e.what()));
+    } catch (...) {
+        qDebug() << "Unknown exception in updateEmployeeChart";
+        QMessageBox::warning(this, "Chart Error", "Unknown error updating employee chart");
     }
-    
-    chart->addSeries(specialtySeries);
 }
 
 // Add this new helper method to improve all table displays
@@ -2282,35 +2423,555 @@ bool MainWindow::validateEmployeeInput()
     return true;
 }
 
+void MainWindow::on_resourceSectionButton_clicked()
+{
+    ui->mainStackedWidget->setCurrentWidget(ui->resourcePage);
+    
+    // Check if the table widget exists before setting up
+    if (ui->tableWidget) {
+        // Setup the resource table
+        resourceManager->setupTable(ui->tableWidget);
+        
+        // Apply improved table styling for better readability
+        improveTableWidgetDisplay(ui->tableWidget);
+        
+        // Connect table selection to update form fields
+        connect(ui->tableWidget, &QTableWidget::itemSelectionChanged, this, &MainWindow::on_btnLookForResource_clicked);
+        
+        // Setup search functionality
+        connect(ui->searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::on_searchTextChanged);
+        
+        // Refresh statistics if needed
+        updateResourceChart();
+    } else {
+        QMessageBox::warning(this, "UI Error", "Resource table widget not found. Please check the UI setup.");
+    }
+}
+
+void MainWindow::setupResourceChart()
+{
+    if (!m_dbConnected) return;
+    
+    // Create a default chart for resources
+    QChart *chart = new QChart();
+    chart->setTitle("Resource Statistics");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+    
+    // Check if resourceChartView exists in the UI before using it
+    // This will prevent the "no member named 'resourceChartView'" error
+    QChartView* resourceChartView = ui->mainStackedWidget->findChild<QChartView*>("resourceChartView");
+    if (resourceChartView) {
+        resourceChartView->setChart(chart);
+        resourceChartView->setRenderHint(QPainter::Antialiasing);
+        resourceChartView->setRubberBand(QChartView::RectangleRubberBand);
+        
+        // Update with initial data
+        updateResourceChart();
+    } else {
+        qDebug() << "Resource chart view not found in UI";
+    }
+}
+
+void MainWindow::updateResourceChart()
+{
+    if (!m_dbConnected) return;
+    
+    try {
+        // Find chart elements dynamically to avoid missing UI element errors
+        QChartView* resourceChartView = ui->mainStackedWidget->findChild<QChartView*>("resourceChartView");
+        QComboBox* resourceChartTypeComboBox = ui->mainStackedWidget->findChild<QComboBox*>("resourceChartTypeComboBox");
+        QLabel* resourceHoverLabel = ui->mainStackedWidget->findChild<QLabel*>("resourceHoverLabel");
+        QLabel* totalResourcesLabel = ui->mainStackedWidget->findChild<QLabel*>("totalResourcesLabel");
+
+        if (!resourceChartView) return;
+        
+        // Get chart type
+        QString chartType = "Pie Chart";
+        if (resourceChartTypeComboBox && !resourceChartTypeComboBox->currentText().isEmpty()) {
+            chartType = resourceChartTypeComboBox->currentText();
+        }
+        
+        // Get the chart from the view
+        QChart *chart = resourceChartView->chart();
+        if (!chart) return;
+        
+        // Clear existing series and disconnect old connections
+        foreach(QAbstractSeries *series, chart->series()) {
+            if (QBarSeries *barSeries = qobject_cast<QBarSeries*>(series)) {
+                disconnect(barSeries, &QBarSeries::hovered, nullptr, nullptr);
+            } else if (QPieSeries *pieSeries = qobject_cast<QPieSeries*>(series)) {
+                for (QPieSlice *slice : pieSeries->slices()) {
+                    disconnect(slice, &QPieSlice::hovered, nullptr, nullptr);
+                }
+            }
+        }
+        chart->removeAllSeries();
+        
+        // Also clear the axes to prevent duplication
+        QList<QAbstractAxis*> axes = chart->axes();
+        for (QAbstractAxis *axis : axes) {
+            chart->removeAxis(axis);
+            delete axis;
+        }
+        
+        // Get data from resource manager
+        QMap<QString, int> typeData = resourceManager->getStatisticsByType();
+        QMap<QString, int> dateData = resourceManager->getResourceCountByDate();
+        
+        if (chartType == "Pie Chart") {
+            // Create pie chart by resource type
+            QPieSeries *series = new QPieSeries();
+            
+            // Add slices to the pie series
+            for (auto it = typeData.begin(); it != typeData.end(); ++it) {
+                QPieSlice *slice = series->append(it.key(), it.value());
+                slice->setLabelVisible(true);
+                slice->setLabel(QString("%1: %2%").arg(it.key()).arg(100 * slice->percentage(), 0, 'f', 1));
+                
+                // Connect slice signals for hover effects
+                connect(slice, &QPieSlice::hovered, [resourceHoverLabel, slice](bool hovered) {
+                    if (hovered) {
+                        slice->setExploded(true);
+                        if (resourceHoverLabel) {
+                            resourceHoverLabel->setText(
+                                QString("%1: %2 resources (%3%)").arg(
+                                    slice->label().split(':').at(0), 
+                                    QString::number(slice->value()),
+                                    QString::number(100 * slice->percentage(), 'f', 1)
+                                )
+                            );
+                        }
+                    } else {
+                        slice->setExploded(false);
+                        if (resourceHoverLabel) {
+                            resourceHoverLabel->setText("Hover over a chart element to see details");
+                        }
+                    }
+                });
+            }
+            
+            chart->addSeries(series);
+            chart->setTitle("Resources by Type");
+            
+        } else if (chartType == "Bar Chart") {
+            // Create bar chart for resources by purchase date
+            QBarSeries *series = new QBarSeries();
+            
+            // Create a bar set
+            QBarSet *set = new QBarSet("Resources");
+            
+            // Create categories list for axis
+            QStringList categories;
+            
+            // Add values to the bar set
+            for (auto it = dateData.begin(); it != dateData.end(); ++it) {
+                *set << it.value();
+                categories << it.key();
+            }
+            
+            series->append(set);
+            chart->addSeries(series);
+            
+            // Create axes
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            series->attachAxis(axisX);
+            
+            QValueAxis *axisY = new QValueAxis();
+            // Ensure we don't crash with empty data
+            if (set->count() > 0) {
+                double maxValue = 0;
+                for (int i = 0; i < set->count(); i++) {
+                    maxValue = qMax(maxValue, set->at(i));
+                }
+                axisY->setRange(0, maxValue * 1.1); // Set range with some padding
+            } else {
+                axisY->setRange(0, 10); // Default range if no data
+            }
+            chart->addAxis(axisY, Qt::AlignLeft);
+            series->attachAxis(axisY);
+            
+            // Connect hover signals using captured resourceHoverLabel
+            connect(series, &QBarSeries::hovered, [resourceHoverLabel, categories](bool status, int index, QBarSet *barset) {
+                if (status && index >= 0 && index < categories.size()) {
+                    if (resourceHoverLabel) {
+                        resourceHoverLabel->setText(
+                            QString("%1: %2 resources").arg(
+                                categories.at(index),
+                                QString::number(barset->at(index))
+                            )
+                        );
+                    }
+                } else {
+                    if (resourceHoverLabel) {
+                        resourceHoverLabel->setText("Hover over a chart element to see details");
+                    }
+                }
+            });
+            
+            chart->setTitle("Resources by Purchase Date");
+        }
+        
+        // Set other chart properties
+        chart->legend()->setVisible(true);
+        
+        // Update summary statistics
+        if (totalResourcesLabel) {
+            totalResourcesLabel->setText(QString("Total Resources: %1").arg(resourceManager->getTotalResourceCount()));
+        }
+        
+    } catch (const std::exception& e) {
+        qDebug() << "Exception in updateResourceChart:" << e.what();
+        QMessageBox::warning(this, "Chart Error", "Failed to update resource chart: " + QString(e.what()));
+    } catch (...) {
+        qDebug() << "Unknown exception in updateResourceChart";
+        QMessageBox::warning(this, "Chart Error", "Unknown error updating resource chart");
+    }
+}
+
+void MainWindow::on_confirmFormButton_clicked()
+{
+    // Validate inputs
+    QString name = ui->nameLineEdit->text().trimmed();
+    QString type = ui->typeComboBox->currentText().trimmed();
+    QString brand = ui->brandLineEdit->text().trimmed();
+    QString quantityText = ui->quantitySpinBox->text().trimmed();
+    QDate purchaseDate = ui->purchaseDateEdit->date();
+    
+    // Check required fields
+    if (name.isEmpty() || type.isEmpty() || brand.isEmpty() || quantityText.isEmpty()) {
+        QMessageBox::warning(this, "Validation Error", "Please fill in all required fields.");
+        return;
+    }
+    
+    // Convert quantity to int
+    bool ok;
+    int quantity = quantityText.toInt(&ok);
+    if (!ok || quantity <= 0) {
+        QMessageBox::warning(this, "Validation Error", "Please enter a valid quantity (positive number).");
+        return;
+    }
+    
+    // Check purchase date is not in the future
+    if (purchaseDate > QDate::currentDate()) {
+        QMessageBox::warning(this, "Validation Error", "Purchase date cannot be in the future.");
+        return;
+    }
+    
+    // Add resource
+    bool success = resourceManager->addResource(name, type, brand, quantity, purchaseDate, imageData);
+    
+    if (success) {
+        QMessageBox::information(this, "Success", "Resource added successfully");
+        
+        // Clear form
+        ui->nameLineEdit->clear();
+        ui->typeComboBox->setCurrentIndex(0);
+        ui->brandLineEdit->clear();
+        ui->quantitySpinBox->setValue(1);
+        ui->purchaseDateEdit->setDate(QDate::currentDate());
+        ui->imagePreviewLabel->clear();
+        imageData.clear();
+        
+        // Refresh table
+        resourceManager->updateTable(ui->tableWidget);
+        
+        // Update statistics
+        updateResourceChart();
+        
+        // Add notification
+        notificationManager->addNotification(
+            "Resource Added", 
+            "New resource: " + name, 
+            "Added at " + QDateTime::currentDateTime().toString(),
+            -1
+        );
+    } else {
+        QMessageBox::critical(this, "Error", "Failed to add resource. Check the database connection.");
+    }
+}
+
+void MainWindow::on_btnSelectImage_clicked()
+{
+    QString filePath = QFileDialog::getOpenFileName(
+        this,
+        "Select Resource Image",
+        "",
+        "Image Files (*.png *.jpg *.jpeg *.bmp)"
+    );
+    
+    if (!filePath.isEmpty()) {
+        // Load image data
+        imageData = ResourceManager::loadImageData(filePath);
+        
+        if (!imageData.isEmpty()) {
+            // Display image preview
+            QPixmap pixmap = ResourceManager::byteArrayToPixmap(imageData);
+            if (!pixmap.isNull()) {
+                ui->imagePreviewLabel->setPixmap(pixmap.scaled(200, 150, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            } else {
+                ui->imagePreviewLabel->setText("Invalid image format");
+                imageData.clear();
+            }
+        } else {
+            ui->imagePreviewLabel->setText("Failed to load image");
+        }
+    }
+}
+
+void MainWindow::on_cancelFormButton_clicked()
+{
+    // Clear form
+    ui->nameLineEdit->clear();
+    ui->typeComboBox->setCurrentIndex(0);
+    ui->brandLineEdit->clear();
+    ui->quantitySpinBox->setValue(1);
+    ui->purchaseDateEdit->setDate(QDate::currentDate());
+    ui->imagePreviewLabel->clear();
+    imageData.clear();
+    
+    // Deselect any selected row
+    if (ui->tableWidget) {
+        ui->tableWidget->clearSelection();
+    }
+    
+    // Reset the selected resource id
+    selectedResourceId = -1;
+}
+
+void MainWindow::on_updateButton_clicked()
+{
+    // Check if a resource is selected
+    if (selectedResourceId <= 0) {
+        QMessageBox::warning(this, "Selection Error", "Please select a resource to update.");
+        return;
+    }
+    
+    // Open update dialog with the correct class name
+    UpdateResourceDialog dialog(selectedResourceId, this);
+    if (dialog.exec() == QDialog::Accepted) {
+        // Refresh table
+        resourceManager->updateTable(ui->tableWidget);
+        
+        // Update statistics
+        updateResourceChart();
+        
+        // Add notification
+        notificationManager->addNotification(
+            "Resource Updated",
+            "Updated resource ID: " + QString::number(selectedResourceId),
+            "Updated at " + QDateTime::currentDateTime().toString(),
+            -1
+        );
+    }
+}
+
+void MainWindow::on_deleteButton_clicked()
+{
+    // Check if a resource is selected
+    if (selectedResourceId <= 0) {
+        QMessageBox::warning(this, "Selection Error", "Please select a resource to delete.");
+        return;
+    }
+    
+    // Confirm deletion
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "Confirm Delete",
+        "Are you sure you want to delete this resource?",
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply == QMessageBox::Yes) {
+        // Delete the resource
+        if (resourceManager->deleteResource(selectedResourceId)) {
+            QMessageBox::information(this, "Success", "Resource deleted successfully");
+            
+            // Refresh table
+            resourceManager->updateTable(ui->tableWidget);
+            
+            // Clear selection
+            selectedResourceId = -1;
+            
+            // Update statistics
+            updateResourceChart();
+            
+            // Clear form
+            on_cancelFormButton_clicked();
+            
+            // Add notification
+            notificationManager->addNotification(
+                "Resource Deleted",
+                "Deleted resource ID: " + QString::number(selectedResourceId),
+                "Deleted at " + QDateTime::currentDateTime().toString(),
+                -1
+            );
+        } else {
+            QMessageBox::critical(this, "Error", "Failed to delete resource. Check the database connection.");
+        }
+    }
+}
+
+void MainWindow::on_exportPdfButton_clicked()
+{
+    QString filePath = QFileDialog::getSaveFileName(
+        this,
+        "Export Resources to PDF",
+        "",
+        "PDF Files (*.pdf)"
+    );
+    
+    if (!filePath.isEmpty()) {
+        if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) {
+            filePath += ".pdf";
+        }
+        
+        if (resourceManager->exportToPdf(filePath)) {
+            QMessageBox::information(this, "Success", "Resources exported to PDF successfully");
+        } else {
+            QMessageBox::critical(this, "Error", "Failed to export resources to PDF");
+        }
+    }
+}
+
+void MainWindow::on_searchTextChanged(const QString &text)
+{
+    if (searchTimer) {
+        searchTimer->stop();
+        
+        if (!text.isEmpty()) {
+            searchTimer->start(300);  // Delay search by 300ms to avoid frequent queries
+        } else {
+            resourceManager->updateTable(ui->tableWidget);
+        }
+    }
+}
+
+void MainWindow::on_searchTimeout()
+{
+    QString searchText = ui->searchLineEdit->text().trimmed();
+    resourceManager->updateTable(ui->tableWidget, searchText);
+}
+
+void MainWindow::on_resetSearchButton_clicked()
+{
+    ui->searchInput->clear();
+    resourceManager->updateTable(ui->tableWidget);
+}
+
+void MainWindow::on_downloadHistoryButton_clicked()
+{
+    QString filePath = QFileDialog::getSaveFileName(
+        this,
+        "Save History Log",
+        "",
+        "Text Files (*.txt)"
+    );
+    
+    if (!filePath.isEmpty()) {
+        if (!filePath.endsWith(".txt", Qt::CaseInsensitive)) {
+            filePath += ".txt";
+        }
+        
+        if (resourceManager->exportHistoryToFile(filePath)) {
+            QMessageBox::information(this, "Success", "Resource history exported successfully");
+        } else {
+            QMessageBox::critical(this, "Error", "Failed to export resource history. The history file may not exist.");
+        }
+    }
+}
+
+void MainWindow::on_clearHistoryButton_clicked()
+{
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "Confirm Clear History",
+        "Are you sure you want to clear the resource history? This action cannot be undone.",
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply == QMessageBox::Yes) {
+        if (resourceManager->clearHistory()) {
+            QMessageBox::information(this, "Success", "Resource history cleared successfully");
+        } else {
+            QMessageBox::critical(this, "Error", "Failed to clear resource history");
+        }
+    }
+}
+
+void MainWindow::on_btnLookForResource_clicked()
+{
+    QTableWidget *tableWidget = ui->tableWidget;
+    if (!tableWidget) return;
+    
+    // Get selected row
+    QList<QTableWidgetItem*> selectedItems = tableWidget->selectedItems();
+    if (selectedItems.isEmpty()) {
+        selectedResourceId = -1;
+        return;
+    }
+    
+    // Get resource ID from first column of selected row
+    int row = selectedItems.first()->row();
+    QTableWidgetItem *idItem = tableWidget->item(row, 0);
+    
+    if (!idItem) return;
+    
+    // Get the resource ID
+    selectedResourceId = idItem->text().toInt();
+    
+    // Get resource data to populate the form
+    QString name = tableWidget->item(row, 1)->text();
+    QString type = tableWidget->item(row, 2)->text();
+    QString brand = tableWidget->item(row, 3)->text();
+    int quantity = tableWidget->item(row, 4)->text().toInt();
+    QDate purchaseDate = QDate::fromString(tableWidget->item(row, 5)->text(), "yyyy-MM-dd");
+    
+    // Update form with selected resource
+    ui->nameLineEdit->setText(name);
+    
+    // Find and set the type in comboBox
+    int typeIndex = ui->typeComboBox->findText(type);
+    if (typeIndex >= 0) {
+        ui->typeComboBox->setCurrentIndex(typeIndex);
+    } else {
+        ui->typeComboBox->setCurrentText(type);
+    }
+    
+    ui->brandLineEdit->setText(brand);
+    ui->quantitySpinBox->setValue(quantity);
+    ui->purchaseDateEdit->setDate(purchaseDate);
+    
+    // Show image if available
+    QLabel *imageLabel = qobject_cast<QLabel*>(tableWidget->cellWidget(row, 6));
+    if (imageLabel && !imageLabel->pixmap().isNull()) {
+        ui->imagePreviewLabel->setPixmap(imageLabel->pixmap());
+    } else {
+        ui->imagePreviewLabel->clear();
+    }
+}
+
 void MainWindow::setLoggedInRole(const QString &role)
 {
     m_loggedInRole = role;
     
-    // Configuration des droits d'accès en fonction du rôle
-    if (role.toLower() == "admin") {
-        // Accès complet pour les administrateurs
-        ui->employeeSectionButton->setEnabled(true);
-        ui->clientSectionButton->setEnabled(true);
-        ui->trainingSectionButton->setEnabled(true);
-        ui->meetingSectionButton->setEnabled(true);
-        statusBar()->showMessage("Connecté en tant qu'administrateur - Accès complet", 5000);
-    } 
-    else if (role.toLower() == "manager") {
-        // Accès restreint pour les managers
-        ui->employeeSectionButton->setEnabled(true);
-        ui->clientSectionButton->setEnabled(true);
-        ui->trainingSectionButton->setEnabled(true);
-        ui->meetingSectionButton->setEnabled(true);
-        statusBar()->showMessage("Connecté en tant que manager", 5000);
-    } 
-    else {
-        // Accès limité pour les autres employés
-        ui->employeeSectionButton->setEnabled(false);
-        ui->clientSectionButton->setEnabled(true);
-        ui->trainingSectionButton->setEnabled(true);
-        ui->meetingSectionButton->setEnabled(true);
-        statusBar()->showMessage("Connecté en tant qu'employé - Accès limité", 5000);
+    // Update UI based on role (e.g., disable certain sections for specific roles)
+    bool isAdmin = (role == "Admin");
+    
+    // Example: Allow only admins to access the employee section
+    if (ui->employeeSectionButton) {
+        ui->employeeSectionButton->setEnabled(isAdmin);
     }
     
-    qDebug() << "Rôle utilisateur défini:" << role;
+    // Display the role in the status bar
+    statusBar()->showMessage(QString("Logged in as: %1").arg(role));
+}
+
+void MainWindow::on_resetResourceSearchButton_clicked()
+{
+    ui->searchLineEdit->clear();
+    resourceManager->updateTable(ui->tableWidget);
 }

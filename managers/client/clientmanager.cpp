@@ -118,7 +118,7 @@ void ClientManager::initialize(Ui::MainWindow *ui)
     connect(ui->clientConsultationCalendar, &QCalendarWidget::activated,
             this, &ClientManager::on_clientConsultationCalendar_activated);
     connect(ui->clientExportPdfButton, &QPushButton::clicked, this, &ClientManager::on_clientExportPdfButton_clicked);
-    connect(ui->reportsButton, &QPushButton::clicked, this, &ClientManager::sendConsultationReminders);
+    connect(ui->clientExportPdfButton, &QPushButton::clicked, this, &ClientManager::sendConsultationReminders);
 
     // Re-enable signals
     ui->clientTableView->blockSignals(false);

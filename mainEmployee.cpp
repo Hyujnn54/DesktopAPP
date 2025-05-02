@@ -353,163 +353,349 @@ void MainWindow::setupConnections()
     connect(ui->logoutButton, &QPushButton::clicked, this, &::MainWindow::on_logoutButtonclicked);
     connect(ui->generateQRCodeBtn, &QPushButton::clicked, this, &MainWindow::on_generateQRCodeBtnClicked);
 
-
+    // Employee statistics chart connections
+    connect(ui->employeeChartRefreshButton, &QPushButton::clicked, this, &MainWindow::updateStatistics);
+    connect(ui->employeeChartTypeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::updateStatistics);
+    connect(ui->employeeChartFilterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::updateStatistics);
+    connect(ui->employeeToggleLegendCheckBox, &QCheckBox::toggled, this, &MainWindow::updateStatistics);
 }
 void MainWindow::updateStatistics()
 {
-    qDebug() << "Starting updateStatistics";
+    qDebug() << "Starting updateStatistics with new UI";
 
-    // Clear existing charts if they exist
-    if (pieChartView) {
-        qDebug() << "Removing pieChartView";
-        if (ui->verticalLayoutStats) {
-            ui->verticalLayoutStats->removeWidget(pieChartView);
+    // Get the chart from the chart view
+    QChart *chart = new QChart();
+    chart->setTitle("Employee Statistics");
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+    chart->legend()->setVisible(ui->employeeToggleLegendCheckBox->isChecked());
+    chart->legend()->setAlignment(Qt::AlignBottom);
+    
+    // Get chart type and filter
+    QString chartType = ui->employeeChartTypeComboBox->currentText();
+    QString filter = ui->employeeChartFilterComboBox->currentText();
+    
+    // Clear any existing chart
+    if (ui->employeeChartView) {
+        ui->employeeChartView->setChart(chart);
+    }
+    
+    // Update chart with employee data based on selected filter
+    if (filter == "Specialty") {
+        // Create a query for specialty distribution
+        QSqlQuery query("SELECT SPECIALITY, COUNT(*) as count FROM EMPLOYEE GROUP BY SPECIALITY");
+        QMap<QString, int> data;
+        
+        while (query.next()) {
+            QString specialty = query.value("SPECIALITY").toString();
+            if (specialty.isEmpty()) specialty = "Unspecified";
+            int count = query.value("count").toInt();
+            data[specialty] = count;
         }
-        delete pieChartView;
-        pieChartView = nullptr;
-    }
-    if (barChartView) {
-        qDebug() << "Removing barChartView";
-        if (ui->verticalLayoutStats) {
-            ui->verticalLayoutStats->removeWidget(barChartView);
+        
+        if (chartType == "Pie Chart") {
+            QPieSeries *series = new QPieSeries();
+            
+            // Add slices to the pie series
+            int totalCount = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                totalCount += it.value();
+            }
+            
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                QPieSlice *slice = series->append(it.key(), it.value());
+                float percentage = (float)it.value() / totalCount * 100.0;
+                slice->setLabel(QString("%1: %2 (%3%)").arg(it.key()).arg(it.value()).arg(percentage, 0, 'f', 1));
+                slice->setLabelVisible(true);
+                
+                // Connect hover signal for interactive feedback
+                connect(slice, &QPieSlice::hovered, [this, slice](bool hovered) {
+                    if (hovered) {
+                        slice->setExploded(true);
+                        ui->employeeHoverDescriptionLabel->setText(slice->label());
+                    } else {
+                        slice->setExploded(false);
+                        ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
+                    }
+                });
+                
+                // Animate each slice appearing
+                QPropertyAnimation *animation = new QPropertyAnimation(slice, "startAngle");
+                animation->setDuration(500);
+                animation->setStartValue(0);
+                animation->setEndValue(slice->startAngle());
+                animation->setEasingCurve(QEasingCurve::OutBack);
+                animation->start(QAbstractAnimation::DeleteWhenStopped);
+                
+                QPropertyAnimation *angleAnimation = new QPropertyAnimation(slice, "angleSpan");
+                angleAnimation->setDuration(500);
+                angleAnimation->setStartValue(0);
+                angleAnimation->setEndValue(slice->angleSpan());
+                angleAnimation->setEasingCurve(QEasingCurve::OutBack);
+                angleAnimation->start(QAbstractAnimation::DeleteWhenStopped);
+            }
+            
+            chart->addSeries(series);
+            chart->setTitle("Employee Distribution by Specialty");
+            
+        } else if (chartType == "Bar Chart") {
+            QBarSeries *series = new QBarSeries();
+            QBarSet *barSet = new QBarSet("Employees");
+            
+            QStringList categories;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                *barSet << it.value();
+                categories << it.key();
+            }
+            
+            series->append(barSet);
+            chart->addSeries(series);
+            
+            // Set up the category axis
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            series->attachAxis(axisX);
+            
+            // Set up the value axis
+            QValueAxis *axisY = new QValueAxis();
+            int maxValue = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                maxValue = qMax(maxValue, it.value());
+            }
+            axisY->setRange(0, maxValue * 1.1); // Add 10% padding
+            chart->addAxis(axisY, Qt::AlignLeft);
+            series->attachAxis(axisY);
+            
+            // Connect hover signals for interactive feedback
+            connect(series, &QBarSeries::hovered, [this, categories](bool status, int index, QBarSet *barset) {
+                if (status && index >= 0 && index < categories.size()) {
+                    ui->employeeHoverDescriptionLabel->setText(
+                        QString("%1: %2 employees").arg(categories.at(index)).arg(barset->at(index))
+                    );
+                } else {
+                    ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
+                }
+            });
+            
+            chart->setTitle("Employee Count by Specialty");
         }
-        delete barChartView;
-        barChartView = nullptr;
-    }
-
-    if (!ui->verticalLayoutStats) {
-        qDebug() << "verticalLayoutStats is null!";
-        return;
-    }
-
-    // Pie Chart: Distribution of Employees by Role
-    qDebug() << "Creating pie chart";
-    QPieSeries *pieSeries = new QPieSeries();
-    QSqlQuery roleQuery("SELECT ROLE, COUNT(*) as count FROM EMPLOYEE GROUP BY ROLE");
-    int totalRoleCount = 0;
-    QList<QPair<QString, int>> roleData;
-
-    // Collect role data and calculate total count
-    while (roleQuery.next()) {
-        QString role = roleQuery.value("ROLE").toString();
-        int count = roleQuery.value("count").toInt();
-        if (!role.isEmpty()) {
-            roleData.append(qMakePair(role, count));
-            totalRoleCount += count;
-            qDebug() << "Role:" << role << "Count:" << count;
+    } else if (filter == "Role") {
+        // Create a query for role distribution
+        QSqlQuery query("SELECT ROLE, COUNT(*) as count FROM EMPLOYEE GROUP BY ROLE");
+        QMap<QString, int> data;
+        
+        while (query.next()) {
+            QString role = query.value("ROLE").toString();
+            if (role.isEmpty()) role = "Unspecified";
+            int count = query.value("count").toInt();
+            data[role] = count;
+        }
+        
+        if (chartType == "Pie Chart") {
+            QPieSeries *series = new QPieSeries();
+            
+            // Add slices to the pie series
+            int totalCount = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                totalCount += it.value();
+            }
+            
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                QPieSlice *slice = series->append(it.key(), it.value());
+                float percentage = (float)it.value() / totalCount * 100.0;
+                slice->setLabel(QString("%1: %2 (%3%)").arg(it.key()).arg(it.value()).arg(percentage, 0, 'f', 1));
+                slice->setLabelVisible(true);
+                
+                // Connect hover signal for interactive feedback
+                connect(slice, &QPieSlice::hovered, [this, slice](bool hovered) {
+                    if (hovered) {
+                        slice->setExploded(true);
+                        ui->employeeHoverDescriptionLabel->setText(slice->label());
+                    } else {
+                        slice->setExploded(false);
+                        ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
+                    }
+                });
+                
+                // Animate each slice appearing
+                QPropertyAnimation *animation = new QPropertyAnimation(slice, "startAngle");
+                animation->setDuration(500);
+                animation->setStartValue(0);
+                animation->setEndValue(slice->startAngle());
+                animation->setEasingCurve(QEasingCurve::OutBack);
+                animation->start(QAbstractAnimation::DeleteWhenStopped);
+                
+                QPropertyAnimation *angleAnimation = new QPropertyAnimation(slice, "angleSpan");
+                angleAnimation->setDuration(500);
+                angleAnimation->setStartValue(0);
+                angleAnimation->setEndValue(slice->angleSpan());
+                angleAnimation->setEasingCurve(QEasingCurve::OutBack);
+                angleAnimation->start(QAbstractAnimation::DeleteWhenStopped);
+            }
+            
+            chart->addSeries(series);
+            chart->setTitle("Employee Distribution by Role");
+            
+        } else if (chartType == "Bar Chart") {
+            QBarSeries *series = new QBarSeries();
+            QBarSet *barSet = new QBarSet("Employees");
+            
+            QStringList categories;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                *barSet << it.value();
+                categories << it.key();
+            }
+            
+            series->append(barSet);
+            chart->addSeries(series);
+            
+            // Set up the category axis
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            series->attachAxis(axisX);
+            
+            // Set up the value axis
+            QValueAxis *axisY = new QValueAxis();
+            int maxValue = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                maxValue = qMax(maxValue, it.value());
+            }
+            axisY->setRange(0, maxValue * 1.1);
+            chart->addAxis(axisY, Qt::AlignLeft);
+            series->attachAxis(axisY);
+            
+            // Connect hover signals for interactive feedback
+            connect(series, &QBarSeries::hovered, [this, categories](bool status, int index, QBarSet *barset) {
+                if (status && index >= 0 && index < categories.size()) {
+                    ui->employeeHoverDescriptionLabel->setText(
+                        QString("%1: %2 employees").arg(categories.at(index)).arg(barset->at(index))
+                    );
+                } else {
+                    ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
+                }
+            });
+            
+            chart->setTitle("Employee Count by Role");
+        }
+    } else if (filter == "Hire Date") {
+        // Create a query for hire date distribution by year
+        QSqlQuery query("SELECT TO_CHAR(DATE_HIRING, 'YYYY') as year, COUNT(*) as count FROM EMPLOYEE GROUP BY TO_CHAR(DATE_HIRING, 'YYYY') ORDER BY year");
+        QMap<QString, int> data;
+        
+        while (query.next()) {
+            QString year = query.value("year").toString();
+            int count = query.value("count").toInt();
+            data[year] = count;
+        }
+        
+        if (chartType == "Pie Chart") {
+            QPieSeries *series = new QPieSeries();
+            
+            // Add slices to the pie series
+            int totalCount = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                totalCount += it.value();
+            }
+            
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                QPieSlice *slice = series->append(it.key(), it.value());
+                float percentage = (float)it.value() / totalCount * 100.0;
+                slice->setLabel(QString("%1: %2 (%3%)").arg(it.key()).arg(it.value()).arg(percentage, 0, 'f', 1));
+                slice->setLabelVisible(true);
+                
+                // Connect hover signal for interactive feedback
+                connect(slice, &QPieSlice::hovered, [this, slice](bool hovered) {
+                    if (hovered) {
+                        slice->setExploded(true);
+                        ui->employeeHoverDescriptionLabel->setText(slice->label());
+                    } else {
+                        slice->setExploded(false);
+                        ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
+                    }
+                });
+                
+                // Animate each slice appearing
+                QPropertyAnimation *animation = new QPropertyAnimation(slice, "startAngle");
+                animation->setDuration(500);
+                animation->setStartValue(0);
+                animation->setEndValue(slice->startAngle());
+                animation->setEasingCurve(QEasingCurve::OutBack);
+                animation->start(QAbstractAnimation::DeleteWhenStopped);
+                
+                QPropertyAnimation *angleAnimation = new QPropertyAnimation(slice, "angleSpan");
+                angleAnimation->setDuration(500);
+                angleAnimation->setStartValue(0);
+                angleAnimation->setEndValue(slice->angleSpan());
+                angleAnimation->setEasingCurve(QEasingCurve::OutBack);
+                angleAnimation->start(QAbstractAnimation::DeleteWhenStopped);
+            }
+            
+            chart->addSeries(series);
+            chart->setTitle("Employee Distribution by Hire Year");
+            
+        } else if (chartType == "Bar Chart") {
+            QBarSeries *series = new QBarSeries();
+            QBarSet *barSet = new QBarSet("Employees");
+            
+            QStringList categories;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                *barSet << it.value();
+                categories << it.key();
+            }
+            
+            series->append(barSet);
+            chart->addSeries(series);
+            
+            // Set up the category axis
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            series->attachAxis(axisX);
+            
+            // Set up the value axis
+            QValueAxis *axisY = new QValueAxis();
+            int maxValue = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                maxValue = qMax(maxValue, it.value());
+            }
+            axisY->setRange(0, maxValue * 1.1);
+            chart->addAxis(axisY, Qt::AlignLeft);
+            series->attachAxis(axisY);
+            
+            // Connect hover signals for interactive feedback
+            connect(series, &QBarSeries::hovered, [this, categories](bool status, int index, QBarSet *barset) {
+                if (status && index >= 0 && index < categories.size()) {
+                    ui->employeeHoverDescriptionLabel->setText(
+                        QString("%1: %2 employees").arg(categories.at(index)).arg(barset->at(index))
+                    );
+                } else {
+                    ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
+                }
+            });
+            
+            chart->setTitle("Employee Count by Hire Year");
         }
     }
-    if (totalRoleCount == 0) {
-        pieSeries->append("No Data", 1);
-        qDebug() << "No role data, using placeholder";
-    } else {
-        // Add slices with percentage labels
-        for (const auto &data : roleData) {
-            QString role = data.first;
-            int count = data.second;
-            qreal percentage = (count * 100.0) / totalRoleCount;
-            QString label = QString("%1 (%2%)").arg(role).arg(percentage, 0, 'f', 1);
-            pieSeries->append(label, count);
-            qDebug() << "Role:" << role << "Count:" << count << "Percentage:" << percentage;
-        }
+    
+    // Set the chart in the chart view
+    ui->employeeChartView->setChart(chart);
+    ui->employeeChartView->setRenderHint(QPainter::Antialiasing);
+    
+    // Update summary statistics
+    QSqlQuery countQuery("SELECT COUNT(*) as total FROM EMPLOYEE");
+    if (countQuery.next()) {
+        int totalEmployees = countQuery.value("total").toInt();
+        ui->employeeTotalCountLabel->setText(QString("Total Employees: %1").arg(totalEmployees));
     }
-    QChart *pieChart = new QChart();
-    pieChart->addSeries(pieSeries);
-    pieChart->setTitle("Employee Distribution by Role");
-    pieChart->legend()->setAlignment(Qt::AlignRight);
-    pieChartView = new QChartView(pieChart);
-    qDebug() << "Pie chart view created";
-    pieChartView->setRenderHint(QPainter::Antialiasing);
-
-    // Bar Chart: Distribution of Employees by Specialty
-    qDebug() << "Creating bar chart";
-    QBarSeries *barSeries = new QBarSeries();
-    QBarSet *barSet = new QBarSet("Employees");
-    QSqlQuery specialtyQuery("SELECT SPECIALITY, COUNT(*) as count FROM EMPLOYEE GROUP BY SPECIALITY");
-    QStringList categories;
-    int totalSpecialtyCount = 0;
-    QList<QPair<QString, int>> specialtyData;
-
-    // Collect specialty data and calculate total count
-    while (specialtyQuery.next()) {
-        QString specialty = specialtyQuery.value("SPECIALITY").toString();
-        int count = specialtyQuery.value("count").toInt();
-        specialtyData.append(qMakePair(specialty, count));
-        totalSpecialtyCount += count;
-        qDebug() << "Specialty:" << specialty << "Count:" << count;
+    
+    QSqlQuery salaryQuery("SELECT AVG(SALARY) as avg_salary FROM EMPLOYEE");
+    if (salaryQuery.next()) {
+        double avgSalary = salaryQuery.value("avg_salary").toDouble();
+        ui->employeeAverageSalaryLabel->setText(QString("Average Salary: $%1").arg(avgSalary, 0, 'f', 2));
     }
-
-    // Add bars with percentage tooltips
-    if (totalSpecialtyCount == 0) {
-        *barSet << 1;
-        categories << "No Data";
-        qDebug() << "No specialty data, using placeholder";
-    } else {
-        for (const auto &data : specialtyData) {
-            QString specialty = data.first.isEmpty() ? "Unknown" : data.first;
-            int count = data.second;
-            qreal percentage = (count * 100.0) / totalSpecialtyCount;
-            *barSet << count;
-            categories << specialty;
-            // Set tooltip with percentage
-            barSet->setLabel(QString("%1 (%2%)").arg(specialty).arg(percentage, 0, 'f', 1));
-            qDebug() << "Specialty:" << specialty << "Count:" << count << "Percentage:" << percentage;
-        }
-    }
-    barSeries->append(barSet);
-
-    QChart *barChart = new QChart();
-    barChart->addSeries(barSeries);
-    barChart->setTitle("Employee Distribution by Specialty");
-    barChart->setAnimationOptions(QChart::SeriesAnimations);
-
-    // Set up the category axis
-    QBarCategoryAxis *axisX = new QBarCategoryAxis();
-    axisX->append(categories);
-    axisX->setLabelsAngle(0);
-    axisX->setLabelsVisible(true);
-    barChart->addAxis(axisX, Qt::AlignBottom);
-    barSeries->attachAxis(axisX);
-
-    // Set up the value axis (Y-axis) for the number of employees
-    QValueAxis *axisY = new QValueAxis();
-    qreal maxValue = 0;
-    for (int i = 0; i < barSet->count(); ++i) {
-        qreal value = barSet->at(i);
-        if (value > maxValue) {
-            maxValue = value;
-        }
-    }
-    maxValue = qMax(5.0, maxValue + 1);
-    axisY->setRange(0, maxValue);
-    barChart->addAxis(axisY, Qt::AlignLeft);
-    barSeries->attachAxis(axisY);
-
-    // Adjust bar chart layout
-    qDebug() << "Adjusting bar chart layout";
-    barChart->setTheme(QChart::ChartThemeQt);
-    if (barChart->layout()) {
-        barChart->layout()->setContentsMargins(0, 0, 0, 0);
-    } else {
-        qDebug() << "Bar chart layout is null!";
-    }
-    barChart->legend()->setAlignment(Qt::AlignBottom);
-    barChartView = new QChartView(barChart);
-    qDebug() << "Bar chart view created";
-    barChartView->setMinimumSize(400, 250);
-    barChartView->setRenderHint(QPainter::Antialiasing);
-
-    // Verify bar count matches categories
-    qDebug() << "Expected bars:" << categories.size() << "Actual bars in barSet:" << barSet->count();
-
-    // Add charts to the layout
-    qDebug() << "Adding charts to layout";
-    ui->verticalLayoutStats->insertWidget(0, pieChartView);
-    ui->verticalLayoutStats->insertWidget(1, barChartView);
-    qDebug() << "Charts added to layout";
-
-    qDebug() << "Specialty categories:" << categories;
-    qDebug() << "Statistics updated with pie and bar charts";
+    
+    qDebug() << "Statistics updated with animations";
 }
 void MainWindow::on_addButtonclicked()
 {

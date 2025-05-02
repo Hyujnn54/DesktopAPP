@@ -13,12 +13,14 @@ INCLUDEPATH += "$$PWD/core" \
                "$$PWD/managers/training" \
                "$$PWD/managers/meeting" \
                "$$PWD/managers/employee" \
+               "$$PWD/managers/resources" \
                "$$PWD/ui/mainwindow" \
                "$$PWD/ui/chartwindow" \
                "$$PWD/dialog/updateclientdialog" \
                "$$PWD/dialog/updatetrainingdialog" \
                "$$PWD/dialog/updatemeeting" \
                "$$PWD/dialog/updateemployee" \
+               "$$PWD/dialog/updateresourcesdialog" \
                "$$PWD/lib/qrcodegen"
 
 HEADERS += \
@@ -34,12 +36,15 @@ HEADERS += \
     managers/meeting/meetingmanager.h \
     managers/employee/employee.h \
     managers/employee/employeemanager.h \
+    managers/resources/resource.h \
+    managers/resources/resourcemanager.h \
     ui/chartwindow/chartwindow.h \
     ui/mainwindow/mainwindow.h \
     dialog/updateclientdialog/updateclientdialog.h \
     dialog/updatetrainingdialog/updatetrainingdialog.h \
     dialog/updatemeeting/updatemeeting.h \
     dialog/updateemployee/updateemployeedialog.h \
+    dialog/updateresourcesdialog/updateresourcesdialog.h \
     lib/qrcodegen/qrcodegen.hpp \
     sign.h
 
@@ -57,12 +62,15 @@ SOURCES += \
     managers/meeting/meetingmanager.cpp \
     managers/employee/employee.cpp \
     managers/employee/employeemanager.cpp \
+    managers/resources/resource.cpp \
+    managers/resources/resourcemanager.cpp \
     ui/chartwindow/chartwindow.cpp \
     ui/mainwindow/mainwindow.cpp \
     dialog/updateclientdialog/updateclientdialog.cpp \
     dialog/updatetrainingdialog/updatetrainingdialog.cpp \
     dialog/updatemeeting/updatemeeting.cpp \
     dialog/updateemployee/updateemployeedialog.cpp \
+    dialog/updateresourcesdialog/updateresourcesdialog.cpp \
     lib/qrcodegen/qrcodegen.cpp \
     sign.cpp
 
@@ -73,6 +81,7 @@ FORMS += \
     dialog/updatetrainingdialog/updatetrainingdialog.ui \
     dialog/updatemeeting/updatemeeting.ui \
     dialog/updateemployee/UpdateEmployeeDialog.ui \
+    dialog/updateresourcesdialog/updateresourcesdialog.ui \
     sign.ui
 
 # Commented out OpenCV includes and libraries

@@ -65,7 +65,7 @@ public:
     QPushButton *trainingSectionButton;
     QPushButton *meetingSectionButton;
     QPushButton *employeeSectionButton;
-    QPushButton *reportsButton;
+    QPushButton *resourceSectionButton;
     QPushButton *settingsButton;
     QPushButton *themeButton;
     QFrame *frame_4;
@@ -274,9 +274,56 @@ public:
     QVBoxLayout *verticalLayoutStats;
     QWidget *chartsContainer;
     QVBoxLayout *chartsLayout;
+    QLabel *employeeHoverLabel;
+    QLabel *employeeTotalCountLabel;
+    QLabel *employeeAverageSalaryLabel;
     QHBoxLayout *buttonLayout;
     QSpacerItem *horizontalSpacer2;
     QPushButton *refreshStatsButton;
+    QWidget *resourcePage;
+    QVBoxLayout *resourcePageLayout;
+    QTabWidget *resourceTabWidget;
+    QWidget *resourceAddTab;
+    QGridLayout *gridLayout_2;
+    QLabel *label_brand;
+    QLineEdit *quantityLineEdit;
+    QPushButton *confirmFormButton;
+    QLabel *lblImagePreview;
+    QSpacerItem *resourceHorizontalSpacer;
+    QLabel *label_quantity;
+    QPushButton *cancelFormButton;
+    QLabel *label_name;
+    QComboBox *typeComboBox;
+    QLineEdit *nameLineEdit;
+    QLabel *label_type;
+    QPushButton *btnSelectImage;
+    QLineEdit *brandLineEdit;
+    QLabel *label_date;
+    QDateEdit *purchaseDateEdit;
+    QWidget *resourceManageTab;
+    QVBoxLayout *resourceManageLayout;
+    QGroupBox *resourceSearchGroupBox;
+    QHBoxLayout *resourceSearchLayout;
+    QLineEdit *searchLineEdit;
+    QPushButton *resetResourceSearchButton;
+    QTableWidget *tableWidget;
+    QHBoxLayout *resourceButtonLayout;
+    QPushButton *exportPdfButton;
+    QPushButton *downloadHistoryButton;
+    QPushButton *clearHistoryButton;
+    QPushButton *btnLookForResource;
+    QSpacerItem *resourceHorizontalSpacer2;
+    QPushButton *deleteButton;
+    QPushButton *updateButton;
+    QWidget *resourceStatisticsTab;
+    QVBoxLayout *resourceStatsLayout;
+    QGroupBox *statsTextGroup;
+    QVBoxLayout *resourceVerticalLayoutStats;
+    QChartView *chartView;
+    QChartView *stackedBarChartView;
+    QHBoxLayout *resourceStatsButtonLayout;
+    QSpacerItem *horizontalSpacer21;
+    QPushButton *resourceRefreshStatsButton;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -403,10 +450,10 @@ public:
 
         verticalLayout_3->addWidget(employeeSectionButton);
 
-        reportsButton = new QPushButton(frame_6);
-        reportsButton->setObjectName("reportsButton");
+        resourceSectionButton = new QPushButton(frame_6);
+        resourceSectionButton->setObjectName("resourceSectionButton");
 
-        verticalLayout_3->addWidget(reportsButton);
+        verticalLayout_3->addWidget(resourceSectionButton);
 
         settingsButton = new QPushButton(frame_6);
         settingsButton->setObjectName("settingsButton");
@@ -1432,6 +1479,22 @@ public:
 
         verticalLayoutStats->addWidget(chartsContainer);
 
+        employeeHoverLabel = new QLabel(employeeStatsTab);
+        employeeHoverLabel->setObjectName("employeeHoverLabel");
+        employeeHoverLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        verticalLayoutStats->addWidget(employeeHoverLabel);
+
+        employeeTotalCountLabel = new QLabel(employeeStatsTab);
+        employeeTotalCountLabel->setObjectName("employeeTotalCountLabel");
+
+        verticalLayoutStats->addWidget(employeeTotalCountLabel);
+
+        employeeAverageSalaryLabel = new QLabel(employeeStatsTab);
+        employeeAverageSalaryLabel->setObjectName("employeeAverageSalaryLabel");
+
+        verticalLayoutStats->addWidget(employeeAverageSalaryLabel);
+
         buttonLayout = new QHBoxLayout();
         buttonLayout->setObjectName("buttonLayout");
         horizontalSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
@@ -1451,6 +1514,223 @@ public:
         employeePageLayout->addWidget(employeeTabWidget);
 
         mainStackedWidget->addWidget(employeePage);
+        resourcePage = new QWidget();
+        resourcePage->setObjectName("resourcePage");
+        resourcePageLayout = new QVBoxLayout(resourcePage);
+        resourcePageLayout->setObjectName("resourcePageLayout");
+        resourceTabWidget = new QTabWidget(resourcePage);
+        resourceTabWidget->setObjectName("resourceTabWidget");
+        resourceAddTab = new QWidget();
+        resourceAddTab->setObjectName("resourceAddTab");
+        resourceAddTab->setContextMenuPolicy(Qt::ContextMenuPolicy::PreventContextMenu);
+        gridLayout_2 = new QGridLayout(resourceAddTab);
+        gridLayout_2->setObjectName("gridLayout_2");
+        label_brand = new QLabel(resourceAddTab);
+        label_brand->setObjectName("label_brand");
+
+        gridLayout_2->addWidget(label_brand, 2, 0, 1, 1);
+
+        quantityLineEdit = new QLineEdit(resourceAddTab);
+        quantityLineEdit->setObjectName("quantityLineEdit");
+
+        gridLayout_2->addWidget(quantityLineEdit, 3, 2, 1, 1);
+
+        confirmFormButton = new QPushButton(resourceAddTab);
+        confirmFormButton->setObjectName("confirmFormButton");
+
+        gridLayout_2->addWidget(confirmFormButton, 6, 2, 1, 1);
+
+        lblImagePreview = new QLabel(resourceAddTab);
+        lblImagePreview->setObjectName("lblImagePreview");
+
+        gridLayout_2->addWidget(lblImagePreview, 5, 1, 1, 2);
+
+        resourceHorizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        gridLayout_2->addItem(resourceHorizontalSpacer, 0, 3, 7, 1);
+
+        label_quantity = new QLabel(resourceAddTab);
+        label_quantity->setObjectName("label_quantity");
+
+        gridLayout_2->addWidget(label_quantity, 3, 0, 1, 1);
+
+        cancelFormButton = new QPushButton(resourceAddTab);
+        cancelFormButton->setObjectName("cancelFormButton");
+
+        gridLayout_2->addWidget(cancelFormButton, 7, 2, 1, 1);
+
+        label_name = new QLabel(resourceAddTab);
+        label_name->setObjectName("label_name");
+
+        gridLayout_2->addWidget(label_name, 0, 0, 1, 1);
+
+        typeComboBox = new QComboBox(resourceAddTab);
+        typeComboBox->addItem(QString());
+        typeComboBox->addItem(QString());
+        typeComboBox->addItem(QString());
+        typeComboBox->addItem(QString());
+        typeComboBox->setObjectName("typeComboBox");
+
+        gridLayout_2->addWidget(typeComboBox, 1, 2, 1, 1);
+
+        nameLineEdit = new QLineEdit(resourceAddTab);
+        nameLineEdit->setObjectName("nameLineEdit");
+
+        gridLayout_2->addWidget(nameLineEdit, 0, 2, 1, 1);
+
+        label_type = new QLabel(resourceAddTab);
+        label_type->setObjectName("label_type");
+
+        gridLayout_2->addWidget(label_type, 1, 0, 1, 1);
+
+        btnSelectImage = new QPushButton(resourceAddTab);
+        btnSelectImage->setObjectName("btnSelectImage");
+
+        gridLayout_2->addWidget(btnSelectImage, 5, 0, 1, 1);
+
+        brandLineEdit = new QLineEdit(resourceAddTab);
+        brandLineEdit->setObjectName("brandLineEdit");
+
+        gridLayout_2->addWidget(brandLineEdit, 2, 2, 1, 1);
+
+        label_date = new QLabel(resourceAddTab);
+        label_date->setObjectName("label_date");
+
+        gridLayout_2->addWidget(label_date, 4, 0, 1, 1);
+
+        purchaseDateEdit = new QDateEdit(resourceAddTab);
+        purchaseDateEdit->setObjectName("purchaseDateEdit");
+
+        gridLayout_2->addWidget(purchaseDateEdit, 4, 2, 1, 1);
+
+        resourceTabWidget->addTab(resourceAddTab, QString());
+        resourceManageTab = new QWidget();
+        resourceManageTab->setObjectName("resourceManageTab");
+        resourceManageLayout = new QVBoxLayout(resourceManageTab);
+        resourceManageLayout->setObjectName("resourceManageLayout");
+        resourceSearchGroupBox = new QGroupBox(resourceManageTab);
+        resourceSearchGroupBox->setObjectName("resourceSearchGroupBox");
+        resourceSearchLayout = new QHBoxLayout(resourceSearchGroupBox);
+        resourceSearchLayout->setObjectName("resourceSearchLayout");
+        searchLineEdit = new QLineEdit(resourceSearchGroupBox);
+        searchLineEdit->setObjectName("searchLineEdit");
+
+        resourceSearchLayout->addWidget(searchLineEdit);
+
+        resetResourceSearchButton = new QPushButton(resourceSearchGroupBox);
+        resetResourceSearchButton->setObjectName("resetResourceSearchButton");
+
+        resourceSearchLayout->addWidget(resetResourceSearchButton);
+
+
+        resourceManageLayout->addWidget(resourceSearchGroupBox);
+
+        tableWidget = new QTableWidget(resourceManageTab);
+        if (tableWidget->columnCount() < 7)
+            tableWidget->setColumnCount(7);
+        QTableWidgetItem *__qtablewidgetitem7 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(0, __qtablewidgetitem7);
+        QTableWidgetItem *__qtablewidgetitem8 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(1, __qtablewidgetitem8);
+        QTableWidgetItem *__qtablewidgetitem9 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(2, __qtablewidgetitem9);
+        QTableWidgetItem *__qtablewidgetitem10 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(3, __qtablewidgetitem10);
+        QTableWidgetItem *__qtablewidgetitem11 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(4, __qtablewidgetitem11);
+        QTableWidgetItem *__qtablewidgetitem12 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(5, __qtablewidgetitem12);
+        QTableWidgetItem *__qtablewidgetitem13 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(6, __qtablewidgetitem13);
+        tableWidget->setObjectName("tableWidget");
+        tableWidget->setStyleSheet(QString::fromUtf8(""));
+
+        resourceManageLayout->addWidget(tableWidget);
+
+        resourceButtonLayout = new QHBoxLayout();
+        resourceButtonLayout->setObjectName("resourceButtonLayout");
+        exportPdfButton = new QPushButton(resourceManageTab);
+        exportPdfButton->setObjectName("exportPdfButton");
+
+        resourceButtonLayout->addWidget(exportPdfButton);
+
+        downloadHistoryButton = new QPushButton(resourceManageTab);
+        downloadHistoryButton->setObjectName("downloadHistoryButton");
+
+        resourceButtonLayout->addWidget(downloadHistoryButton);
+
+        clearHistoryButton = new QPushButton(resourceManageTab);
+        clearHistoryButton->setObjectName("clearHistoryButton");
+
+        resourceButtonLayout->addWidget(clearHistoryButton);
+
+        btnLookForResource = new QPushButton(resourceManageTab);
+        btnLookForResource->setObjectName("btnLookForResource");
+
+        resourceButtonLayout->addWidget(btnLookForResource);
+
+        resourceHorizontalSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        resourceButtonLayout->addItem(resourceHorizontalSpacer2);
+
+        deleteButton = new QPushButton(resourceManageTab);
+        deleteButton->setObjectName("deleteButton");
+
+        resourceButtonLayout->addWidget(deleteButton);
+
+        updateButton = new QPushButton(resourceManageTab);
+        updateButton->setObjectName("updateButton");
+
+        resourceButtonLayout->addWidget(updateButton);
+
+
+        resourceManageLayout->addLayout(resourceButtonLayout);
+
+        resourceTabWidget->addTab(resourceManageTab, QString());
+        resourceStatisticsTab = new QWidget();
+        resourceStatisticsTab->setObjectName("resourceStatisticsTab");
+        resourceStatsLayout = new QVBoxLayout(resourceStatisticsTab);
+        resourceStatsLayout->setObjectName("resourceStatsLayout");
+        statsTextGroup = new QGroupBox(resourceStatisticsTab);
+        statsTextGroup->setObjectName("statsTextGroup");
+        resourceVerticalLayoutStats = new QVBoxLayout(statsTextGroup);
+        resourceVerticalLayoutStats->setObjectName("resourceVerticalLayoutStats");
+        chartView = new QChartView(statsTextGroup);
+        chartView->setObjectName("chartView");
+        sizePolicy2.setHeightForWidth(chartView->sizePolicy().hasHeightForWidth());
+        chartView->setSizePolicy(sizePolicy2);
+
+        resourceVerticalLayoutStats->addWidget(chartView);
+
+        stackedBarChartView = new QChartView(statsTextGroup);
+        stackedBarChartView->setObjectName("stackedBarChartView");
+        sizePolicy2.setHeightForWidth(stackedBarChartView->sizePolicy().hasHeightForWidth());
+        stackedBarChartView->setSizePolicy(sizePolicy2);
+
+        resourceVerticalLayoutStats->addWidget(stackedBarChartView);
+
+
+        resourceStatsLayout->addWidget(statsTextGroup);
+
+        resourceStatsButtonLayout = new QHBoxLayout();
+        resourceStatsButtonLayout->setObjectName("resourceStatsButtonLayout");
+        horizontalSpacer21 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+
+        resourceStatsButtonLayout->addItem(horizontalSpacer21);
+
+        resourceRefreshStatsButton = new QPushButton(resourceStatisticsTab);
+        resourceRefreshStatsButton->setObjectName("resourceRefreshStatsButton");
+
+        resourceStatsButtonLayout->addWidget(resourceRefreshStatsButton);
+
+
+        resourceStatsLayout->addLayout(resourceStatsButtonLayout);
+
+        resourceTabWidget->addTab(resourceStatisticsTab, QString());
+
+        resourcePageLayout->addWidget(resourceTabWidget);
+
+        mainStackedWidget->addWidget(resourcePage);
 
         verticalLayout_5->addWidget(mainStackedWidget);
 
@@ -1467,11 +1747,12 @@ public:
 
         retranslateUi(MainWindow);
 
-        mainStackedWidget->setCurrentIndex(2);
-        clientTabWidget->setCurrentIndex(2);
+        mainStackedWidget->setCurrentIndex(4);
+        clientTabWidget->setCurrentIndex(1);
         trainingTabWidget->setCurrentIndex(2);
         meetingTabWidget->setCurrentIndex(1);
-        employeeTabWidget->setCurrentIndex(0);
+        employeeTabWidget->setCurrentIndex(1);
+        resourceTabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -1487,7 +1768,7 @@ public:
         trainingSectionButton->setText(QCoreApplication::translate("MainWindow", "Training", nullptr));
         meetingSectionButton->setText(QCoreApplication::translate("MainWindow", "Meetings", nullptr));
         employeeSectionButton->setText(QCoreApplication::translate("MainWindow", "Employee", nullptr));
-        reportsButton->setText(QCoreApplication::translate("MainWindow", "Reports", nullptr));
+        resourceSectionButton->setText(QCoreApplication::translate("MainWindow", "Resource", nullptr));
         settingsButton->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
         themeButton->setText(QCoreApplication::translate("MainWindow", "Toggle Theme", nullptr));
         clientConsultantComboBox->setPlaceholderText(QCoreApplication::translate("MainWindow", "Select Consultant...", nullptr));
@@ -1664,8 +1945,53 @@ public:
         downloadBtn->setText(QCoreApplication::translate("MainWindow", "Download", nullptr));
         generateQRCodeBtn->setText(QCoreApplication::translate("MainWindow", "Generate QR Code", nullptr));
         employeeTabWidget->setTabText(employeeTabWidget->indexOf(listEmployee), QCoreApplication::translate("MainWindow", "Manage Employees", nullptr));
+        employeeHoverLabel->setText(QCoreApplication::translate("MainWindow", "Hover over a chart element to see details", nullptr));
+        employeeTotalCountLabel->setText(QCoreApplication::translate("MainWindow", "Total Employees: 0", nullptr));
+        employeeAverageSalaryLabel->setText(QCoreApplication::translate("MainWindow", "Average Salary: $0.00", nullptr));
         refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
         employeeTabWidget->setTabText(employeeTabWidget->indexOf(employeeStatsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
+        label_brand->setText(QCoreApplication::translate("MainWindow", "Brand", nullptr));
+        confirmFormButton->setText(QCoreApplication::translate("MainWindow", "Add Resource", nullptr));
+        lblImagePreview->setText(QString());
+        label_quantity->setText(QCoreApplication::translate("MainWindow", "Quantity", nullptr));
+        cancelFormButton->setText(QCoreApplication::translate("MainWindow", "Cancel", nullptr));
+        label_name->setText(QCoreApplication::translate("MainWindow", "Name:", nullptr));
+        typeComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Electronics ", nullptr));
+        typeComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Cleaning Supplies", nullptr));
+        typeComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Kitchen Supplies", nullptr));
+        typeComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Stationery ", nullptr));
+
+        label_type->setText(QCoreApplication::translate("MainWindow", "Type", nullptr));
+        btnSelectImage->setText(QCoreApplication::translate("MainWindow", "Select Image", nullptr));
+        label_date->setText(QCoreApplication::translate("MainWindow", "Purchase Date", nullptr));
+        resourceTabWidget->setTabText(resourceTabWidget->indexOf(resourceAddTab), QCoreApplication::translate("MainWindow", "Add Resources", nullptr));
+        resourceSearchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
+        searchLineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
+        resetResourceSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
+        QTableWidgetItem *___qtablewidgetitem7 = tableWidget->horizontalHeaderItem(0);
+        ___qtablewidgetitem7->setText(QCoreApplication::translate("MainWindow", "ID", nullptr));
+        QTableWidgetItem *___qtablewidgetitem8 = tableWidget->horizontalHeaderItem(1);
+        ___qtablewidgetitem8->setText(QCoreApplication::translate("MainWindow", "Name", nullptr));
+        QTableWidgetItem *___qtablewidgetitem9 = tableWidget->horizontalHeaderItem(2);
+        ___qtablewidgetitem9->setText(QCoreApplication::translate("MainWindow", "Type", nullptr));
+        QTableWidgetItem *___qtablewidgetitem10 = tableWidget->horizontalHeaderItem(3);
+        ___qtablewidgetitem10->setText(QCoreApplication::translate("MainWindow", "Brand", nullptr));
+        QTableWidgetItem *___qtablewidgetitem11 = tableWidget->horizontalHeaderItem(4);
+        ___qtablewidgetitem11->setText(QCoreApplication::translate("MainWindow", "Quantity", nullptr));
+        QTableWidgetItem *___qtablewidgetitem12 = tableWidget->horizontalHeaderItem(5);
+        ___qtablewidgetitem12->setText(QCoreApplication::translate("MainWindow", "Purchase Date", nullptr));
+        QTableWidgetItem *___qtablewidgetitem13 = tableWidget->horizontalHeaderItem(6);
+        ___qtablewidgetitem13->setText(QCoreApplication::translate("MainWindow", "Image", nullptr));
+        exportPdfButton->setText(QCoreApplication::translate("MainWindow", "PDF", nullptr));
+        downloadHistoryButton->setText(QCoreApplication::translate("MainWindow", "History", nullptr));
+        clearHistoryButton->setText(QCoreApplication::translate("MainWindow", "Clear History", nullptr));
+        btnLookForResource->setText(QCoreApplication::translate("MainWindow", "Look For Resource", nullptr));
+        deleteButton->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
+        updateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
+        resourceTabWidget->setTabText(resourceTabWidget->indexOf(resourceManageTab), QCoreApplication::translate("MainWindow", "Manage Resources", nullptr));
+        statsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
+        resourceRefreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
+        resourceTabWidget->setTabText(resourceTabWidget->indexOf(resourceStatisticsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi
 
 };
