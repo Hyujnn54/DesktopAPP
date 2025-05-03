@@ -480,6 +480,15 @@
                 </property>
                 <layout class="QHBoxLayout" name="searchLayout">
                  <item>
+                  <widget class="QComboBox" name="searchColumnComboBox">
+                   <item><property name="text"><string>Name</string></property></item>
+                   <item><property name="text"><string>Type</string></property></item>
+                   <item><property name="text"><string>Brand</string></property></item>
+                   <item><property name="text"><string>Quantity</string></property></item>
+                   <item><property name="text"><string>Purchase Date</string></property></item>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QLineEdit" name="searchLineEdit">
                    <property name="placeholderText">
                     <string>Type to search...</string>

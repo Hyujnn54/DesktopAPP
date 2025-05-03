@@ -75,6 +75,12 @@ private slots:
     void on_trainingChartFilterComboBox_currentIndexChanged(int index);
     void on_meetingChartFilterComboBox_currentIndexChanged(int index);
 
+    // Employee chart handlers
+    void on_employeeChartRefreshButton_clicked();
+    void on_employeeChartTypeComboBox_currentIndexChanged(int index);
+    void on_employeeChartFilterComboBox_currentIndexChanged(int index);
+    void on_employeeToggleLegendCheckBox_toggled(bool checked);
+
     // Resource management
     void on_confirmFormButton_clicked();
     void on_btnSelectImage_clicked();
@@ -88,6 +94,7 @@ private slots:
     void on_clearHistoryButton_clicked();
     void on_btnLookForResource_clicked();
     void on_searchTimeout();
+    void on_resourceSearchColumnChanged(int index);
 
 private:
     void setupUiConnections();

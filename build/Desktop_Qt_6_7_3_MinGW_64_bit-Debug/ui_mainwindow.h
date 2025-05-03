@@ -271,15 +271,19 @@ public:
     QPushButton *downloadBtn;
     QPushButton *generateQRCodeBtn;
     QWidget *employeeStatsTab;
-    QVBoxLayout *verticalLayoutStats;
-    QWidget *chartsContainer;
-    QVBoxLayout *chartsLayout;
-    QLabel *employeeHoverLabel;
+    QVBoxLayout *employeeStatsLayout;
+    QGroupBox *employeeChartControlsGroupBox;
+    QHBoxLayout *employeeChartControlsLayout;
+    QLabel *employeeChartTypeLabel;
+    QComboBox *employeeChartTypeComboBox;
+    QLabel *employeeChartFilterLabel;
+    QComboBox *employeeChartFilterComboBox;
+    QCheckBox *employeeToggleLegendCheckBox;
+    QPushButton *employeeChartRefreshButton;
+    QChartView *employeeChartView;
+    QLabel *employeeHoverDescriptionLabel;
     QLabel *employeeTotalCountLabel;
     QLabel *employeeAverageSalaryLabel;
-    QHBoxLayout *buttonLayout;
-    QSpacerItem *horizontalSpacer2;
-    QPushButton *refreshStatsButton;
     QWidget *resourcePage;
     QVBoxLayout *resourcePageLayout;
     QTabWidget *resourceTabWidget;
@@ -304,6 +308,7 @@ public:
     QVBoxLayout *resourceManageLayout;
     QGroupBox *resourceSearchGroupBox;
     QHBoxLayout *resourceSearchLayout;
+    QComboBox *resourceSearchColumnComboBox;
     QLineEdit *searchLineEdit;
     QPushButton *resetResourceSearchButton;
     QTableWidget *tableWidget;
@@ -317,13 +322,16 @@ public:
     QPushButton *updateButton;
     QWidget *resourceStatisticsTab;
     QVBoxLayout *resourceStatsLayout;
-    QGroupBox *statsTextGroup;
-    QVBoxLayout *resourceVerticalLayoutStats;
-    QChartView *chartView;
-    QChartView *stackedBarChartView;
-    QHBoxLayout *resourceStatsButtonLayout;
-    QSpacerItem *horizontalSpacer21;
+    QGroupBox *resourceChartControlsGroupBox;
+    QHBoxLayout *resourceChartControlsLayout;
+    QLabel *resourceChartTypeLabel;
+    QComboBox *resourceChartTypeComboBox;
+    QLabel *resourceChartFilterLabel;
+    QComboBox *resourceChartFilterComboBox;
+    QCheckBox *resourceToggleLegendCheckBox;
     QPushButton *resourceRefreshStatsButton;
+    QChartView *chartView;
+    QLabel *resourceHoverLabel;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -1470,44 +1478,73 @@ public:
         employeeTabWidget->addTab(listEmployee, QString());
         employeeStatsTab = new QWidget();
         employeeStatsTab->setObjectName("employeeStatsTab");
-        verticalLayoutStats = new QVBoxLayout(employeeStatsTab);
-        verticalLayoutStats->setObjectName("verticalLayoutStats");
-        chartsContainer = new QWidget(employeeStatsTab);
-        chartsContainer->setObjectName("chartsContainer");
-        chartsLayout = new QVBoxLayout(chartsContainer);
-        chartsLayout->setObjectName("chartsLayout");
+        employeeStatsLayout = new QVBoxLayout(employeeStatsTab);
+        employeeStatsLayout->setObjectName("employeeStatsLayout");
+        employeeChartControlsGroupBox = new QGroupBox(employeeStatsTab);
+        employeeChartControlsGroupBox->setObjectName("employeeChartControlsGroupBox");
+        employeeChartControlsLayout = new QHBoxLayout(employeeChartControlsGroupBox);
+        employeeChartControlsLayout->setObjectName("employeeChartControlsLayout");
+        employeeChartTypeLabel = new QLabel(employeeChartControlsGroupBox);
+        employeeChartTypeLabel->setObjectName("employeeChartTypeLabel");
 
-        verticalLayoutStats->addWidget(chartsContainer);
+        employeeChartControlsLayout->addWidget(employeeChartTypeLabel);
 
-        employeeHoverLabel = new QLabel(employeeStatsTab);
-        employeeHoverLabel->setObjectName("employeeHoverLabel");
-        employeeHoverLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+        employeeChartTypeComboBox = new QComboBox(employeeChartControlsGroupBox);
+        employeeChartTypeComboBox->addItem(QString());
+        employeeChartTypeComboBox->addItem(QString());
+        employeeChartTypeComboBox->setObjectName("employeeChartTypeComboBox");
 
-        verticalLayoutStats->addWidget(employeeHoverLabel);
+        employeeChartControlsLayout->addWidget(employeeChartTypeComboBox);
+
+        employeeChartFilterLabel = new QLabel(employeeChartControlsGroupBox);
+        employeeChartFilterLabel->setObjectName("employeeChartFilterLabel");
+
+        employeeChartControlsLayout->addWidget(employeeChartFilterLabel);
+
+        employeeChartFilterComboBox = new QComboBox(employeeChartControlsGroupBox);
+        employeeChartFilterComboBox->addItem(QString());
+        employeeChartFilterComboBox->addItem(QString());
+        employeeChartFilterComboBox->setObjectName("employeeChartFilterComboBox");
+
+        employeeChartControlsLayout->addWidget(employeeChartFilterComboBox);
+
+        employeeToggleLegendCheckBox = new QCheckBox(employeeChartControlsGroupBox);
+        employeeToggleLegendCheckBox->setObjectName("employeeToggleLegendCheckBox");
+        employeeToggleLegendCheckBox->setChecked(true);
+
+        employeeChartControlsLayout->addWidget(employeeToggleLegendCheckBox);
+
+        employeeChartRefreshButton = new QPushButton(employeeChartControlsGroupBox);
+        employeeChartRefreshButton->setObjectName("employeeChartRefreshButton");
+
+        employeeChartControlsLayout->addWidget(employeeChartRefreshButton);
+
+
+        employeeStatsLayout->addWidget(employeeChartControlsGroupBox);
+
+        employeeChartView = new QChartView(employeeStatsTab);
+        employeeChartView->setObjectName("employeeChartView");
+        sizePolicy2.setHeightForWidth(employeeChartView->sizePolicy().hasHeightForWidth());
+        employeeChartView->setSizePolicy(sizePolicy2);
+        employeeChartView->setMinimumSize(QSize(0, 400));
+
+        employeeStatsLayout->addWidget(employeeChartView);
+
+        employeeHoverDescriptionLabel = new QLabel(employeeStatsTab);
+        employeeHoverDescriptionLabel->setObjectName("employeeHoverDescriptionLabel");
+        employeeHoverDescriptionLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        employeeStatsLayout->addWidget(employeeHoverDescriptionLabel);
 
         employeeTotalCountLabel = new QLabel(employeeStatsTab);
         employeeTotalCountLabel->setObjectName("employeeTotalCountLabel");
 
-        verticalLayoutStats->addWidget(employeeTotalCountLabel);
+        employeeStatsLayout->addWidget(employeeTotalCountLabel);
 
         employeeAverageSalaryLabel = new QLabel(employeeStatsTab);
         employeeAverageSalaryLabel->setObjectName("employeeAverageSalaryLabel");
 
-        verticalLayoutStats->addWidget(employeeAverageSalaryLabel);
-
-        buttonLayout = new QHBoxLayout();
-        buttonLayout->setObjectName("buttonLayout");
-        horizontalSpacer2 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
-
-        buttonLayout->addItem(horizontalSpacer2);
-
-        refreshStatsButton = new QPushButton(employeeStatsTab);
-        refreshStatsButton->setObjectName("refreshStatsButton");
-
-        buttonLayout->addWidget(refreshStatsButton);
-
-
-        verticalLayoutStats->addLayout(buttonLayout);
+        employeeStatsLayout->addWidget(employeeAverageSalaryLabel);
 
         employeeTabWidget->addTab(employeeStatsTab, QString());
 
@@ -1612,6 +1649,16 @@ public:
         resourceSearchGroupBox->setObjectName("resourceSearchGroupBox");
         resourceSearchLayout = new QHBoxLayout(resourceSearchGroupBox);
         resourceSearchLayout->setObjectName("resourceSearchLayout");
+        resourceSearchColumnComboBox = new QComboBox(resourceSearchGroupBox);
+        resourceSearchColumnComboBox->addItem(QString());
+        resourceSearchColumnComboBox->addItem(QString());
+        resourceSearchColumnComboBox->addItem(QString());
+        resourceSearchColumnComboBox->addItem(QString());
+        resourceSearchColumnComboBox->addItem(QString());
+        resourceSearchColumnComboBox->setObjectName("resourceSearchColumnComboBox");
+
+        resourceSearchLayout->addWidget(resourceSearchColumnComboBox);
+
         searchLineEdit = new QLineEdit(resourceSearchGroupBox);
         searchLineEdit->setObjectName("searchLineEdit");
 
@@ -1691,40 +1738,59 @@ public:
         resourceStatisticsTab->setObjectName("resourceStatisticsTab");
         resourceStatsLayout = new QVBoxLayout(resourceStatisticsTab);
         resourceStatsLayout->setObjectName("resourceStatsLayout");
-        statsTextGroup = new QGroupBox(resourceStatisticsTab);
-        statsTextGroup->setObjectName("statsTextGroup");
-        resourceVerticalLayoutStats = new QVBoxLayout(statsTextGroup);
-        resourceVerticalLayoutStats->setObjectName("resourceVerticalLayoutStats");
-        chartView = new QChartView(statsTextGroup);
-        chartView->setObjectName("chartView");
-        sizePolicy2.setHeightForWidth(chartView->sizePolicy().hasHeightForWidth());
-        chartView->setSizePolicy(sizePolicy2);
+        resourceChartControlsGroupBox = new QGroupBox(resourceStatisticsTab);
+        resourceChartControlsGroupBox->setObjectName("resourceChartControlsGroupBox");
+        resourceChartControlsLayout = new QHBoxLayout(resourceChartControlsGroupBox);
+        resourceChartControlsLayout->setObjectName("resourceChartControlsLayout");
+        resourceChartTypeLabel = new QLabel(resourceChartControlsGroupBox);
+        resourceChartTypeLabel->setObjectName("resourceChartTypeLabel");
 
-        resourceVerticalLayoutStats->addWidget(chartView);
+        resourceChartControlsLayout->addWidget(resourceChartTypeLabel);
 
-        stackedBarChartView = new QChartView(statsTextGroup);
-        stackedBarChartView->setObjectName("stackedBarChartView");
-        sizePolicy2.setHeightForWidth(stackedBarChartView->sizePolicy().hasHeightForWidth());
-        stackedBarChartView->setSizePolicy(sizePolicy2);
+        resourceChartTypeComboBox = new QComboBox(resourceChartControlsGroupBox);
+        resourceChartTypeComboBox->addItem(QString());
+        resourceChartTypeComboBox->addItem(QString());
+        resourceChartTypeComboBox->setObjectName("resourceChartTypeComboBox");
 
-        resourceVerticalLayoutStats->addWidget(stackedBarChartView);
+        resourceChartControlsLayout->addWidget(resourceChartTypeComboBox);
 
+        resourceChartFilterLabel = new QLabel(resourceChartControlsGroupBox);
+        resourceChartFilterLabel->setObjectName("resourceChartFilterLabel");
 
-        resourceStatsLayout->addWidget(statsTextGroup);
+        resourceChartControlsLayout->addWidget(resourceChartFilterLabel);
 
-        resourceStatsButtonLayout = new QHBoxLayout();
-        resourceStatsButtonLayout->setObjectName("resourceStatsButtonLayout");
-        horizontalSpacer21 = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
+        resourceChartFilterComboBox = new QComboBox(resourceChartControlsGroupBox);
+        resourceChartFilterComboBox->addItem(QString());
+        resourceChartFilterComboBox->addItem(QString());
+        resourceChartFilterComboBox->setObjectName("resourceChartFilterComboBox");
 
-        resourceStatsButtonLayout->addItem(horizontalSpacer21);
+        resourceChartControlsLayout->addWidget(resourceChartFilterComboBox);
 
-        resourceRefreshStatsButton = new QPushButton(resourceStatisticsTab);
+        resourceToggleLegendCheckBox = new QCheckBox(resourceChartControlsGroupBox);
+        resourceToggleLegendCheckBox->setObjectName("resourceToggleLegendCheckBox");
+        resourceToggleLegendCheckBox->setChecked(true);
+
+        resourceChartControlsLayout->addWidget(resourceToggleLegendCheckBox);
+
+        resourceRefreshStatsButton = new QPushButton(resourceChartControlsGroupBox);
         resourceRefreshStatsButton->setObjectName("resourceRefreshStatsButton");
 
-        resourceStatsButtonLayout->addWidget(resourceRefreshStatsButton);
+        resourceChartControlsLayout->addWidget(resourceRefreshStatsButton);
 
 
-        resourceStatsLayout->addLayout(resourceStatsButtonLayout);
+        resourceStatsLayout->addWidget(resourceChartControlsGroupBox);
+
+        chartView = new QChartView(resourceStatisticsTab);
+        chartView->setObjectName("chartView");
+        chartView->setMinimumSize(QSize(0, 400));
+
+        resourceStatsLayout->addWidget(chartView);
+
+        resourceHoverLabel = new QLabel(resourceStatisticsTab);
+        resourceHoverLabel->setObjectName("resourceHoverLabel");
+        resourceHoverLabel->setAlignment(Qt::AlignmentFlag::AlignCenter);
+
+        resourceStatsLayout->addWidget(resourceHoverLabel);
 
         resourceTabWidget->addTab(resourceStatisticsTab, QString());
 
@@ -1747,10 +1813,10 @@ public:
 
         retranslateUi(MainWindow);
 
-        mainStackedWidget->setCurrentIndex(4);
+        mainStackedWidget->setCurrentIndex(2);
         clientTabWidget->setCurrentIndex(1);
         trainingTabWidget->setCurrentIndex(2);
-        meetingTabWidget->setCurrentIndex(1);
+        meetingTabWidget->setCurrentIndex(3);
         employeeTabWidget->setCurrentIndex(1);
         resourceTabWidget->setCurrentIndex(1);
 
@@ -1945,10 +2011,20 @@ public:
         downloadBtn->setText(QCoreApplication::translate("MainWindow", "Download", nullptr));
         generateQRCodeBtn->setText(QCoreApplication::translate("MainWindow", "Generate QR Code", nullptr));
         employeeTabWidget->setTabText(employeeTabWidget->indexOf(listEmployee), QCoreApplication::translate("MainWindow", "Manage Employees", nullptr));
-        employeeHoverLabel->setText(QCoreApplication::translate("MainWindow", "Hover over a chart element to see details", nullptr));
+        employeeChartControlsGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Chart Options", nullptr));
+        employeeChartTypeLabel->setText(QCoreApplication::translate("MainWindow", "Chart Type:", nullptr));
+        employeeChartTypeComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Pie Chart", nullptr));
+        employeeChartTypeComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Bar Chart", nullptr));
+
+        employeeChartFilterLabel->setText(QCoreApplication::translate("MainWindow", "Filter By:", nullptr));
+        employeeChartFilterComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Role", nullptr));
+        employeeChartFilterComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Specialty", nullptr));
+
+        employeeToggleLegendCheckBox->setText(QCoreApplication::translate("MainWindow", "Show Legend", nullptr));
+        employeeChartRefreshButton->setText(QCoreApplication::translate("MainWindow", "Refresh", nullptr));
+        employeeHoverDescriptionLabel->setText(QCoreApplication::translate("MainWindow", "Hover over a chart element to see details", nullptr));
         employeeTotalCountLabel->setText(QCoreApplication::translate("MainWindow", "Total Employees: 0", nullptr));
         employeeAverageSalaryLabel->setText(QCoreApplication::translate("MainWindow", "Average Salary: $0.00", nullptr));
-        refreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
         employeeTabWidget->setTabText(employeeTabWidget->indexOf(employeeStatsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
         label_brand->setText(QCoreApplication::translate("MainWindow", "Brand", nullptr));
         confirmFormButton->setText(QCoreApplication::translate("MainWindow", "Add Resource", nullptr));
@@ -1966,6 +2042,12 @@ public:
         label_date->setText(QCoreApplication::translate("MainWindow", "Purchase Date", nullptr));
         resourceTabWidget->setTabText(resourceTabWidget->indexOf(resourceAddTab), QCoreApplication::translate("MainWindow", "Add Resources", nullptr));
         resourceSearchGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Search", nullptr));
+        resourceSearchColumnComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Name", nullptr));
+        resourceSearchColumnComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Type", nullptr));
+        resourceSearchColumnComboBox->setItemText(2, QCoreApplication::translate("MainWindow", "Brand", nullptr));
+        resourceSearchColumnComboBox->setItemText(3, QCoreApplication::translate("MainWindow", "Quantity", nullptr));
+        resourceSearchColumnComboBox->setItemText(4, QCoreApplication::translate("MainWindow", "Purchase Date", nullptr));
+
         searchLineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "Type to search...", nullptr));
         resetResourceSearchButton->setText(QCoreApplication::translate("MainWindow", "Reset Search", nullptr));
         QTableWidgetItem *___qtablewidgetitem7 = tableWidget->horizontalHeaderItem(0);
@@ -1989,8 +2071,18 @@ public:
         deleteButton->setText(QCoreApplication::translate("MainWindow", "Delete", nullptr));
         updateButton->setText(QCoreApplication::translate("MainWindow", "Update", nullptr));
         resourceTabWidget->setTabText(resourceTabWidget->indexOf(resourceManageTab), QCoreApplication::translate("MainWindow", "Manage Resources", nullptr));
-        statsTextGroup->setTitle(QCoreApplication::translate("MainWindow", "Statistical Summary", nullptr));
-        resourceRefreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh Statistics", nullptr));
+        resourceChartControlsGroupBox->setTitle(QCoreApplication::translate("MainWindow", "Chart Options", nullptr));
+        resourceChartTypeLabel->setText(QCoreApplication::translate("MainWindow", "Chart Type:", nullptr));
+        resourceChartTypeComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Pie Chart", nullptr));
+        resourceChartTypeComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Bar Chart", nullptr));
+
+        resourceChartFilterLabel->setText(QCoreApplication::translate("MainWindow", "Filter By:", nullptr));
+        resourceChartFilterComboBox->setItemText(0, QCoreApplication::translate("MainWindow", "Type", nullptr));
+        resourceChartFilterComboBox->setItemText(1, QCoreApplication::translate("MainWindow", "Purchase Date", nullptr));
+
+        resourceToggleLegendCheckBox->setText(QCoreApplication::translate("MainWindow", "Show Legend", nullptr));
+        resourceRefreshStatsButton->setText(QCoreApplication::translate("MainWindow", "Refresh", nullptr));
+        resourceHoverLabel->setText(QCoreApplication::translate("MainWindow", "Hover over a chart element to see details", nullptr));
         resourceTabWidget->setTabText(resourceTabWidget->indexOf(resourceStatisticsTab), QCoreApplication::translate("MainWindow", "Statistics", nullptr));
     } // retranslateUi
 

@@ -84,6 +84,40 @@ void ResourceManager::updateTable(QTableWidget *tableWidget, const QString &filt
     tableWidget->setSortingEnabled(true);
 }
 
+void ResourceManager::updateTable(QTableWidget* tableWidget, const QString& searchText, const QString& column)
+{
+    // Default: show all resources if no search text
+    QString queryStr = "SELECT RESOURCE_ID, NAME, TYPE, BRAND, QUANTITY, PURCHASE_DATE, IMAGE FROM RESOURCES";
+    QMap<QString, QString> columnMap = {
+        {"Name", "NAME"},
+        {"Type", "TYPE"},
+        {"Brand", "BRAND"},
+        {"Quantity", "QUANTITY"},
+        {"Purchase Date", "PURCHASE_DATE"}
+    };
+    QList<QVariant> bindValues;
+    if (!searchText.isEmpty() && columnMap.contains(column)) {
+        queryStr += QString(" WHERE UPPER(%1) LIKE UPPER(?)").arg(columnMap[column]);
+        bindValues << ("%" + searchText + "%");
+    }
+    QSqlQuery query;
+    query.prepare(queryStr);
+    for (const QVariant& val : bindValues) {
+        query.addBindValue(val);
+    }
+    query.exec();
+    tableWidget->setRowCount(0);
+    int row = 0;
+    while (query.next()) {
+        tableWidget->insertRow(row);
+        for (int col = 0; col < 6; ++col) {
+            tableWidget->setItem(row, col, new QTableWidgetItem(query.value(col).toString()));
+        }
+        // Handle image column if needed
+        row++;
+    }
+}
+
 void ResourceManager::updateResourceData(QTableWidget *tableWidget, int row, const Resource &resource)
 {
     // Create items for each column

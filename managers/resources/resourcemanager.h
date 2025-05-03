@@ -22,6 +22,7 @@ public:
     // Interface management
     void setupTable(QTableWidget *tableWidget);
     void updateTable(QTableWidget *tableWidget, const QString &filter = "");
+    void updateTable(QTableWidget *tableWidget, const QString &searchText, const QString &column);
     void clearForm();
     
     // Data operations

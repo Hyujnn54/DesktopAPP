@@ -1307,6 +1307,17 @@ void MainWindow::setupChartConnections()
     connect(ui->meetingChartRefreshButton, &QPushButton::clicked, this, &MainWindow::on_meetingChartRefreshButton_clicked);
     connect(ui->meetingChartTypeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_meetingChartTypeComboBox_currentIndexChanged);
     connect(ui->meetingChartFilterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_meetingChartFilterComboBox_currentIndexChanged);
+    
+    // Add these to setup chart connections
+    connect(ui->employeeChartRefreshButton, &QPushButton::clicked, this, &MainWindow::on_employeeChartRefreshButton_clicked);
+    connect(ui->employeeChartTypeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_employeeChartTypeComboBox_currentIndexChanged);
+    connect(ui->employeeChartFilterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_employeeChartFilterComboBox_currentIndexChanged);
+    connect(ui->employeeToggleLegendCheckBox, &QCheckBox::toggled, this, &MainWindow::on_employeeToggleLegendCheckBox_toggled);
+    // Resource statistics chart controls
+    connect(ui->resourceRefreshStatsButton, &QPushButton::clicked, this, [this]() { updateResourceChart(); });
+    connect(ui->resourceChartTypeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) { updateResourceChart(); });
+    connect(ui->resourceChartFilterComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int) { updateResourceChart(); });
+    connect(ui->resourceToggleLegendCheckBox, &QCheckBox::toggled, this, [this](bool) { updateResourceChart(); });
 }
 
 void MainWindow::setupClientChart()
@@ -1807,170 +1818,238 @@ void MainWindow::updateMeetingChart()
 void MainWindow::updateEmployeeChart()
 {
     if (!m_dbConnected) return;
-
     try {
-        // Get chart type and filter from employee-specific controls
-        QComboBox* employeeChartTypeComboBox = ui->mainStackedWidget->findChild<QComboBox*>("employeeChartTypeComboBox");
-        QComboBox* employeeChartFilterComboBox = ui->mainStackedWidget->findChild<QComboBox*>("employeeChartFilterComboBox");
-        QCheckBox* employeeToggleLegendCheckBox = ui->mainStackedWidget->findChild<QCheckBox*>("employeeToggleLegendCheckBox");
-        QLabel* employeeHoverLabel = ui->mainStackedWidget->findChild<QLabel*>("employeeHoverLabel");
-        
+        QComboBox* employeeChartTypeComboBox = ui->employeeChartTypeComboBox;
+        QComboBox* employeeChartFilterComboBox = ui->employeeChartFilterComboBox;
+        QCheckBox* employeeToggleLegendCheckBox = ui->employeeToggleLegendCheckBox;
         QString chartType = employeeChartTypeComboBox ? employeeChartTypeComboBox->currentText() : "Pie Chart";
         QString filter = employeeChartFilterComboBox ? employeeChartFilterComboBox->currentText() : "Role";
         bool showLegend = employeeToggleLegendCheckBox ? employeeToggleLegendCheckBox->isChecked() : true;
-
-        // Use employee-specific chart view
         QChartView* chartView = ui->employeeChartView;
         if (!chartView) return;
-
         QChart* chart = chartView->chart();
         if (!chart) return;
-
-        // Clear existing series
         chart->removeAllSeries();
-        
-        // Clear existing axes
         QList<QAbstractAxis*> axes = chart->axes();
-        for (QAbstractAxis* axis : axes) {
-            chart->removeAxis(axis);
-            delete axis;
-        }
-
-        // Update chart title based on filter
+        for (QAbstractAxis* axis : axes) { chart->removeAxis(axis); delete axis; }
         chart->setTitle(QString("Employee Statistics by %1").arg(filter));
-        
-        // Show/hide legend based on checkbox
+        chart->setAnimationOptions(QChart::SeriesAnimations); // Enable animation
         chart->legend()->setVisible(showLegend);
-
-        // Get data from employee manager
-        QMap<QString, int> data = employeeManager->getEmployeeCountByCategory(filter);
-
-        // Create appropriate chart based on selection
+        QMap<QString, int> data;
+        // Query EMPLOYEE table directly for statistics
+        if (filter == "Role") {
+            QSqlQuery query("SELECT ROLE, COUNT(*) as COUNT FROM EMPLOYEE GROUP BY ROLE");
+            while (query.next()) {
+                QString role = query.value(0).toString();
+                int count = query.value(1).toInt();
+                data[role] = count;
+            }
+        } else if (filter == "Specialty") {
+            QSqlQuery query("SELECT SPECIALITY, COUNT(*) as COUNT FROM EMPLOYEE GROUP BY SPECIALITY");
+            while (query.next()) {
+                QString specialty = query.value(0).toString();
+                int count = query.value(1).toInt();
+                data[specialty] = count;
+            }
+        }
+        if (data.isEmpty()) {
+            chart->setTitle("No employee data available");
+            if (ui->employeeHoverDescriptionLabel) ui->employeeHoverDescriptionLabel->setText("No data");
+            return;
+        }
         if (chartType == "Pie Chart") {
             QPieSeries *series = new QPieSeries();
-
-            // Add slices to the pie series
+            int total = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) total += it.value();
             for (auto it = data.begin(); it != data.end(); ++it) {
                 QPieSlice *slice = series->append(it.key(), it.value());
                 slice->setLabelVisible(true);
-                slice->setLabelPosition(QPieSlice::LabelOutside);
-
-                // Format label to show percentage
-                slice->setLabel(QString("%1: %2%").arg(it.key()).arg(100 * slice->percentage(), 0, 'f', 1));
-
-                // Connect hover signals for interactive feedback using captured employeeHoverLabel
+                slice->setLabel(QString("%1: %2 (%3%)").arg(it.key()).arg(it.value()).arg(100.0 * it.value() / total, 0, 'f', 1));
                 connect(slice, &QPieSlice::hovered, [this, slice](bool hovered) {
                     if (hovered) {
                         slice->setExploded(true);
-                        slice->setLabelVisible(true);
-                        ui->employeeHoverLabel->setText(
-                            QString("%1: %2 employees (%3%)").arg(
-                                slice->label().split(':').at(0), 
-                                QString::number(slice->value()),
-                                QString::number(100 * slice->percentage(), 'f', 1)
-                            )
-                        );
-                    } else if (ui->employeeHoverLabel) {
+                        ui->employeeHoverDescriptionLabel->setText(slice->label());
+                    } else {
                         slice->setExploded(false);
-                        ui->employeeHoverLabel->setText("Hover over a chart element to see details");
+                        ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
                     }
                 });
+                // Animate each slice appearing
+                QPropertyAnimation *animation = new QPropertyAnimation(slice, "startAngle");
+                animation->setDuration(500);
+                animation->setStartValue(0);
+                animation->setEndValue(slice->startAngle());
+                animation->setEasingCurve(QEasingCurve::OutBack);
+                animation->start(QAbstractAnimation::DeleteWhenStopped);
+                QPropertyAnimation *angleAnimation = new QPropertyAnimation(slice, "angleSpan");
+                angleAnimation->setDuration(500);
+                angleAnimation->setStartValue(0);
+                angleAnimation->setEndValue(slice->angleSpan());
+                angleAnimation->setEasingCurve(QEasingCurve::OutBack);
+                angleAnimation->start(QAbstractAnimation::DeleteWhenStopped);
             }
-
             chart->addSeries(series);
-            series->setLabelsVisible(true);
-
-            // Enable animations for a more modern look
-            chart->setAnimationOptions(QChart::SeriesAnimations);
-
         } else if (chartType == "Bar Chart") {
             QBarSeries *series = new QBarSeries();
-
-            // Create a bar set
             QBarSet *set = new QBarSet("Employees");
-
-            // Create categories list for axis
             QStringList categories;
-
-            // Add values to the bar set
             for (auto it = data.begin(); it != data.end(); ++it) {
                 *set << it.value();
                 categories << it.key();
             }
-
             series->append(set);
             chart->addSeries(series);
-
-            // Create axes
             QBarCategoryAxis *axisX = new QBarCategoryAxis();
             axisX->append(categories);
             chart->addAxis(axisX, Qt::AlignBottom);
             series->attachAxis(axisX);
-
             QValueAxis *axisY = new QValueAxis();
-            // Ensure we don't crash with empty data
-            if (set->count() > 0) {
-                double maxValue = 0;
-                for (int i = 0; i < set->count(); i++) {
-                    maxValue = qMax(maxValue, set->at(i));
-                }
-                axisY->setRange(0, maxValue * 1.1); // Set range with some padding
-            } else {
-                axisY->setRange(0, 10); // Default range if no data
-            }
+            int maxValue = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) maxValue = qMax(maxValue, it.value());
+            axisY->setRange(0, maxValue * 1.1);
             chart->addAxis(axisY, Qt::AlignLeft);
             series->attachAxis(axisY);
-
-            // Connect hover signals for interactive feedback
             connect(series, &QBarSeries::hovered, [this, categories](bool status, int index, QBarSet *barset) {
-                if (status && index >= 0 && index < categories.size() && ui->employeeHoverLabel) {
-                    double percentage = 0;
-                    double total = 0;
-
-                    // Calculate total to get percentage
-                    for (int i = 0; i < barset->count(); i++) {
-                        total += barset->at(i);
-                    }
-
-                    if (total > 0) {
-                        percentage = (barset->at(index) / total) * 100.0;
-                    }
-
-                    ui->employeeHoverLabel->setText(
-                        QString("%1: %2 employees (%3%)").arg(
-                            categories.at(index), 
-                            QString::number(barset->at(index)),
-                            QString::number(percentage, 'f', 1)
-                        )
-                    );
-                } else if (ui->employeeHoverLabel) {
-                    ui->employeeHoverLabel->setText("Hover over a chart element to see details");
+                if (status && index >= 0 && index < categories.size()) {
+                    ui->employeeHoverDescriptionLabel->setText(QString("%1: %2 employees").arg(categories.at(index)).arg(barset->at(index)));
+                } else {
+                    ui->employeeHoverDescriptionLabel->setText("Hover over a chart element to see details");
                 }
             });
-
-            // Enable animations
-            chart->setAnimationOptions(QChart::SeriesAnimations);
         }
-
-        // Update summary statistics if these labels exist
         if (ui->employeeTotalCountLabel) {
-            ui->employeeTotalCountLabel->setText(QString("Total Employees: %1").arg(employeeManager->getTotalEmployeeCount()));
+            QSqlQuery totalQuery("SELECT COUNT(*) FROM EMPLOYEE");
+            int total = 0;
+            if (totalQuery.next()) total = totalQuery.value(0).toInt();
+            ui->employeeTotalCountLabel->setText(QString("Total Employees: %1").arg(total));
         }
-        
         if (ui->employeeAverageSalaryLabel) {
-            ui->employeeAverageSalaryLabel->setText(QString("Average Salary: $%1").arg(employeeManager->getAverageSalary(), 0, 'f', 2));
+            QSqlQuery avgQuery("SELECT AVG(SALAIRE) FROM EMPLOYEE");
+            double avg = 0;
+            if (avgQuery.next()) avg = avgQuery.value(0).toDouble();
+            ui->employeeAverageSalaryLabel->setText(QString("Average Salary: $%1").arg(avg, 0, 'f', 2));
         }
-
-        // Ensure the chart view is properly configured
         chartView->setRenderHint(QPainter::Antialiasing);
         chartView->setRubberBand(QChartView::RectangleRubberBand);
-
     } catch (const std::exception& e) {
         qDebug() << "Exception in updateEmployeeChart:" << e.what();
         QMessageBox::warning(this, "Chart Error", "Failed to update employee chart: " + QString(e.what()));
     } catch (...) {
         qDebug() << "Unknown exception in updateEmployeeChart";
         QMessageBox::warning(this, "Chart Error", "Unknown error updating employee chart");
+    }
+}
+
+void MainWindow::updateResourceChart()
+{
+    if (!m_dbConnected) return;
+    try {
+        QChartView* chartView = ui->chartView;
+        if (!chartView) return;
+        QComboBox* chartTypeCombo = ui->resourceChartTypeComboBox;
+        QComboBox* filterCombo = ui->resourceChartFilterComboBox;
+        QCheckBox* legendCheck = ui->resourceToggleLegendCheckBox;
+        QString chartType = chartTypeCombo ? chartTypeCombo->currentText() : "Pie Chart";
+        QString filter = filterCombo ? filterCombo->currentText() : "Type";
+        bool showLegend = legendCheck ? legendCheck->isChecked() : true;
+        QChart* chart = chartView->chart();
+        if (!chart) return;
+        chart->removeAllSeries();
+        QList<QAbstractAxis*> axes = chart->axes();
+        for (QAbstractAxis* axis : axes) { chart->removeAxis(axis); delete axis; }
+        chart->setTitle(QString("Resource Statistics by %1").arg(filter));
+        chart->setAnimationOptions(QChart::SeriesAnimations); // Enable animation
+        chart->legend()->setVisible(showLegend);
+        QMap<QString, int> data;
+        // Fix: Always query the actual RESOURCES table columns
+        if (filter == "Type") {
+            QSqlQuery query("SELECT TYPE, COUNT(*) as COUNT FROM RESOURCES GROUP BY TYPE");
+            while (query.next()) {
+                QString type = query.value(0).toString();
+                int count = query.value(1).toInt();
+                data[type] = count;
+            }
+        } else if (filter == "Purchase Date") {
+            QSqlQuery query("SELECT TO_CHAR(PURCHASE_DATE, 'YYYY-MM') as MONTH, COUNT(*) as COUNT FROM RESOURCES GROUP BY TO_CHAR(PURCHASE_DATE, 'YYYY-MM') ORDER BY MONTH");
+            while (query.next()) {
+                QString month = query.value(0).toString();
+                int count = query.value(1).toInt();
+                data[month] = count;
+            }
+        }
+        if (data.isEmpty()) {
+            chart->setTitle("No resource data available");
+            if (ui->resourceHoverLabel) ui->resourceHoverLabel->setText("No data");
+            return;
+        }
+        if (chartType == "Pie Chart") {
+            QPieSeries *series = new QPieSeries();
+            int total = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) total += it.value();
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                QPieSlice *slice = series->append(it.key(), it.value());
+                slice->setLabelVisible(true);
+                slice->setLabel(QString("%1: %2 (%3%)").arg(it.key()).arg(it.value()).arg(100.0 * it.value() / total, 0, 'f', 1));
+                connect(slice, &QPieSlice::hovered, [this, slice](bool hovered) {
+                    if (hovered) {
+                        slice->setExploded(true);
+                        ui->resourceHoverLabel->setText(slice->label());
+                    } else {
+                        slice->setExploded(false);
+                        ui->resourceHoverLabel->setText("Hover over a chart element to see details");
+                    }
+                });
+                // Animate each slice appearing
+                QPropertyAnimation *animation = new QPropertyAnimation(slice, "startAngle");
+                animation->setDuration(500);
+                animation->setStartValue(0);
+                animation->setEndValue(slice->startAngle());
+                animation->setEasingCurve(QEasingCurve::OutBack);
+                animation->start(QAbstractAnimation::DeleteWhenStopped);
+                QPropertyAnimation *angleAnimation = new QPropertyAnimation(slice, "angleSpan");
+                angleAnimation->setDuration(500);
+                angleAnimation->setStartValue(0);
+                angleAnimation->setEndValue(slice->angleSpan());
+                angleAnimation->setEasingCurve(QEasingCurve::OutBack);
+                angleAnimation->start(QAbstractAnimation::DeleteWhenStopped);
+            }
+            chart->addSeries(series);
+        } else if (chartType == "Bar Chart") {
+            QBarSeries *series = new QBarSeries();
+            QBarSet *set = new QBarSet("Resources");
+            QStringList categories;
+            for (auto it = data.begin(); it != data.end(); ++it) {
+                *set << it.value();
+                categories << it.key();
+            }
+            series->append(set);
+            chart->addSeries(series);
+            QBarCategoryAxis *axisX = new QBarCategoryAxis();
+            axisX->append(categories);
+            chart->addAxis(axisX, Qt::AlignBottom);
+            series->attachAxis(axisX);
+            QValueAxis *axisY = new QValueAxis();
+            int maxValue = 0;
+            for (auto it = data.begin(); it != data.end(); ++it) maxValue = qMax(maxValue, it.value());
+            axisY->setRange(0, maxValue * 1.1);
+            chart->addAxis(axisY, Qt::AlignLeft);
+            series->attachAxis(axisY);
+            connect(series, &QBarSeries::hovered, [this, categories](bool status, int index, QBarSet *barset) {
+                if (status && index >= 0 && index < categories.size()) {
+                    ui->resourceHoverLabel->setText(QString("%1: %2 resources").arg(categories.at(index)).arg(barset->at(index)));
+                } else {
+                    ui->resourceHoverLabel->setText("Hover over a chart element to see details");
+                }
+            });
+        }
+        chartView->setRenderHint(QPainter::Antialiasing);
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+    } catch (const std::exception& e) {
+        qDebug() << "Exception in updateResourceChart:" << e.what();
+        QMessageBox::warning(this, "Chart Error", "Failed to update resource chart: " + QString(e.what()));
+    } catch (...) {
+        qDebug() << "Unknown exception in updateResourceChart";
+        QMessageBox::warning(this, "Chart Error", "Unknown error updating resource chart");
     }
 }
 
@@ -2440,6 +2519,7 @@ void MainWindow::on_resourceSectionButton_clicked()
         
         // Setup search functionality
         connect(ui->searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::on_searchTextChanged);
+        connect(ui->resourceSearchColumnComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::on_resourceSearchColumnChanged);
         
         // Refresh statistics if needed
         updateResourceChart();
@@ -2474,171 +2554,13 @@ void MainWindow::setupResourceChart()
     }
 }
 
-void MainWindow::updateResourceChart()
-{
-    if (!m_dbConnected) return;
-    
-    try {
-        // Find chart elements dynamically to avoid missing UI element errors
-        QChartView* resourceChartView = ui->mainStackedWidget->findChild<QChartView*>("resourceChartView");
-        QComboBox* resourceChartTypeComboBox = ui->mainStackedWidget->findChild<QComboBox*>("resourceChartTypeComboBox");
-        QLabel* resourceHoverLabel = ui->mainStackedWidget->findChild<QLabel*>("resourceHoverLabel");
-        QLabel* totalResourcesLabel = ui->mainStackedWidget->findChild<QLabel*>("totalResourcesLabel");
-
-        if (!resourceChartView) return;
-        
-        // Get chart type
-        QString chartType = "Pie Chart";
-        if (resourceChartTypeComboBox && !resourceChartTypeComboBox->currentText().isEmpty()) {
-            chartType = resourceChartTypeComboBox->currentText();
-        }
-        
-        // Get the chart from the view
-        QChart *chart = resourceChartView->chart();
-        if (!chart) return;
-        
-        // Clear existing series and disconnect old connections
-        foreach(QAbstractSeries *series, chart->series()) {
-            if (QBarSeries *barSeries = qobject_cast<QBarSeries*>(series)) {
-                disconnect(barSeries, &QBarSeries::hovered, nullptr, nullptr);
-            } else if (QPieSeries *pieSeries = qobject_cast<QPieSeries*>(series)) {
-                for (QPieSlice *slice : pieSeries->slices()) {
-                    disconnect(slice, &QPieSlice::hovered, nullptr, nullptr);
-                }
-            }
-        }
-        chart->removeAllSeries();
-        
-        // Also clear the axes to prevent duplication
-        QList<QAbstractAxis*> axes = chart->axes();
-        for (QAbstractAxis *axis : axes) {
-            chart->removeAxis(axis);
-            delete axis;
-        }
-        
-        // Get data from resource manager
-        QMap<QString, int> typeData = resourceManager->getStatisticsByType();
-        QMap<QString, int> dateData = resourceManager->getResourceCountByDate();
-        
-        if (chartType == "Pie Chart") {
-            // Create pie chart by resource type
-            QPieSeries *series = new QPieSeries();
-            
-            // Add slices to the pie series
-            for (auto it = typeData.begin(); it != typeData.end(); ++it) {
-                QPieSlice *slice = series->append(it.key(), it.value());
-                slice->setLabelVisible(true);
-                slice->setLabel(QString("%1: %2%").arg(it.key()).arg(100 * slice->percentage(), 0, 'f', 1));
-                
-                // Connect slice signals for hover effects
-                connect(slice, &QPieSlice::hovered, [resourceHoverLabel, slice](bool hovered) {
-                    if (hovered) {
-                        slice->setExploded(true);
-                        if (resourceHoverLabel) {
-                            resourceHoverLabel->setText(
-                                QString("%1: %2 resources (%3%)").arg(
-                                    slice->label().split(':').at(0), 
-                                    QString::number(slice->value()),
-                                    QString::number(100 * slice->percentage(), 'f', 1)
-                                )
-                            );
-                        }
-                    } else {
-                        slice->setExploded(false);
-                        if (resourceHoverLabel) {
-                            resourceHoverLabel->setText("Hover over a chart element to see details");
-                        }
-                    }
-                });
-            }
-            
-            chart->addSeries(series);
-            chart->setTitle("Resources by Type");
-            
-        } else if (chartType == "Bar Chart") {
-            // Create bar chart for resources by purchase date
-            QBarSeries *series = new QBarSeries();
-            
-            // Create a bar set
-            QBarSet *set = new QBarSet("Resources");
-            
-            // Create categories list for axis
-            QStringList categories;
-            
-            // Add values to the bar set
-            for (auto it = dateData.begin(); it != dateData.end(); ++it) {
-                *set << it.value();
-                categories << it.key();
-            }
-            
-            series->append(set);
-            chart->addSeries(series);
-            
-            // Create axes
-            QBarCategoryAxis *axisX = new QBarCategoryAxis();
-            axisX->append(categories);
-            chart->addAxis(axisX, Qt::AlignBottom);
-            series->attachAxis(axisX);
-            
-            QValueAxis *axisY = new QValueAxis();
-            // Ensure we don't crash with empty data
-            if (set->count() > 0) {
-                double maxValue = 0;
-                for (int i = 0; i < set->count(); i++) {
-                    maxValue = qMax(maxValue, set->at(i));
-                }
-                axisY->setRange(0, maxValue * 1.1); // Set range with some padding
-            } else {
-                axisY->setRange(0, 10); // Default range if no data
-            }
-            chart->addAxis(axisY, Qt::AlignLeft);
-            series->attachAxis(axisY);
-            
-            // Connect hover signals using captured resourceHoverLabel
-            connect(series, &QBarSeries::hovered, [resourceHoverLabel, categories](bool status, int index, QBarSet *barset) {
-                if (status && index >= 0 && index < categories.size()) {
-                    if (resourceHoverLabel) {
-                        resourceHoverLabel->setText(
-                            QString("%1: %2 resources").arg(
-                                categories.at(index),
-                                QString::number(barset->at(index))
-                            )
-                        );
-                    }
-                } else {
-                    if (resourceHoverLabel) {
-                        resourceHoverLabel->setText("Hover over a chart element to see details");
-                    }
-                }
-            });
-            
-            chart->setTitle("Resources by Purchase Date");
-        }
-        
-        // Set other chart properties
-        chart->legend()->setVisible(true);
-        
-        // Update summary statistics
-        if (totalResourcesLabel) {
-            totalResourcesLabel->setText(QString("Total Resources: %1").arg(resourceManager->getTotalResourceCount()));
-        }
-        
-    } catch (const std::exception& e) {
-        qDebug() << "Exception in updateResourceChart:" << e.what();
-        QMessageBox::warning(this, "Chart Error", "Failed to update resource chart: " + QString(e.what()));
-    } catch (...) {
-        qDebug() << "Unknown exception in updateResourceChart";
-        QMessageBox::warning(this, "Chart Error", "Unknown error updating resource chart");
-    }
-}
-
 void MainWindow::on_confirmFormButton_clicked()
 {
     // Validate inputs
     QString name = ui->nameLineEdit->text().trimmed();
     QString type = ui->typeComboBox->currentText().trimmed();
     QString brand = ui->brandLineEdit->text().trimmed();
-    QString quantityText = ui->quantitySpinBox->text().trimmed();
+    QString quantityText = ui->quantityLineEdit->text().trimmed();
     QDate purchaseDate = ui->purchaseDateEdit->date();
     
     // Check required fields
@@ -2671,9 +2593,9 @@ void MainWindow::on_confirmFormButton_clicked()
         ui->nameLineEdit->clear();
         ui->typeComboBox->setCurrentIndex(0);
         ui->brandLineEdit->clear();
-        ui->quantitySpinBox->setValue(1);
+        ui->quantityLineEdit->setText("1");
         ui->purchaseDateEdit->setDate(QDate::currentDate());
-        ui->imagePreviewLabel->clear();
+        ui->lblImagePreview->clear();
         imageData.clear();
         
         // Refresh table
@@ -2711,13 +2633,13 @@ void MainWindow::on_btnSelectImage_clicked()
             // Display image preview
             QPixmap pixmap = ResourceManager::byteArrayToPixmap(imageData);
             if (!pixmap.isNull()) {
-                ui->imagePreviewLabel->setPixmap(pixmap.scaled(200, 150, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                ui->lblImagePreview->setPixmap(pixmap.scaled(200, 150, Qt::KeepAspectRatio, Qt::SmoothTransformation));
             } else {
-                ui->imagePreviewLabel->setText("Invalid image format");
+                ui->lblImagePreview->setText("Invalid image format");
                 imageData.clear();
             }
         } else {
-            ui->imagePreviewLabel->setText("Failed to load image");
+            ui->lblImagePreview->setText("Failed to load image");
         }
     }
 }
@@ -2728,9 +2650,9 @@ void MainWindow::on_cancelFormButton_clicked()
     ui->nameLineEdit->clear();
     ui->typeComboBox->setCurrentIndex(0);
     ui->brandLineEdit->clear();
-    ui->quantitySpinBox->setValue(1);
+    ui->quantityLineEdit->setText("1");
     ui->purchaseDateEdit->setDate(QDate::currentDate());
-    ui->imagePreviewLabel->clear();
+    ui->lblImagePreview->clear();
     imageData.clear();
     
     // Deselect any selected row
@@ -2751,7 +2673,7 @@ void MainWindow::on_updateButton_clicked()
     }
     
     // Open update dialog with the correct class name
-    UpdateResourceDialog dialog(selectedResourceId, this);
+    UpdateResourceDialog dialog(this);
     if (dialog.exec() == QDialog::Accepted) {
         // Refresh table
         resourceManager->updateTable(ui->tableWidget);
@@ -2853,12 +2775,13 @@ void MainWindow::on_searchTextChanged(const QString &text)
 void MainWindow::on_searchTimeout()
 {
     QString searchText = ui->searchLineEdit->text().trimmed();
-    resourceManager->updateTable(ui->tableWidget, searchText);
+    QString column = ui->resourceSearchColumnComboBox->currentText();
+    resourceManager->updateTable(ui->tableWidget, searchText, column);
 }
 
-void MainWindow::on_resetSearchButton_clicked()
+void MainWindow::on_resetResourceSearchButton_clicked()
 {
-    ui->searchInput->clear();
+    ui->searchLineEdit->clear();
     resourceManager->updateTable(ui->tableWidget);
 }
 
@@ -2942,15 +2865,15 @@ void MainWindow::on_btnLookForResource_clicked()
     }
     
     ui->brandLineEdit->setText(brand);
-    ui->quantitySpinBox->setValue(quantity);
+    ui->quantityLineEdit->setText(QString::number(quantity));
     ui->purchaseDateEdit->setDate(purchaseDate);
     
     // Show image if available
     QLabel *imageLabel = qobject_cast<QLabel*>(tableWidget->cellWidget(row, 6));
     if (imageLabel && !imageLabel->pixmap().isNull()) {
-        ui->imagePreviewLabel->setPixmap(imageLabel->pixmap());
+        ui->lblImagePreview->setPixmap(imageLabel->pixmap());
     } else {
-        ui->imagePreviewLabel->clear();
+        ui->lblImagePreview->clear();
     }
 }
 
@@ -2970,8 +2893,31 @@ void MainWindow::setLoggedInRole(const QString &role)
     statusBar()->showMessage(QString("Logged in as: %1").arg(role));
 }
 
-void MainWindow::on_resetResourceSearchButton_clicked()
+void MainWindow::on_employeeChartRefreshButton_clicked()
 {
-    ui->searchLineEdit->clear();
-    resourceManager->updateTable(ui->tableWidget);
+    updateEmployeeChart();
+}
+
+void MainWindow::on_employeeChartTypeComboBox_currentIndexChanged(int index)
+{
+    Q_UNUSED(index);
+    updateEmployeeChart();
+}
+
+void MainWindow::on_employeeChartFilterComboBox_currentIndexChanged(int index)
+{
+    Q_UNUSED(index);
+    updateEmployeeChart();
+}
+
+void MainWindow::on_employeeToggleLegendCheckBox_toggled(bool checked)
+{
+    Q_UNUSED(checked);
+    updateEmployeeChart();
+}
+
+void MainWindow::on_resourceSearchColumnChanged(int index)
+{
+    Q_UNUSED(index);
+    on_searchTimeout(); // Re-filter when column changes
 }
