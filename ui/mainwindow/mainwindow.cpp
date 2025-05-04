@@ -2558,8 +2558,8 @@ void MainWindow::on_resourceSectionButton_clicked()
         // Apply improved table styling for better readability
         improveTableWidgetDisplay(ui->tableWidget);
         
-        // Connect table selection to update form fields
-        connect(ui->tableWidget, &QTableWidget::itemSelectionChanged, this, &MainWindow::on_btnLookForResource_clicked);
+        // Connect table selection to update selectedResourceId
+        connect(ui->tableWidget, &QTableWidget::itemSelectionChanged, this, &MainWindow::on_resourceTableSelectionChanged);
         
         // Setup search functionality
         connect(ui->searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::on_searchTextChanged);
@@ -2715,23 +2715,63 @@ void MainWindow::on_updateButton_clicked()
         QMessageBox::warning(this, "Selection Error", "Please select a resource to update.");
         return;
     }
-    
-    // Open update dialog with the correct class name
+
+    // Find the selected row in the table
+    int selectedRow = -1;
+    for (int i = 0; i < ui->tableWidget->rowCount(); ++i) {
+        QTableWidgetItem *idItem = ui->tableWidget->item(i, 0);
+        if (idItem && idItem->text().toInt() == selectedResourceId) {
+            selectedRow = i;
+            break;
+        }
+    }
+    if (selectedRow == -1) {
+        QMessageBox::warning(this, "Error", "Selected resource not found in the table.");
+        return;
+    }
+
+    // Extract data from the selected row
+    QString name = ui->tableWidget->item(selectedRow, 1)->text();
+    QString type = ui->tableWidget->item(selectedRow, 2)->text();
+    QString brand = ui->tableWidget->item(selectedRow, 3)->text();
+    int quantity = ui->tableWidget->item(selectedRow, 4)->text().toInt();
+    QDate purchaseDate = QDate::fromString(ui->tableWidget->item(selectedRow, 5)->text(), "yyyy-MM-dd");
+    QByteArray imageData;
+    // Try to get image data from the cell widget if possible
+    QLabel *imageLabel = qobject_cast<QLabel*>(ui->tableWidget->cellWidget(selectedRow, 6));
+    if (imageLabel && !imageLabel->pixmap(Qt::ReturnByValue).isNull()) {
+        QPixmap pixmap = imageLabel->pixmap(Qt::ReturnByValue);
+        QBuffer buffer(&imageData);
+        buffer.open(QIODevice::WriteOnly);
+        pixmap.save(&buffer, "PNG");
+    }
+
+    // Open update dialog and pre-fill with selected resource data
     UpdateResourceDialog dialog(this);
+    dialog.setResourceData(selectedResourceId, name, type, brand, quantity, purchaseDate, imageData);
     if (dialog.exec() == QDialog::Accepted) {
-        // Refresh table
-        resourceManager->updateTable(ui->tableWidget);
-        
-        // Update statistics
-        updateResourceChart();
-        
-        // Add notification
-        notificationManager->addNotification(
-            "Resource Updated",
-            "Updated resource ID: " + QString::number(selectedResourceId),
-            "Updated at " + QDateTime::currentDateTime().toString(),
-            -1
+        // Update the resource in the database
+        bool success = resourceManager->updateResource(
+            selectedResourceId,
+            dialog.getName(),
+            dialog.getType(),
+            dialog.getBrand(),
+            dialog.getQuantity(),
+            dialog.getPurchaseDate(),
+            dialog.getImageData()
         );
+        if (success) {
+            resourceManager->updateTable(ui->tableWidget);
+            updateResourceChart();
+            notificationManager->addNotification(
+                "Resource Updated",
+                "Updated resource ID: " + QString::number(selectedResourceId),
+                "Updated at " + QDateTime::currentDateTime().toString(),
+                -1
+            );
+        } else {
+            QMessageBox::critical(this, "Error", "Failed to update resource. Check the database connection.");
+        }
     }
 }
 
@@ -2969,5 +3009,18 @@ void MainWindow::setupUiConnections()
     
     if (ui->resetSearchButton) {
         connect(ui->resetSearchButton, &QPushButton::clicked, this, &MainWindow::on_resetSearchButton_clicked);
+    }
+}
+
+void MainWindow::on_resourceTableSelectionChanged() {
+    auto selectedItems = ui->tableWidget->selectedItems();
+    if (!selectedItems.isEmpty()) {
+        int row = selectedItems.first()->row();
+        QTableWidgetItem *idItem = ui->tableWidget->item(row, 0);
+        if (idItem) {
+            selectedResourceId = idItem->text().toInt();
+        }
+    } else {
+        selectedResourceId = -1;
     }
 }

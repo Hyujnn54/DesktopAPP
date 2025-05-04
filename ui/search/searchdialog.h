@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QSqlQuery>
 #include <QSerialPort>
-#include "resource.h"
+#include "managers/resources/resource.h"
 
 namespace Ui {
 class SearchDialog;

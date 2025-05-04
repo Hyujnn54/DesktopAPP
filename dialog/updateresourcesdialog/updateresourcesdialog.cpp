@@ -25,11 +25,11 @@ UpdateResourceDialog::~UpdateResourceDialog()
     delete ui;
 }
 
-void UpdateResourceDialog::setResourceData(int resourceId, const QString &name, const QString &type, 
+void UpdateResourceDialog::setResourceData([[maybe_unused]] int resourceId, const QString &name, const QString &type,
                                           const QString &brand, int quantity, const QDate &purchaseDate, 
                                           const QByteArray &imageData)
 {
-    ui->resourceIdLineEdit->setText(QString::number(resourceId));
+    // Removed resourceIdLineEdit since it's no longer in the UI
     ui->nameLineEdit->setText(name);
     
     // Set the type in the combobox

@@ -4,6 +4,7 @@
 #include <QSerialPortInfo>
 #include <QDebug>
 #include <QSqlError>
+#include "managers/resources/resource.h"
 
 SearchDialog::SearchDialog(QWidget *parent) :
     QDialog(parent),
