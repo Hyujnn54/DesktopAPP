@@ -1,4 +1,9 @@
 #include "UpdateTrainingDialog.h"
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QCheckBox>
+#include <QSpinBox>
+#include <QHBoxLayout>
 
 UpdateTrainingDialog::UpdateTrainingDialog(QWidget *parent)
     : QDialog(parent),
@@ -77,4 +82,63 @@ int UpdateTrainingDialog::getTime() const
 double UpdateTrainingDialog::getPrix() const
 {
     return prixSpinBox->value();
+}
+
+// Add resource area population and update logic
+void UpdateTrainingDialog::setResourceData(int trainingId) {
+    // Get used resources for this training
+    QMap<int, int> usedResources;
+    QSqlQuery usedQuery;
+    usedQuery.prepare("SELECT RESOURCE_ID, QUANTITY FROM AHMED.TRAINING_RESOURCES WHERE TRAINING_ID = :tid");
+    usedQuery.bindValue(":tid", trainingId);
+    if (usedQuery.exec()) {
+        while (usedQuery.next()) {
+            usedResources[usedQuery.value(0).toInt()] = usedQuery.value(1).toInt();
+        }
+    }
+    QSqlQuery resQuery("SELECT RESOURCE_ID, NAME FROM RESOURCES");
+    QVBoxLayout* vbox = findChild<QVBoxLayout*>("resourcesVBoxLayout");
+    if (!vbox) return;
+    while (resQuery.next()) {
+        int id = resQuery.value(0).toInt();
+        QString name = resQuery.value(1).toString();
+        QWidget* rowWidget = new QWidget();
+        QHBoxLayout* rowLayout = new QHBoxLayout(rowWidget);
+        QCheckBox* checkBox = new QCheckBox(name);
+        checkBox->setObjectName(QString("resourceCheckBox_%1").arg(id));
+        QSpinBox* spinBox = new QSpinBox();
+        spinBox->setMinimum(1);
+        spinBox->setMaximum(1000);
+        spinBox->setValue(1);
+        spinBox->setObjectName(QString("resourceSpinBox_%1").arg(id));
+        spinBox->setEnabled(false);
+        rowLayout->addWidget(checkBox);
+        rowLayout->addWidget(spinBox);
+        rowWidget->setLayout(rowLayout);
+        vbox->addWidget(rowWidget);
+        QObject::connect(checkBox, &QCheckBox::toggled, spinBox, &QSpinBox::setEnabled);
+        if (usedResources.contains(id)) {
+            checkBox->setChecked(true);
+            spinBox->setValue(usedResources[id]);
+        }
+    }
+}
+
+QList<QPair<int, int>> UpdateTrainingDialog::getSelectedResources() const {
+    QList<QPair<int, int>> selectedResources;
+    QVBoxLayout* vbox = findChild<QVBoxLayout*>("resourcesVBoxLayout");
+    if (!vbox) return selectedResources;
+    for (int i = 0; i < vbox->count(); ++i) {
+        QWidget* rowWidget = vbox->itemAt(i)->widget();
+        if (!rowWidget) continue;
+        QCheckBox* checkBox = rowWidget->findChild<QCheckBox*>();
+        QSpinBox* spinBox = rowWidget->findChild<QSpinBox*>();
+        if (checkBox && spinBox && checkBox->isChecked()) {
+            QString objName = checkBox->objectName();
+            int resourceId = objName.section('_', 1, 1).toInt();
+            int quantity = spinBox->value();
+            selectedResources.append(qMakePair(resourceId, quantity));
+        }
+    }
+    return selectedResources;
 }

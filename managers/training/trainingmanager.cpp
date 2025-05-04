@@ -234,7 +234,17 @@ void TrainingManager::on_trainingUpdateButton_clicked()
 
     UpdateTrainingDialog dialog(nullptr);
     dialog.setTrainingData(name, description, trainer, date, time, prix);
-
+    // Find the training ID (assume FORMATION is unique, otherwise adjust logic)
+    QSqlQuery idQuery;
+    idQuery.prepare("SELECT IDFORM FROM AHMED.FORMATIONS WHERE FORMATION = :formation");
+    idQuery.bindValue(":formation", name);
+    int trainingId = -1;
+    if (idQuery.exec() && idQuery.next()) {
+        trainingId = idQuery.value(0).toInt();
+    }
+    if (trainingId != -1) {
+        dialog.setResourceData(trainingId);
+    }
     if (dialog.exec() == QDialog::Accepted) {
         QString newName = dialog.getName();
         QString newDescription = dialog.getDescription();
@@ -242,7 +252,23 @@ void TrainingManager::on_trainingUpdateButton_clicked()
         QDate newDate = dialog.getDate();
         int newTime = dialog.getTime();
         double newPrix = dialog.getPrix();
-
+        // --- Update resources in DB ---
+        if (trainingId != -1) {
+            QSqlQuery delQuery;
+            delQuery.prepare("DELETE FROM AHMED.TRAINING_RESOURCES WHERE TRAINING_ID = :tid");
+            delQuery.bindValue(":tid", trainingId);
+            delQuery.exec();
+            for (const auto& pair : dialog.getSelectedResources()) {
+                int resourceId = pair.first;
+                int quantity = pair.second;
+                QSqlQuery linkQuery;
+                linkQuery.prepare("INSERT INTO AHMED.TRAINING_RESOURCES (TRAINING_ID, RESOURCE_ID, QUANTITY) VALUES (:tid, :rid, :qty)");
+                linkQuery.bindValue(":tid", trainingId);
+                linkQuery.bindValue(":rid", resourceId);
+                linkQuery.bindValue(":qty", quantity);
+                linkQuery.exec();
+            }
+        }
         if (formations->modifier(name, newName, newDescription, newTrainer, newDate, newTime, newPrix)) {
             QMessageBox::information(nullptr, "Success", "Training updated successfully!");
             if (notificationManager) {

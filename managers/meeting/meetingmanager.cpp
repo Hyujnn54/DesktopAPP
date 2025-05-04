@@ -127,17 +127,21 @@ void MeetingManager::handleAddButtonClick()
         return;
     }
 
-    // Use -1 as a placeholder ID for new meetings
-    meeting m(-1, title, organiser, participant, agenda, duration, dateTime);
+    // Get the next meeting ID from the sequence
+    QSqlQuery seqQuery("SELECT MEETING_SEQ.NEXTVAL FROM DUAL");
+    int newMeetingId = -1;
+    if (seqQuery.next()) {
+        newMeetingId = seqQuery.value(0).toInt();
+    } else {
+        QMessageBox::critical(nullptr, "Error", "Failed to get new meeting ID from sequence.");
+        return;
+    }
+
+    // Use newMeetingId for the meeting and resources
+    meeting m(newMeetingId, title, organiser, participant, agenda, duration, dateTime);
     m.setEmployeeId(organiserId);
     m.setClientId(participantId);
     if (m.add()) {
-        // Get the new meeting ID (assume it's the max ID for simplicity)
-        QSqlQuery idQuery("SELECT MAX(ID) FROM AHMED.MEETING");
-        int newMeetingId = -1;
-        if (idQuery.exec() && idQuery.next()) {
-            newMeetingId = idQuery.value(0).toInt();
-        }
         // Insert selected resources into MEETING_RESOURCES
         QList<QPair<int, int>> selectedResources = getSelectedMeetingResources();
         for (const auto& pair : selectedResources) {

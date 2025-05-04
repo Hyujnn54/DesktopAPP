@@ -95,6 +95,14 @@
     </layout>
    </item>
    <item>
+    <widget class="QGroupBox" name="resourcesGroupBox">
+     <property name="title">
+      <string>Resources Used</string>
+     </property>
+     <layout class="QVBoxLayout" name="resourcesVBoxLayout"/>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <spacer name="horizontalSpacer">

@@ -25,6 +25,8 @@ public:
     QDate getDate() const;
     int getTime() const;
     double getPrix() const;
+    void setResourceData(int trainingId);
+    QList<QPair<int, int>> getSelectedResources() const;
 
 private:
     QLineEdit *nameEdit;

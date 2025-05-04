@@ -15,6 +15,7 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDoubleSpinBox>
 #include <QtWidgets/QFormLayout>
+#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
@@ -42,6 +43,8 @@ public:
     QSpinBox *timeSpinBox;
     QLabel *label_prix;
     QDoubleSpinBox *prixSpinBox;
+    QGroupBox *resourcesGroupBox;
+    QVBoxLayout *resourcesVBoxLayout;
     QHBoxLayout *horizontalLayout;
     QSpacerItem *horizontalSpacer;
     QPushButton *confirmButton;
@@ -125,6 +128,13 @@ public:
 
         verticalLayout->addLayout(formLayout);
 
+        resourcesGroupBox = new QGroupBox(UpdateTrainingDialog);
+        resourcesGroupBox->setObjectName("resourcesGroupBox");
+        resourcesVBoxLayout = new QVBoxLayout(resourcesGroupBox);
+        resourcesVBoxLayout->setObjectName("resourcesVBoxLayout");
+
+        verticalLayout->addWidget(resourcesGroupBox);
+
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setObjectName("horizontalLayout");
         horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Policy::Expanding, QSizePolicy::Policy::Minimum);
@@ -159,6 +169,7 @@ public:
         label_date->setText(QCoreApplication::translate("UpdateTrainingDialog", "Date:", nullptr));
         label_time->setText(QCoreApplication::translate("UpdateTrainingDialog", "Time (hours):", nullptr));
         label_prix->setText(QCoreApplication::translate("UpdateTrainingDialog", "Prix:", nullptr));
+        resourcesGroupBox->setTitle(QCoreApplication::translate("UpdateTrainingDialog", "Resources Used", nullptr));
         confirmButton->setText(QCoreApplication::translate("UpdateTrainingDialog", "Confirm", nullptr));
         cancelButton->setText(QCoreApplication::translate("UpdateTrainingDialog", "Cancel", nullptr));
     } // retranslateUi

@@ -62,10 +62,9 @@ bool meeting::add()
         }
         
         QSqlQuery query;
-        // Use a simpler INSERT statement without RETURNING clause
-        query.prepare("INSERT INTO AHMED.MEETING (TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID, DATEM) "
-                    "VALUES (:title, :organiser, :participant, :agenda, :duration, :employee_id, :client_id, :ressource_id, :datem)");
-        
+        query.prepare("INSERT INTO AHMED.MEETING (ID, TITLE, ORGANISER, PARTICIPANT, AGENDA, DURATION, EMPLOYEE_ID, CLIENT_ID, RESSOURCE_ID, DATEM) "
+                      "VALUES (:id, :title, :organiser, :participant, :agenda, :duration, :employee_id, :client_id, :ressource_id, :datem)");
+        query.bindValue(":id", id);
         query.bindValue(":title", title);
         query.bindValue(":organiser", organiser);
         query.bindValue(":participant", participant);
