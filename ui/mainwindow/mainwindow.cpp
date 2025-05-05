@@ -30,7 +30,7 @@
 #include <QPainter>
 #include <QSqlRecord>
 #include <QInputDialog>
-
+#include <QPrinter>
 // Inline delegate for image thumbnail in the employee table
 class InlineImageDelegate : public QStyledItemDelegate {
 public:
@@ -124,7 +124,8 @@ MainWindow::MainWindow(bool dbConnected, QWidget *parent)
     setupChartConnections();
 
     // Connect networkManager and AI chat signals after UI setup
-    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onAIResponseReceived);
+    //connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onAIResponseReceived);
+    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::on_imageAnalysisFinished);
     connect(ui->trainingNotificationLabel, &QPushButton::clicked, this, &MainWindow::handleNotificationLabelClicked);
     
     // Important: Connect notification count changes to update the label
@@ -1334,7 +1335,7 @@ bool MainWindow::validateMeetingInput(const QStringList &parts, QString &errorMe
     return true;
 }
 
-void MainWindow::onAIResponseReceived(QNetworkReply *reply)
+/*void MainWindow::onAIResponseReceived(QNetworkReply *reply)
 {
     qDebug() << "Entering onAIResponseReceived";
     if (!reply) {
@@ -1369,7 +1370,7 @@ void MainWindow::onAIResponseReceived(QNetworkReply *reply)
 
     reply->deleteLater();
     qDebug() << "Exiting onAIResponseReceived";
-}
+}*/
 
 void MainWindow::setupChartConnections()
 {
@@ -2356,105 +2357,123 @@ void MainWindow::on_modifyBtn_clicked()
 
 void MainWindow::on_downloadBtn_clicked()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Export Employee List as PDF", "", "PDF Files (*.pdf)");
+    QTableWidget* table = ui->employeeTableWidget;
+    QList<QTableWidgetItem*> selectedItems = table->selectedItems();
+    if (selectedItems.isEmpty()) {
+        QMessageBox::warning(this, "Error", "No employee selected!");
+        return;
+    }
+
+    int row = table->row(selectedItems.first());
+    QStringList headers;
+    for (int column = 0; column < table->columnCount(); ++column) {
+        QTableWidgetItem* item = table->horizontalHeaderItem(column);
+        headers << (item ? item->text() : "");
+    }
+
+    QStringList employeeData;
+    QByteArray imageData;
+    for (int col = 0; col < headers.size(); ++col) {
+        QTableWidgetItem* item = table->item(row, col);
+        if (item && headers[col].toLower() == "image") {
+            // Assuming the image is stored as base64 string in the table
+            imageData = QByteArray::fromBase64(item->text().toUtf8());
+        } else {
+            employeeData << (item ? item->text() : "");
+        }
+    }
+
+    QString fileName = QFileDialog::getSaveFileName(this, "Export Employee as PDF", "", "PDF Files (*.pdf)");
     if (fileName.isEmpty()) {
         return;
     }
     if (!fileName.endsWith(".pdf", Qt::CaseInsensitive)) {
         fileName += ".pdf";
     }
-    QPdfWriter pdfWriter(fileName);
-    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
-    pdfWriter.setPageMargins(QMarginsF(20, 20, 20, 20));
-    QPainter painter(&pdfWriter);
-    QFont regularFont("Arial", 11);
-    QFont headerFont("Arial", 13, QFont::Bold);
-    QFont titleFont("Arial", 20, QFont::Bold);
-    int pageWidth = pdfWriter.width();
-    int tableWidth = pageWidth - 40;
-    int rowHeight = 44;
-    painter.setFont(titleFont);
-    painter.drawText(20, 50, "Employee List");
-    painter.setFont(headerFont);
-    painter.drawText(20, 90, QString("Generated on %1").arg(QDate::currentDate().toString("yyyy-MM-dd")));
-    QTableWidget* table = ui->employeeTableWidget;
-    QStringList headers;
-    for (int column = 0; column < table->columnCount(); ++column) {
-        QTableWidgetItem* item = table->horizontalHeaderItem(column);
-        headers << (item ? item->text() : "");
+
+    QTextDocument doc;
+    QString imageHtml;
+    if (!imageData.isEmpty()) {
+        QString base64 = QString::fromLatin1(imageData.toBase64());
+        imageHtml = QString(R"(
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src='data:image/png;base64,%1' width='120' height='160' style='border:2px solid #4a90e2; border-radius: 5px;'/>
+            </div>
+        )").arg(base64);
+    } else {
+        imageHtml = "<p><em>No Image Available</em></p>";
     }
-    QVector<qreal> columnWidths;
-    int colCount = headers.size();
-    for (int i = 0; i < colCount; ++i) columnWidths.append(1.0 / colCount);
-    int y = 120;
-    painter.setFont(headerFont);
-    int x = 20;
-    QRect headerRect(20, y, tableWidth, rowHeight);
-    painter.fillRect(headerRect, QColor(230, 230, 230));
-    painter.setPen(QPen(Qt::black));
-    painter.drawRect(headerRect);
+
+    QString infoItems;
     for (int i = 0; i < headers.size(); ++i) {
-        int colWidth = tableWidth * columnWidths[i];
-        QRect cellRect(x, y, colWidth, rowHeight);
-        painter.drawRect(cellRect);
-        painter.drawText(cellRect, Qt::AlignCenter, headers[i]);
-        x += colWidth;
-    }
-    y += rowHeight;
-    painter.setFont(regularFont);
-    int rowCount = table->rowCount();
-    if (rowCount == 0) {
-        QRect noDataRect(20, y, tableWidth, rowHeight);
-        painter.drawRect(noDataRect);
-        painter.drawText(noDataRect, Qt::AlignCenter, "No employees to display.");
-        painter.end();
-        QMessageBox::information(this, "Export Complete", "PDF file created, but no employees were available to display.");
-        return;
-    }
-    QColor altRowColor(245, 245, 245);
-    for (int row = 0; row < rowCount; ++row) {
-        if (row % 2 == 1) {
-            QRect rowRect(20, y, tableWidth, rowHeight);
-            painter.fillRect(rowRect, altRowColor);
-        }
-        x = 20;
-        for (int col = 0; col < headers.size(); ++col) {
-            int colWidth = tableWidth * columnWidths[col];
-            QRect cellRect(x, y, colWidth, rowHeight);
-            painter.drawRect(cellRect);
-            QTableWidgetItem* item = table->item(row, col);
-            QString text = item ? item->text() : "";
-            painter.drawText(cellRect.adjusted(8, 8, -8, -8), Qt::AlignVCenter | Qt::AlignLeft, text);
-            x += colWidth;
-        }
-        y += rowHeight;
-        if (y > pdfWriter.height() - 60) {
-            pdfWriter.newPage();
-            y = 40;
-            painter.setFont(headerFont);
-            x = 20;
-            QRect headerRect(20, y, tableWidth, rowHeight);
-            painter.fillRect(headerRect, QColor(230, 230, 230));
-            painter.drawRect(headerRect);
-            for (int i = 0; i < headers.size(); ++i) {
-                int colWidth = tableWidth * columnWidths[i];
-                QRect cellRect(x, y, colWidth, rowHeight);
-                painter.drawRect(cellRect);
-                painter.drawText(cellRect, Qt::AlignCenter, headers[i]);
-                x += colWidth;
-            }
-            y += rowHeight;
-            painter.setFont(regularFont);
+        if (headers[i].toLower() != "image") {
+            infoItems += "<div class='info-item'><strong>" + headers[i] + ":</strong> " + employeeData[i] + "</div>";
         }
     }
-    painter.end();
+
+    QString html = R"(
+        <html>
+        <head>
+            <style>
+                body {
+                    font-family: 'Segoe UI', sans-serif;
+                    background-color: #f7f7f7;
+                    padding: 20px;
+                    color: #333;
+                }
+                .cv-container {
+                    background-color: #ffffff;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                    width: 100%;
+                }
+                .section {
+                    margin-top: 20px;
+                }
+                .section h2 {
+                    color: #2c5282;
+                    border-bottom: 1px solid #ccc;
+                    padding-bottom: 5px;
+                }
+                .info-item {
+                    margin: 6px 0;
+                }
+                .info-item strong {
+                    display: inline-block;
+                    width: 140px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='cv-container'>
+                %1
+                <div class='section'>
+                    <h2>Employee Information</h2>
+                    <p style='color: #666;'>Generated on %2</p>
+                    %3
+                </div>
+            </div>
+        </body>
+        </html>
+    )";
+
+    html = html.arg(imageHtml, QDate::currentDate().toString("yyyy-MM-dd"), infoItems);
+    doc.setHtml(html);
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(fileName);
+    printer.setPageSize(QPageSize(QPageSize::A4));
+    printer.setPageMargins(QMarginsF(15, 15, 15, 15));
+
+    doc.print(&printer);
     QMessageBox::information(this, "Export Successful", "Employee data exported to PDF successfully!");
 }
-
 void MainWindow::on_selectImageButton_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Select Employee Image", "", 
-                                                  "Image Files (*.png *.jpg *.jpeg *.bmp)");
+    QString fileName = QFileDialog::getOpenFileName(this, "Select Employee Image", "",
+                                                    "Image Files (*.png *.jpg *.jpeg *.bmp)");
     if (!fileName.isEmpty()) {
         ui->imagePathLineEdit->setText(fileName);
     }
@@ -2553,55 +2572,136 @@ void MainWindow::setupResourceChart()
 
 void MainWindow::on_confirmFormButton_clicked()
 {
-    // Validate inputs
     QString name = ui->nameLineEdit->text().trimmed();
     QString type = ui->typeComboBox->currentText().trimmed();
     QString brand = ui->brandLineEdit->text().trimmed();
-    QString quantityText = ui->quantityLineEdit->text().trimmed();
-    QDate purchaseDate = ui->purchaseDateEdit->date();
-    QByteArray imageData = this->imageData;
-
-    // Convert quantity to int
     bool ok;
-    int quantity = quantityText.toInt(&ok);
+    int quantity = ui->quantityLineEdit->text().toInt(&ok);
+    QDate purchase_date = ui->purchaseDateEdit->date();
+    QDate currentDate = QDate::currentDate();
+
+    if (name.isEmpty() || type.isEmpty() || brand.isEmpty() || !ok) {
+        QMessageBox::warning(this, "Input Error", "All fields (Name, Type, Brand, Quantity) must be filled correctly.");
+        return;
+    }
+
+    auto startsWithUpper = [](const QString& str) {
+        return !str.isEmpty() && str[0].isUpper();
+    };
+    if (!startsWithUpper(name) || !startsWithUpper(type) || !startsWithUpper(brand)) {
+        QMessageBox::warning(this, "Input Error", "Name, Type, and Brand must start with an uppercase letter.");
+        return;
+    }
+
     if (!ok || quantity <= 0) {
-        QMessageBox::warning(this, "Validation Error", "Please enter a valid quantity (positive number).");
+        QMessageBox::warning(this, "Input Error", "Quantity must be a positive number greater than zero.");
         return;
     }
 
-    // Check purchase date is not in the future
-    if (purchaseDate > QDate::currentDate()) {
-        QMessageBox::warning(this, "Validation Error", "Purchase date cannot be in the future.");
+    if (purchase_date > currentDate) {
+        QMessageBox::warning(this, "Input Error", "Purchase date cannot be in the future.");
         return;
     }
 
-    // Add resource
-    bool success = resourceManager->addResource(name, type, brand, quantity, purchaseDate, imageData);
+    if (imageData.isEmpty()) {
+        QMessageBox::warning(this, "Input Error", "Please select an image.");
+        return;
+    }
 
-    if (success) {
-        QMessageBox::information(this, "Success", "Resource added successfully");
-        // Clear form
+    // Prepare Clarifai API request
+    QNetworkRequest request(QUrl("https://api.clarifai.com/v2/models/aaa03c23b3724a16a56b629203edc62c/outputs"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Authorization", "Key 5deb057118f94dc8ac2dcd74b1047592"); // Replace with your Clarifai API key
+
+    QJsonObject imageObject;
+    imageObject["base64"] = QString(imageData.toBase64());
+    QJsonObject dataObject;
+    dataObject["image"] = imageObject;
+    QJsonObject inputObject;
+    inputObject["data"] = dataObject;
+    QJsonArray inputsArray;
+    inputsArray.append(inputObject);
+    QJsonObject requestObject;
+    requestObject["inputs"] = inputsArray;
+    QJsonDocument doc(requestObject);
+    QByteArray jsonData = doc.toJson();
+    //qDebug() << "JSON Payload:" << QString(jsonData);
+    QNetworkReply *reply = networkManager->post(request, jsonData);
+    reply->setProperty("resourceName", name);
+    reply->setProperty("type", type);
+    reply->setProperty("brand", brand);
+    reply->setProperty("quantity", quantity);
+    reply->setProperty("purchaseDate", purchase_date.toString("yyyy-MM-dd"));
+    qDebug() << "Sent image analysis request to Clarifai API";
+}
+
+void MainWindow::on_imageAnalysisFinished(QNetworkReply *reply)
+{
+    if (reply->error() != QNetworkReply::NoError) {
+        QByteArray responseData = reply->readAll();
+        QString responseString = QString::fromUtf8(responseData);
+        QMessageBox::warning(this, "API Error",
+                             "Failed to analyze image: " + reply->errorString() + "\nServer response: " + responseString);
+        qDebug() << "API request failed:" << reply->errorString();
+        qDebug() << "Server response:" << responseString;
+        reply->deleteLater();
+        return;
+    }
+
+    QByteArray responseData = reply->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(responseData);
+    QJsonObject jsonObj = doc.object();
+    QString resourceName = reply->property("resourceName").toString().toLower();
+    bool matchFound = false;
+    QJsonArray outputs = jsonObj["outputs"].toArray();
+    if (!outputs.isEmpty()) {
+        QJsonObject output = outputs[0].toObject();
+        QJsonObject data = output["data"].toObject();
+        QJsonArray concepts = data["concepts"].toArray();
+        qDebug() << "Resource name to match:" << resourceName;
+        qDebug() << "Detected concepts:";
+        for (const QJsonValue &value : concepts) {
+            QJsonObject concept = value.toObject();
+            QString detectedName = concept["name"].toString().toLower();
+            double confidence = concept["value"].toDouble();
+            qDebug() << "- Name:" << detectedName << "Confidence:" << confidence;
+            if (detectedName == resourceName) {
+                matchFound = true;
+                break;
+            }
+        }
+    } else {
+        qDebug() << "No concepts detected in the image.";
+    }
+    if (!matchFound) {
+        QMessageBox::warning(this, "Mismatch Error", "The picture you added does not match the resource name '" + resourceName + "'.");
+        reply->deleteLater();
+        return;
+    }
+    Resource resource;
+    resource.setName(reply->property("resourceName").toString());
+    resource.setType(reply->property("type").toString());
+    resource.setBrand(reply->property("brand").toString());
+    resource.setQuantity(reply->property("quantity").toInt());
+    resource.setPurchaseDate(QDate::fromString(reply->property("purchaseDate").toString(), "yyyy-MM-dd"));
+    resource.setImage(imageData);
+    if (resource.addResource(/*employeeName*/"Admin")) {
+        //qDebug() << "Resource added successfully by " << employeeName;
+        QMessageBox::information(this, "Success", "Resource added successfully!");
         ui->nameLineEdit->clear();
         ui->typeComboBox->setCurrentIndex(0);
         ui->brandLineEdit->clear();
-        ui->quantityLineEdit->setText("1");
+        ui->quantityLineEdit->clear();
         ui->purchaseDateEdit->setDate(QDate::currentDate());
+        imageData.clear();
         ui->lblImagePreview->clear();
-        this->imageData.clear();
-        // Refresh table
         resourceManager->updateTable(ui->tableWidget);
-        // Update statistics
         updateResourceChart();
-        // Add notification
-        notificationManager->addNotification(
-            "Resource Added", 
-            "New resource: " + name, 
-            "Added at " + QDateTime::currentDateTime().toString(),
-            -1
-        );
     } else {
-        QMessageBox::critical(this, "Error", "Failed to add resource. Check the database connection.");
+        qDebug() << "Failed to add resource:" << QSqlQuery().lastError().text();
+        QMessageBox::warning(this, "Error", "Failed to add resource: " + QSqlQuery().lastError().text());
     }
+    reply->deleteLater();
 }
 
 void MainWindow::on_btnSelectImage_clicked()
@@ -2765,25 +2865,188 @@ void MainWindow::on_deleteButton_clicked()
     }
 }
 
-void MainWindow::on_exportPdfButton_clicked()
-{
-    QString filePath = QFileDialog::getSaveFileName(
-        this,
-        "Export Resources to PDF",
-        "",
-        "PDF Files (*.pdf)"
-    );
-    
-    if (!filePath.isEmpty()) {
-        if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) {
-            filePath += ".pdf";
+void MainWindow::on_exportPdfButton_clicked() {
+    // Refresh the table with all data (no filter)
+    //refreshTableWidget("");
+    qDebug() << "Table row count before export:" << ui->tableWidget->rowCount();
+
+    // Prompt the user to choose a save location for the PDF
+    QString filePath = QFileDialog::getSaveFileName(this, "Save PDF", QDir::homePath() + "/resources.pdf", "PDF Files (*.pdf)");
+    if (filePath.isEmpty()) {
+        qDebug() << "PDF export canceled by user.";
+        return;
+    }
+
+    // Ensure the file has a .pdf extension
+    if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) {
+        filePath += ".pdf";
+    }
+
+    // Check if file is writable to avoid issues later
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::warning(this, "PDF Export Error", "Cannot write to the selected file location.");
+        qDebug() << "Failed to open file for writing:" << filePath;
+        return;
+    }
+    file.close(); // Close it since QPrinter will handle writing
+
+    // Set up the QPrinter for PDF output
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(filePath);
+    printer.setPageSize(QPageSize(QPageSize::A4));
+    printer.setPageMargins(QMarginsF(15, 50, 15, 15), QPageLayout::Millimeter);
+
+    // Set up the QPainter to draw on the PDF
+    QPainter painter(&printer);
+    if (!painter.isActive()) {
+        QMessageBox::warning(this, "PDF Export Error", "Failed to initialize PDF painter.");
+        qDebug() << "Failed to initialize QPainter for PDF export.";
+        return;
+    }
+
+    // Get the page dimensions in pixels
+    QRectF pageRect = printer.pageRect(QPrinter::DevicePixel);
+    int pageWidth = pageRect.width();
+    int pageHeight = pageRect.height();
+    qDebug() << "Page dimensions:" << pageWidth << "x" << pageHeight;
+
+    // Define layout constants
+    const int tableMargin = 100;
+    const int rowHeight = 700; // Increased to 500 for taller rows (was 400)
+    const int fontSize = 10;   // Increased font size for better readability (was 9)
+    const int headerFontSize = 12; // Increased header font size (was 11)
+    const int imageSize = 600; // Increased to 300 for larger images (was 200)
+    const int textPadding = 30; // Increased padding for better spacing (was 25)
+
+    // Calculate column widths dynamically based on page width
+    const int numColumns = ui->tableWidget->columnCount();
+    int totalTableWidth = pageWidth - 2 * tableMargin;
+    int colWidths[] = {40, 100, 100, 100, 100, 100, 200}; // Adjusted widths: Quantity (index 4) to 100, Image (index 6) to 350
+    int totalDefinedWidth = 0;
+    for (int colWidth : colWidths) {
+        totalDefinedWidth += colWidth;
+    }
+    double scaleFactor = static_cast<double>(totalTableWidth) / totalDefinedWidth;
+    for (int &colWidth : colWidths) {
+        colWidth = static_cast<int>(colWidth * scaleFactor);
+    }
+
+    // Center the table on the page
+    totalTableWidth = 0;
+    for (int colWidth : colWidths) {
+        totalTableWidth += colWidth;
+    }
+    int tableMarginAdjusted = (pageWidth - totalTableWidth) / 2;
+
+    // Set up fonts
+    QFont font("Arial", fontSize);
+    QFont headerFont("Arial", headerFontSize, QFont::Bold);
+    painter.setFont(font);
+
+    // Draw the title and timestamp
+    painter.setFont(QFont("Arial", 14, QFont::Bold));
+    painter.drawText(tableMarginAdjusted, 150, "Resource Management System - Exported Data"); // Uncommented for better presentation
+    painter.setFont(QFont("Arial", 10));
+    painter.drawText(tableMarginAdjusted, 350, "Exported on: " + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+    int y = 250;
+
+    // Draw the table headers
+    int x = tableMarginAdjusted;
+    painter.setFont(headerFont);
+    for (int col = 0; col < numColumns; ++col) {
+        QString headerText = ui->tableWidget->horizontalHeaderItem(col)->text();
+        QRect headerRect(x, y, colWidths[col], rowHeight);
+        QRect textRect(x, y + textPadding, colWidths[col], rowHeight - 2 * textPadding);
+        painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, headerText);
+        painter.drawRect(headerRect);
+        x += colWidths[col];
+    }
+    y += rowHeight;
+
+    // Set the font back to normal for the table data
+    painter.setFont(font);
+
+    // Draw the table data
+    for (int row = 0; row < ui->tableWidget->rowCount(); ++row) {
+        x = tableMarginAdjusted;
+
+        // Add alternating row colors
+        if (row % 2 == 0) {
+            painter.fillRect(QRect(tableMarginAdjusted, y, totalTableWidth, rowHeight), QBrush(QColor(240, 240, 240)));
         }
-        
-        if (resourceManager->exportToPdf(filePath)) {
-            QMessageBox::information(this, "Success", "Resources exported to PDF successfully");
-        } else {
-            QMessageBox::critical(this, "Error", "Failed to export resources to PDF");
+
+        for (int col = 0; col < numColumns; ++col) {
+            QTableWidgetItem *item = ui->tableWidget->item(row, col);
+            QRect cellRect(x, y, colWidths[col], rowHeight);
+            QRect textRect(x, y + textPadding, colWidths[col], rowHeight - 2 * textPadding);
+
+            if (col == 6) { // Image column
+                if (item) {
+                    QVariant imageData = item->data(Qt::DecorationRole);
+                    if (imageData.canConvert<QPixmap>()) {
+                        QPixmap pixmap = imageData.value<QPixmap>();
+                        if (!pixmap.isNull()) {
+                            QPixmap scaledPixmap = pixmap.scaled(imageSize, imageSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                            int imageX = x + (colWidths[col] - imageSize) / 2; // Center horizontally
+                            int imageY = y + (rowHeight - imageSize) / 2;      // Center vertically
+                            painter.drawPixmap(imageX, imageY, scaledPixmap);
+                            qDebug() << "Image rendered successfully for row" << row;
+                        } else {
+                            painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, "Image Load Failed");
+                            qDebug() << "Image is null for row" << row;
+                        }
+                    } else {
+                        painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, "No Image Data");
+                        qDebug() << "No image data for row" << row;
+                    }
+                } else {
+                    painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, "No Item");
+                    qDebug() << "No item in image column for row" << row;
+                }
+            } else { // Text columns
+                QString text = item ? item->text() : "";
+                painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
+            }
+
+            painter.drawRect(cellRect);
+            x += colWidths[col];
         }
+
+        y += rowHeight;
+
+        // Check if we need a new page
+        if (y > pageHeight - tableMargin) {
+            printer.newPage();
+            y = tableMargin;
+
+            // Redraw the headers on the new page
+            x = tableMarginAdjusted;
+            painter.setFont(headerFont);
+            for (int col = 0; col < numColumns; ++col) {
+                QString headerText = ui->tableWidget->horizontalHeaderItem(col)->text();
+                QRect headerRect(x, y, colWidths[col], rowHeight);
+                QRect textRect(x, y + textPadding, colWidths[col], rowHeight - 2 * textPadding);
+                painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, headerText);
+                painter.drawRect(headerRect);
+                x += colWidths[col];
+            }
+            y += rowHeight;
+            painter.setFont(font);
+        }
+    }
+
+    // Finish painting and save the PDF
+    painter.end();
+
+    // Verify the file was written
+    if (QFile::exists(filePath)) {
+        QMessageBox::information(this, "PDF Export", "Table data has been successfully exported to " + filePath);
+        qDebug() << "PDF exported to:" << filePath;
+    } else {
+        QMessageBox::warning(this, "PDF Export Error", "Failed to save the PDF file.");
+        qDebug() << "PDF export failed: File not found at" << filePath;
     }
 }
 

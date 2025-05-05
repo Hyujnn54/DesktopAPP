@@ -78,9 +78,6 @@ constexpr auto qt_meta_stringdata_CLASSMainWindowENDCLASS = QtMocHelpers::string
     "on_chatClearButton_clicked",
     "processUserInput",
     "input",
-    "onAIResponseReceived",
-    "QNetworkReply*",
-    "reply",
     "on_employeeSearchChanged",
     "text",
     "on_resetSearchButton_clicked",
@@ -112,6 +109,9 @@ constexpr auto qt_meta_stringdata_CLASSMainWindowENDCLASS = QtMocHelpers::string
     "on_employeeToggleLegendCheckBox_toggled",
     "checked",
     "on_confirmFormButton_clicked",
+    "on_imageAnalysisFinished",
+    "QNetworkReply*",
+    "reply",
     "on_btnSelectImage_clicked",
     "on_cancelFormButton_clicked",
     "on_updateButton_clicked",
@@ -160,34 +160,34 @@ Q_CONSTINIT static const uint qt_meta_data_CLASSMainWindowENDCLASS[] = {
       14,    0,  363,    2, 0x08,   13 /* Private */,
       15,    1,  364,    2, 0x08,   14 /* Private */,
       17,    1,  367,    2, 0x08,   16 /* Private */,
-      20,    1,  370,    2, 0x08,   18 /* Private */,
-      22,    0,  373,    2, 0x08,   20 /* Private */,
-      23,    0,  374,    2, 0x08,   21 /* Private */,
-      24,    0,  375,    2, 0x08,   22 /* Private */,
-      25,    0,  376,    2, 0x08,   23 /* Private */,
-      26,    0,  377,    2, 0x08,   24 /* Private */,
-      27,    0,  378,    2, 0x08,   25 /* Private */,
-      28,    0,  379,    2, 0x08,   26 /* Private */,
-      29,    0,  380,    2, 0x08,   27 /* Private */,
-      30,    1,  381,    2, 0x08,   28 /* Private */,
-      31,    1,  384,    2, 0x08,   30 /* Private */,
-      32,    1,  387,    2, 0x08,   32 /* Private */,
-      33,    1,  390,    2, 0x08,   34 /* Private */,
-      34,    1,  393,    2, 0x08,   36 /* Private */,
-      35,    0,  396,    2, 0x08,   38 /* Private */,
-      36,    0,  397,    2, 0x08,   39 /* Private */,
-      37,    0,  398,    2, 0x08,   40 /* Private */,
-      38,    1,  399,    2, 0x08,   41 /* Private */,
-      40,    1,  402,    2, 0x08,   43 /* Private */,
-      41,    1,  405,    2, 0x08,   45 /* Private */,
-      42,    1,  408,    2, 0x08,   47 /* Private */,
-      43,    1,  411,    2, 0x08,   49 /* Private */,
-      44,    1,  414,    2, 0x08,   51 /* Private */,
-      45,    0,  417,    2, 0x08,   53 /* Private */,
-      46,    1,  418,    2, 0x08,   54 /* Private */,
-      47,    1,  421,    2, 0x08,   56 /* Private */,
-      48,    1,  424,    2, 0x08,   58 /* Private */,
-      50,    0,  427,    2, 0x08,   60 /* Private */,
+      19,    0,  370,    2, 0x08,   18 /* Private */,
+      20,    0,  371,    2, 0x08,   19 /* Private */,
+      21,    0,  372,    2, 0x08,   20 /* Private */,
+      22,    0,  373,    2, 0x08,   21 /* Private */,
+      23,    0,  374,    2, 0x08,   22 /* Private */,
+      24,    0,  375,    2, 0x08,   23 /* Private */,
+      25,    0,  376,    2, 0x08,   24 /* Private */,
+      26,    0,  377,    2, 0x08,   25 /* Private */,
+      27,    1,  378,    2, 0x08,   26 /* Private */,
+      28,    1,  381,    2, 0x08,   28 /* Private */,
+      29,    1,  384,    2, 0x08,   30 /* Private */,
+      30,    1,  387,    2, 0x08,   32 /* Private */,
+      31,    1,  390,    2, 0x08,   34 /* Private */,
+      32,    0,  393,    2, 0x08,   36 /* Private */,
+      33,    0,  394,    2, 0x08,   37 /* Private */,
+      34,    0,  395,    2, 0x08,   38 /* Private */,
+      35,    1,  396,    2, 0x08,   39 /* Private */,
+      37,    1,  399,    2, 0x08,   41 /* Private */,
+      38,    1,  402,    2, 0x08,   43 /* Private */,
+      39,    1,  405,    2, 0x08,   45 /* Private */,
+      40,    1,  408,    2, 0x08,   47 /* Private */,
+      41,    1,  411,    2, 0x08,   49 /* Private */,
+      42,    0,  414,    2, 0x08,   51 /* Private */,
+      43,    1,  415,    2, 0x08,   52 /* Private */,
+      44,    1,  418,    2, 0x08,   54 /* Private */,
+      45,    1,  421,    2, 0x08,   56 /* Private */,
+      47,    0,  424,    2, 0x08,   58 /* Private */,
+      48,    1,  425,    2, 0x08,   59 /* Private */,
       51,    0,  428,    2, 0x08,   61 /* Private */,
       52,    0,  429,    2, 0x08,   62 /* Private */,
       53,    0,  430,    2, 0x08,   63 /* Private */,
@@ -217,8 +217,7 @@ Q_CONSTINIT static const uint qt_meta_data_CLASSMainWindowENDCLASS[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QString,   16,
-    QMetaType::Void, 0x80000000 | 18,   19,
-    QMetaType::Void, QMetaType::QString,   21,
+    QMetaType::Void, QMetaType::QString,   18,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -227,37 +226,38 @@ Q_CONSTINIT static const uint qt_meta_data_CLASSMainWindowENDCLASS[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Bool,
-    QMetaType::Void, QMetaType::QString,   21,
-    QMetaType::Void, QMetaType::QString,   21,
-    QMetaType::Void, QMetaType::QString,   21,
-    QMetaType::Void, QMetaType::QString,   21,
-    QMetaType::Void, QMetaType::QString,   21,
+    QMetaType::Void, QMetaType::QString,   18,
+    QMetaType::Void, QMetaType::QString,   18,
+    QMetaType::Void, QMetaType::QString,   18,
+    QMetaType::Void, QMetaType::QString,   18,
+    QMetaType::Void, QMetaType::QString,   18,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,   39,
-    QMetaType::Void, QMetaType::Int,   39,
-    QMetaType::Void, QMetaType::Int,   39,
-    QMetaType::Void, QMetaType::Int,   39,
-    QMetaType::Void, QMetaType::Int,   39,
-    QMetaType::Void, QMetaType::Int,   39,
+    QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void, QMetaType::Int,   36,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,   39,
-    QMetaType::Void, QMetaType::Int,   39,
-    QMetaType::Void, QMetaType::Bool,   49,
+    QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void, QMetaType::Int,   36,
+    QMetaType::Void, QMetaType::Bool,   46,
     QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   21,
+    QMetaType::Void, 0x80000000 | 49,   50,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,   39,
+    QMetaType::Void, QMetaType::QString,   18,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,   36,
     QMetaType::Void,
     QMetaType::Void,
 
@@ -301,9 +301,6 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         // method 'processUserInput'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
-        // method 'onAIResponseReceived'
-        QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<QNetworkReply *, std::false_type>,
         // method 'on_employeeSearchChanged'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
@@ -375,6 +372,9 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<bool, std::false_type>,
         // method 'on_confirmFormButton_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'on_imageAnalysisFinished'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<QNetworkReply *, std::false_type>,
         // method 'on_btnSelectImage_clicked'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'on_cancelFormButton_clicked'
@@ -428,36 +428,36 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 10: _t->on_chatSendButton_clicked(); break;
         case 11: _t->on_chatClearButton_clicked(); break;
         case 12: _t->processUserInput((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 13: _t->onAIResponseReceived((*reinterpret_cast< std::add_pointer_t<QNetworkReply*>>(_a[1]))); break;
-        case 14: _t->on_employeeSearchChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 15: _t->on_resetSearchButton_clicked(); break;
-        case 16: _t->on_addButton_clicked(); break;
-        case 17: _t->on_deleteBtn_clicked(); break;
-        case 18: _t->on_modifyBtn_clicked(); break;
-        case 19: _t->on_downloadBtn_clicked(); break;
-        case 20: _t->on_selectImageButton_clicked(); break;
-        case 21: _t->on_generateQRCodeBtn_clicked(); break;
-        case 22: { bool _r = _t->validateEmployeeInput();
+        case 13: _t->on_employeeSearchChanged((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 14: _t->on_resetSearchButton_clicked(); break;
+        case 15: _t->on_addButton_clicked(); break;
+        case 16: _t->on_deleteBtn_clicked(); break;
+        case 17: _t->on_modifyBtn_clicked(); break;
+        case 18: _t->on_downloadBtn_clicked(); break;
+        case 19: _t->on_selectImageButton_clicked(); break;
+        case 20: _t->on_generateQRCodeBtn_clicked(); break;
+        case 21: { bool _r = _t->validateEmployeeInput();
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 23: _t->validateCIN((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 24: _t->validateName((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 25: _t->validatePhone((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 26: _t->validateEmail((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 27: _t->validateSalary((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 28: _t->on_clientChartRefreshButton_clicked(); break;
-        case 29: _t->on_trainingChartRefreshButton_clicked(); break;
-        case 30: _t->on_meetingChartRefreshButton_clicked(); break;
-        case 31: _t->on_clientChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 32: _t->on_trainingChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 33: _t->on_meetingChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 34: _t->on_clientChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 35: _t->on_trainingChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 36: _t->on_meetingChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 37: _t->on_employeeChartRefreshButton_clicked(); break;
-        case 38: _t->on_employeeChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 39: _t->on_employeeChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
-        case 40: _t->on_employeeToggleLegendCheckBox_toggled((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
-        case 41: _t->on_confirmFormButton_clicked(); break;
+        case 22: _t->validateCIN((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 23: _t->validateName((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 24: _t->validatePhone((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 25: _t->validateEmail((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 26: _t->validateSalary((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 27: _t->on_clientChartRefreshButton_clicked(); break;
+        case 28: _t->on_trainingChartRefreshButton_clicked(); break;
+        case 29: _t->on_meetingChartRefreshButton_clicked(); break;
+        case 30: _t->on_clientChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 31: _t->on_trainingChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 32: _t->on_meetingChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 33: _t->on_clientChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 34: _t->on_trainingChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 35: _t->on_meetingChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 36: _t->on_employeeChartRefreshButton_clicked(); break;
+        case 37: _t->on_employeeChartTypeComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 38: _t->on_employeeChartFilterComboBox_currentIndexChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 39: _t->on_employeeToggleLegendCheckBox_toggled((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
+        case 40: _t->on_confirmFormButton_clicked(); break;
+        case 41: _t->on_imageAnalysisFinished((*reinterpret_cast< std::add_pointer_t<QNetworkReply*>>(_a[1]))); break;
         case 42: _t->on_btnSelectImage_clicked(); break;
         case 43: _t->on_cancelFormButton_clicked(); break;
         case 44: _t->on_updateButton_clicked(); break;
