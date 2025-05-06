@@ -704,62 +704,93 @@ void ClientManager::updateCalendarConsultations()
 
 void ClientManager::exportClientsToPdf()
 {
-    QString fileName = QFileDialog::getSaveFileName(nullptr, "Save PDF", "Clients.pdf", "PDF Files (*.pdf)");
+    QString fileName = QFileDialog::getSaveFileName(nullptr, "Export PDF", "", "PDF Files (*.pdf)");
     if (fileName.isEmpty()) {
         return;
     }
+
     QPdfWriter pdfWriter(fileName);
-    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
-    pdfWriter.setPageMargins(QMarginsF(50, 50, 50, 50)); // Increased margins
+    pdfWriter.setPageSize(QPageSize::A4);
+    pdfWriter.setPageMargins(QMarginsF(20, 20, 20, 20));
+    pdfWriter.setResolution(300);
+
     QPainter painter(&pdfWriter);
-    QFont regularFont("Arial", 16); // Larger font
-    QFont headerFont("Arial", 20, QFont::Bold); // Larger header font
-    QFont titleFont("Arial", 32, QFont::Bold); // Larger title font
-    int pageWidth = pdfWriter.width();
-    int tableWidth = pageWidth - 100; // Adjusted for larger margins
-    int rowHeight = 80; // Increased row height
-    int cellPadding = 24; // Increased padding
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    const qreal scaleFactor = pdfWriter.logicalDpiX() / 72.0;
+    const qreal mmToPoints = 2.83465;
+    const qreal margin = 20 * mmToPoints * scaleFactor;
+    const qreal pageWidth = pdfWriter.width() - 2 * margin;
+    const qreal pageHeight = pdfWriter.height() - 2 * margin;
+
+    QFont titleFont("Arial", 14, QFont::Bold);
+    QFont headerFont("Arial", 10, QFont::Bold);
+    QFont bodyFont("Arial", 9);
+    QFont summaryFont("Arial", 11, QFont::Bold);
+
     painter.setFont(titleFont);
-    painter.drawText(50, 100, "Client List"); // Adjusted Y position
-    painter.setFont(headerFont);
-    painter.drawText(50, 160, QString("Generated on %1").arg(QDate::currentDate().toString("yyyy-MM-dd"))); // Adjusted Y position
-    QStringList headers = {"Name", "Sector", "Contact", "Email", "Consultation Date", "Consultant"};
-    QVector<qreal> columnWidths = {0.2, 0.15, 0.15, 0.15, 0.2, 0.15};
-    int y = 220; // Adjusted starting Y position
-    painter.setFont(headerFont);
-    int x = 50; // Adjusted X position
-    QRect headerRect(50, y, tableWidth, rowHeight);
-    painter.fillRect(headerRect, QColor(230, 230, 230));
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawRect(headerRect);
+    painter.setPen(Qt::darkBlue);
+    QString title = "Client Management System Report";
+    QString date = QDate::currentDate().toString("MMMM d, yyyy");
+    QString headerText = QString("%1\nGenerated on: %2").arg(title, date);
+    painter.drawText(QRectF(margin, margin, pageWidth, 50 * scaleFactor), Qt::AlignCenter, headerText);
+
+    qreal yPos = margin + 60 * scaleFactor;
+
+    QStringList headers = {"Name", "Sector", "Contact", "Email", "Date & Time", "Consultant"};
+    qreal columnWidths[] = {1.5, 1.5, 1.2, 2.8, 1.5, 1.6};
+    qreal totalWidthUnits = 0;
+    for (qreal width : columnWidths) totalWidthUnits += width;
+    qreal tableWidth = pageWidth;
+    qreal rowHeight = 30 * scaleFactor;
+
+    QVector<qreal> actualWidths(headers.size());
+    qreal accumulatedWidth = margin;
     for (int i = 0; i < headers.size(); ++i) {
-        int colWidth = tableWidth * columnWidths[i];
-        QRect cellRect(x, y, colWidth, rowHeight);
-        painter.drawRect(cellRect);
-        painter.drawText(cellRect.adjusted(cellPadding, 0, -cellPadding, 0), Qt::AlignVCenter | Qt::AlignLeft, headers[i]);
-        x += colWidth;
+        actualWidths[i] = (columnWidths[i] / totalWidthUnits) * tableWidth;
     }
-    y += rowHeight;
-    painter.setFont(regularFont);
+
+    painter.setFont(headerFont);
+    painter.setBrush(QBrush(QColor(200, 220, 255)));
+    painter.setPen(Qt::black);
+    painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
+    for (int i = 0; i < headers.size(); ++i) {
+        painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
+                         Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+        accumulatedWidth += actualWidths[i];
+    }
+    yPos += rowHeight;
+
     int rowCount = clientProxyModel->rowCount();
-    if (rowCount == 0) {
-        QRect noDataRect(50, y, tableWidth, rowHeight);
-        painter.drawRect(noDataRect);
-        painter.drawText(noDataRect, Qt::AlignCenter, "No clients to display.");
-        painter.end();
-        return;
-    }
-    QColor altRowColor(245, 245, 245);
+    int colCount = headers.size();
+    int pageNumber = 1;
+
+    painter.setFont(bodyFont);
+    painter.setBrush(Qt::NoBrush);
     for (int row = 0; row < rowCount; ++row) {
-        if (row % 2 == 1) {
-            QRect rowRect(50, y, tableWidth, rowHeight);
-            painter.fillRect(rowRect, altRowColor);
+        if (yPos + rowHeight > pageHeight - margin) {
+            painter.setFont(bodyFont);
+            painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
+                             Qt::AlignRight, QString("Page %1").arg(pageNumber++));
+
+            pdfWriter.newPage();
+            yPos = margin;
+
+            painter.setFont(headerFont);
+            painter.setBrush(QBrush(QColor(200, 220, 255)));
+            accumulatedWidth = margin;
+            painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
+            for (int i = 0; i < headers.size(); ++i) {
+                painter.drawText(QRectF(accumulatedWidth, yPos, actualWidths[i], rowHeight),
+                                 Qt::AlignCenter | Qt::TextWordWrap, headers[i]);
+                accumulatedWidth += actualWidths[i];
+            }
+            yPos += rowHeight;
         }
-        x = 50;
-        for (int col = 0; col < headers.size(); ++col) {
-            int colWidth = tableWidth * columnWidths[col];
-            QRect cellRect(x, y, colWidth, rowHeight);
-            painter.drawRect(cellRect);
+
+        accumulatedWidth = margin;
+        painter.drawRect(QRectF(margin, yPos, tableWidth, rowHeight));
+        for (int col = 0; col < colCount; ++col) {
             QString text = clientProxyModel->data(clientProxyModel->index(row, col)).toString();
             if (col == 4 && !text.isEmpty()) {
                 QDateTime dateTime = clientProxyModel->data(clientProxyModel->index(row, col)).toDateTime();
@@ -767,31 +798,54 @@ void ClientManager::exportClientsToPdf()
                     text = dateTime.toString("yyyy-MM-dd HH:mm");
                 }
             }
-            painter.drawText(cellRect.adjusted(cellPadding, 0, -cellPadding, 0), Qt::AlignVCenter | Qt::AlignLeft, text);
-            x += colWidth;
+            QRectF textRect(accumulatedWidth + 2 * scaleFactor, yPos, actualWidths[col] - 4 * scaleFactor, rowHeight);
+            painter.drawText(textRect, Qt::AlignCenter | Qt::TextWordWrap, text);
+            accumulatedWidth += actualWidths[col];
         }
-        y += rowHeight;
-        if (y > pdfWriter.height() - 120) { // Adjusted for larger margins
-            pdfWriter.newPage();
-            y = 100; // Reset Y position
-            painter.setFont(headerFont);
-            x = 50;
-            QRect headerRect(50, y, tableWidth, rowHeight);
-            painter.fillRect(headerRect, QColor(230, 230, 230));
-            painter.drawRect(headerRect);
-            for (int i = 0; i < headers.size(); ++i) {
-                int colWidth = tableWidth * columnWidths[i];
-                QRect cellRect(x, y, colWidth, rowHeight);
-                painter.drawRect(cellRect);
-                painter.drawText(cellRect.adjusted(cellPadding, 0, -cellPadding, 0), Qt::AlignVCenter | Qt::AlignLeft, headers[i]);
-                x += colWidth;
-            }
-            y += rowHeight;
-            painter.setFont(regularFont);
-        }
+        yPos += rowHeight;
     }
+
+    painter.setFont(bodyFont);
+    painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
+                     Qt::AlignRight, QString("Page %1").arg(pageNumber));
+
+    yPos += 20 * scaleFactor;
+    if (yPos + 60 * scaleFactor < pageHeight - margin) {
+        painter.setFont(summaryFont);
+        painter.setPen(Qt::darkGreen);
+        QDateTime start = QDateTime::currentDateTime().addDays(-30);
+        QDateTime end = QDateTime::currentDateTime();
+        int totalConsultations = clientProxyModel->rowCount(); // Placeholder, replace with actual method if available
+        int uniqueClients = clientProxyModel->rowCount(); // Placeholder, replace with actual method if available
+        QString summary = QString("Summary (Last 30 Days):\n"
+                                  "Total Consultations: %1\n"
+                                  "Unique Clients: %2")
+                              .arg(totalConsultations)
+                              .arg(uniqueClients);
+        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
+    } else {
+        pdfWriter.newPage();
+        yPos = margin;
+        painter.setFont(summaryFont);
+        painter.setPen(Qt::darkGreen);
+        QDateTime start = QDateTime::currentDateTime().addDays(-30);
+        QDateTime end = QDateTime::currentDateTime();
+        int totalConsultations = clientProxyModel->rowCount(); // Placeholder, replace with actual method if available
+        int uniqueClients = clientProxyModel->rowCount(); // Placeholder, replace with actual method if available
+        QString summary = QString("Summary (Last 30 Days):\n"
+                                  "Total Consultations: %1\n"
+                                  "Unique Clients: %2")
+                              .arg(totalConsultations)
+                              .arg(uniqueClients);
+        painter.drawText(QRectF(margin, yPos, pageWidth, 60 * scaleFactor), Qt::AlignLeft, summary);
+        painter.setFont(bodyFont);
+        painter.setPen(Qt::black);
+        painter.drawText(QRectF(margin, pageHeight + margin - 10 * scaleFactor, pageWidth, 10 * scaleFactor),
+                         Qt::AlignRight, QString("Page %1").arg(pageNumber + 1));
+    }
+
     painter.end();
-    QMessageBox::information(nullptr, "Success", "Clients exported to PDF successfully!");
+    QMessageBox::information(nullptr, "Success", "PDF exported successfully to " + fileName);
     if (notificationManager) {
         notificationManager->addNotification("PDF Exported", "Client Section", "Client list exported to " + fileName, -1);
     }

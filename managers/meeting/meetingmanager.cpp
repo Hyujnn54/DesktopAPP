@@ -373,125 +373,126 @@ void MeetingManager::handleExportPdfButtonClick()
 
 void MeetingManager::exportAllMeetingsToPdf()
 {
-    QString fileName = QFileDialog::getSaveFileName(nullptr, "Save PDF", "Meetings.pdf", "PDF Files (*.pdf)");
-    if (fileName.isEmpty()) {
+    // Check if a meeting is selected in the table
+    int selectedRow = ui->meetingTableWidget->currentRow();
+    if (selectedRow < 0) {
+        QMessageBox::warning(nullptr, "Error", "Please select a meeting to export.");
         return;
     }
+
+    // Prompt user to save the PDF
+    QString fileName = QFileDialog::getSaveFileName(nullptr, "Save PDF",
+                                                    "Meeting_" + ui->meetingTableWidget->item(selectedRow, 1)->text() + ".pdf",
+                                                    "PDF Files (*.pdf)");
+    if (fileName.isEmpty()) {
+        return; // User canceled the dialog
+    }
+
+    // Set up the PDF writer
     QPdfWriter pdfWriter(fileName);
-    pdfWriter.setPageSize(QPageSize(QPageSize::A4));
-    pdfWriter.setPageMargins(QMarginsF(50, 50, 50, 50)); // Increased margins
+    pdfWriter.setPageSize(QPageSize::A4);
+    pdfWriter.setResolution(300); // High resolution for clarity
+
+    // Start painting on the PDF
     QPainter painter(&pdfWriter);
+    painter.setPen(Qt::black);
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setRenderHint(QPainter::TextAntialiasing, true);
 
-    // Font setup with fallback
-    QFont regularFont("Helvetica", 16); // Use Helvetica as a reliable fallback
-    if (!regularFont.exactMatch()) {
-        regularFont = QFont("Arial", 16);
-    }
-    QFont headerFont("Helvetica", 20, QFont::Bold);
-    if (!headerFont.exactMatch()) {
-        headerFont = QFont("Arial", 20, QFont::Bold);
-    }
-    QFont titleFont("Helvetica", 32, QFont::Bold);
+    // Define layout constants (in device units: 1/300 inch at 300 DPI)
+    const int margin = 500;       // Margin from edges
+    const int lineSpacing = 200;  // Space between lines
+    const int qrSize = 500;       // QR code size (1 inch at 300 DPI)
+    const int padding = 250;      // Padding between label and value
+    const int pageWidth = pdfWriter.width() - 2 * margin;
+    int yPos = margin;
+
+    // Title styling
+    QFont titleFont("Helvetica", 16, QFont::Bold);
     if (!titleFont.exactMatch()) {
-        titleFont = QFont("Arial", 32, QFont::Bold);
+        titleFont = QFont("Arial", 16, QFont::Bold);
     }
-
-    int pageWidth = pdfWriter.width();
-    int tableWidth = pageWidth - 100; // Adjusted for larger margins
-    int rowHeight = 80; // Increased row height
-    int cellPadding = 24; // Increased padding
-
     painter.setFont(titleFont);
-    painter.drawText(50, 100, "Meeting List"); // Adjusted Y position
-    painter.setFont(headerFont);
-    painter.drawText(50, 160, QString("Generated on %1").arg(QDate::currentDate().toString("yyyy-MM-dd"))); // Adjusted Y position
+    painter.setPen(QColor("#3A5DAE")); // Blue color for title
+    painter.drawText(margin, yPos, "Meeting Management System - Selected Meeting");
+    yPos += 300; // Space after title
 
-    QStringList headers = {"Title", "Organiser", "Participant", "Agenda", "Duration", "Date & Time"};
-    QVector<qreal> columnWidths = {0.2, 0.15, 0.15, 0.15, 0.1, 0.25};
-    int y = 220; // Adjusted starting Y position
-    painter.setFont(headerFont);
-    int x = 50; // Adjusted X position
-    QRect headerRect(50, y, tableWidth, rowHeight);
-    painter.fillRect(headerRect, QColor(230, 230, 230));
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawRect(headerRect);
-    x = 50;
-    for (int i = 0; i < headers.size(); ++i) {
-        int colWidth = tableWidth * columnWidths[i];
-        QRect cellRect(x, y, colWidth, rowHeight);
-        painter.drawRect(cellRect);
-        painter.drawText(cellRect.adjusted(cellPadding, 0, -cellPadding, 0), Qt::AlignVCenter | Qt::AlignLeft, headers[i]);
-        x += colWidth;
+    // Label and value fonts
+    QFont labelFont("Helvetica", 12, QFont::Bold);
+    if (!labelFont.exactMatch()) {
+        labelFont = QFont("Arial", 12, QFont::Bold);
     }
-    y += rowHeight;
-
-    painter.setFont(regularFont);
-    int visibleRowCount = 0;
-    for (int row = 0; row < ui->meetingTableWidget->rowCount(); ++row) {
-        if (!ui->meetingTableWidget->isRowHidden(row)) {
-            visibleRowCount++;
-            qDebug() << "Visible row" << row << "data:" << ui->meetingTableWidget->item(row, 1)->text(); // Debug output
-        }
-    }
-    if (visibleRowCount == 0) {
-        QRect noDataRect(50, y, tableWidth, rowHeight);
-        painter.drawRect(noDataRect);
-        painter.drawText(noDataRect, Qt::AlignCenter, "No meetings to display.");
-        painter.end();
-        QMessageBox::information(nullptr, "Export Complete", "PDF file created, but no meetings were available to display.");
-        return;
+    QFont valueFont("Helvetica", 10);
+    if (!valueFont.exactMatch()) {
+        valueFont = QFont("Arial", 10);
     }
 
-    QColor altRowColor(245, 245, 245);
-    int visibleRowIndex = 0;
-    for (int row = 0; row < ui->meetingTableWidget->rowCount(); ++row) {
-        if (ui->meetingTableWidget->isRowHidden(row)) {
-            continue;
-        }
-        if (visibleRowIndex % 2 == 1) {
-            QRect rowRect(50, y, tableWidth, rowHeight);
-            painter.fillRect(rowRect, altRowColor);
-        }
-        visibleRowIndex++;
-        x = 50;
-        for (int col = 1; col < 7; ++col) { // skip ID column (col 0)
-            int colWidth = tableWidth * columnWidths[col - 1];
-            QRect cellRect(x, y, colWidth, rowHeight);
-            painter.drawRect(cellRect);
-            QTableWidgetItem* item = ui->meetingTableWidget->item(row, col);
-            QString text = item ? item->text() : "";
-            if (!text.isEmpty() && col == 5 && !text.contains("min")) {
-                text += " min";
-            }
-            painter.drawText(cellRect.adjusted(cellPadding, 0, -cellPadding, 0), Qt::AlignVCenter | Qt::AlignLeft, text);
-            x += colWidth;
-        }
-        y += rowHeight;
-        if (y > pdfWriter.height() - 120) { // Adjusted for larger margins
-            pdfWriter.newPage();
-            y = 100; // Reset Y position
-            painter.setFont(headerFont);
-            x = 50;
-            QRect headerRect(50, y, tableWidth, rowHeight);
-            painter.fillRect(headerRect, QColor(230, 230, 230));
-            painter.drawRect(headerRect);
-            for (int i = 0; i < headers.size(); ++i) {
-                int colWidth = tableWidth * columnWidths[i];
-                QRect cellRect(x, y, colWidth, rowHeight);
-                painter.drawRect(cellRect);
-                painter.drawText(cellRect.adjusted(cellPadding, 0, -cellPadding, 0), Qt::AlignVCenter | Qt::AlignLeft, headers[i]);
-                x += colWidth;
-            }
-            y += rowHeight;
-            painter.setFont(regularFont);
+    // Extract the selected meeting's details from the table
+    QString id = ui->meetingTableWidget->item(selectedRow, 0)->text();
+    QString title = ui->meetingTableWidget->item(selectedRow, 1)->text();
+    QString organiser = ui->meetingTableWidget->item(selectedRow, 2)->text();
+    QString participant = ui->meetingTableWidget->item(selectedRow, 3)->text();
+    QString agenda = ui->meetingTableWidget->item(selectedRow, 4)->text();
+    QString duration = ui->meetingTableWidget->item(selectedRow, 5)->text();
+    if (!duration.contains("min")) {
+        duration += " min";
+    }
+    QString dateTimeStr = ui->meetingTableWidget->item(selectedRow, 6)->text();
+
+    // Draw meeting details vertically
+    QStringList labels = {"ID:", "Title:", "Organiser:", "Participant:", "Agenda:", "Duration:", "Date and Time:"};
+    QStringList values = {id, title, organiser, participant, agenda, duration, dateTimeStr};
+
+    // Find the widest label to align values consistently
+    int maxLabelWidth = 0;
+    QFontMetrics fmLabel(labelFont);
+    for (const QString& label : labels) {
+        int labelWidth = fmLabel.horizontalAdvance(label);
+        if (labelWidth > maxLabelWidth) {
+            maxLabelWidth = labelWidth;
         }
     }
+    maxLabelWidth += padding; // Add padding after the widest label
+
+    // Draw each label-value pair
+    for (int i = 0; i < labels.size(); ++i) {
+        // Draw the label
+        painter.setFont(labelFont);
+        painter.setPen(QColor("#3A5DAE")); // Blue for labels
+        painter.drawText(margin, yPos, labels[i]);
+
+        // Draw the value aligned after the widest label
+        painter.setFont(valueFont);
+        painter.setPen(Qt::black); // Black for values
+        painter.drawText(margin + maxLabelWidth, yPos, values[i]);
+
+        yPos += lineSpacing;
+    }
+
+    // Generate and draw QR code for this meeting
+    meeting currentMeeting(id.toInt(), title, organiser, participant, agenda,
+                           duration.replace(" min", "").toInt(),
+                           QDateTime::fromString(dateTimeStr, "yyyy-MM-dd hh:mm"),
+                           QVariant(), QVariant(), QVariant());
+    QPixmap qrCode = currentMeeting.generateQRCode();
+    painter.setFont(valueFont);
+    painter.setPen(Qt::black);
+    painter.drawText(margin, yPos, "QR Code for Meeting ID " + id + ":");
+    yPos += lineSpacing;
+    painter.drawPixmap(margin, yPos, qrCode.scaled(qrSize, qrSize, Qt::KeepAspectRatio));
+    yPos += qrSize + lineSpacing;
+
+    // Draw a separator line after the meeting
+    painter.setPen(QPen(Qt::gray, 20));
+    painter.drawLine(margin, yPos, pageWidth + margin, yPos);
+
+    // Clean up
     painter.end();
-    QMessageBox::information(nullptr, "Success", "Meeting list exported to PDF successfully!");
+
+    QMessageBox::information(nullptr, "Success", "Selected meeting exported to PDF successfully!");
     if (notificationManager) {
-        notificationManager->addNotification("PDF Exported", "Meeting Section", "Meeting list exported to " + fileName, -1);
+        notificationManager->addNotification("PDF Exported", "Meeting Section",
+                                             "Meeting list exported to " + fileName, -1);
     }
 }
 
