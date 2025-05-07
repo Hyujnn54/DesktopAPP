@@ -1,0 +1,17 @@
+2025-05-06 13:10:07 | Employee: Admin | Action: Added | Resource ID: 17 | Name: Pencil | Type: Electronics | Brand: Bic | Quantity: 51 | Purchase Date: 2025-01-01
+2025-05-06 13:10:20 | Employee: Admin | Action: Deleted | Resource ID: 16 | Name: Pencil | Type: Electronics | Brand: Bic | Quantity: 61 | Purchase Date: 2025-01-01
+2025-05-06 13:10:35 | Employee: Admin | Action: Updated | Resource ID: 15 | Name: Pencil | Type: Electronics | Brand: Reynolds | Quantity: 53 | Purchase Date: 2025-01-01
+2025-05-06 18:46:14 | Employee: Admin | Action: Added | Resource ID: 18 | Name: Pencil | Type: Electronics | Brand: Reynolds | Quantity: 31 | Purchase Date: 2025-01-01
+2025-05-06 19:13:27 | Employee: Admin | Action: Added | Resource ID: 19 | Name: Pencil | Type: Electronics | Brand: Standard | Quantity: 41 | Purchase Date: 2025-01-01
+2025-05-06 19:15:13 | Employee: Admin | Action: Added | Resource ID: 20 | Name: Pencil | Type: Electronics | Brand: Bic | Quantity: 41 | Purchase Date: 2025-01-01
+2025-05-06 19:17:15 | Employee: Admin | Action: Added | Resource ID: 21 | Name: Pencil | Type: Electronics | Brand: Bic | Quantity: 61 | Purchase Date: 2025-01-01
+2025-05-06 19:32:33 | Employee: DefaultEmployee | Action: Updated | Resource ID: 12 | Name: pencil | Type: Electronics | Brand: bic | Quantity: 412 | Purchase Date: 2025-02-01
+2025-05-06 20:35:39 | Employee: Admin | Action: Added | Resource ID: 22 | Name: Pencil | Type: Electronics | Brand: Bic | Quantity: 61 | Purchase Date: 2025-01-01
+2025-05-06 20:36:11 | Employee: Admin | Action: Updated | Resource ID: 22 | Name: Pencil | Type: Electronics | Brand: Bic | Quantity: 62 | Purchase Date: 2025-01-01
+2025-05-06 20:36:21 | Employee: Admin | Action: Deleted | Resource ID: 22 | Name: Pencil | Type: Electronics | Brand: Bic | Quantity: 62 | Purchase Date: 2025-01-01
+2025-05-06 23:50:37 | Employee: Admin | Action: Added | Resource ID: 23 | Name: Pencil | Type: Electronics | Brand: Srgergbfe | Quantity: 12 | Purchase Date: 2000-01-01
+2025-05-07 09:39:08 | Employee: Admin | Action: Added | Resource ID: 24 | Name: Pencil | Type: Electronics | Brand: DDD | Quantity: 11 | Purchase Date: 2000-01-01
+2025-05-07 09:39:39 | Employee: Admin | Action: Updated | Resource ID: 23 | Name: Pencil | Type: Electronics | Brand: Srgergbfe | Quantity: 50 | Purchase Date: 2000-01-01
+2025-05-07 09:39:46 | Employee: Admin | Action: Deleted | Resource ID: 23 | Name: Pencil | Type: Electronics | Brand: Srgergbfe | Quantity: 50 | Purchase Date: 2000-01-01
+2025-05-07 10:01:08 | Employee: DefaultEmployee | Action: Updated | Resource ID: 12 | Name: pencil | Type: Electronics | Brand: bic | Quantity: 411 | Purchase Date: 2025-02-01
+2025-05-07 10:03:51 | Employee: DefaultEmployee | Action: Updated | Resource ID: 12 | Name: pencil | Type: Electronics | Brand: bic | Quantity: 410 | Purchase Date: 2025-02-01
